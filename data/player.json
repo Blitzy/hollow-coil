@@ -1,0 +1,19 @@
+{
+  "$schema": "./schemas/player.schema.json",
+  "health": 100,
+  "hull": { "mins": [-16, -16, -24], "maxs": [16, 16, 32] },
+  "eye_height": 22,
+  "weapons": ["pistol", "shotgun"],
+  "starting_weapon": "pistol",
+  "movement": {
+    "max_ground_speed": 320,
+    "ground_accelerate": 10,
+    "friction": 4,
+    "stop_speed": 100,
+    "air_accelerate": 10,
+    "air_wish_speed_cap": 30,
+    "gravity": 800,
+    "jump_velocity": 270,
+    "step_height": 18
+  }
+}

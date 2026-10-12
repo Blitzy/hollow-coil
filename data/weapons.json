@@ -1,0 +1,31 @@
+{
+  "$schema": "./schemas/weapons.schema.json",
+  "switching": {
+    "lower_time": 0.2,
+    "raise_time": 0.25
+  },
+  "weapons": {
+    "pistol": {
+      "name": "Pistol",
+      "slot": 1,
+      "fire_interval": 0.35,
+      "hitscan": {
+        "pellets": 1,
+        "damage": 14,
+        "spread": { "horizontal": 1, "vertical": 1 },
+        "range": 2048
+      }
+    },
+    "shotgun": {
+      "name": "Shotgun",
+      "slot": 2,
+      "fire_interval": 0.9,
+      "hitscan": {
+        "pellets": 8,
+        "damage": 6,
+        "spread": { "horizontal": 6, "vertical": 4 },
+        "range": 2048
+      }
+    }
+  }
+}

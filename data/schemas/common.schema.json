@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "common.schema.json",
+  "title": "Shared definitions",
+  "$defs": {
+    "seconds": {
+      "description": "A duration in seconds. Engines convert to ticks using the sim's tick-rate constant.",
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "hull": {
+      "description": "Collision box relative to the entity origin, in Quake units. The origin sits 24 above the floor for a standard hull.",
+      "type": "object",
+      "properties": {
+        "mins": { "$ref": "#/$defs/vec3" },
+        "maxs": { "$ref": "#/$defs/vec3" }
+      },
+      "required": ["mins", "maxs"],
+      "additionalProperties": false
+    },
+    "vec3": {
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "spread": {
+      "description": "Maximum angle off the aim direction, in degrees, on each axis.",
+      "type": "object",
+      "properties": {
+        "horizontal": { "type": "number", "minimum": 0, "maximum": 45 },
+        "vertical": { "type": "number", "minimum": 0, "maximum": 45 }
+      },
+      "required": ["horizontal", "vertical"],
+      "additionalProperties": false
+    },
+    "hitscan": {
+      "description": "An instant-hit attack: one trace per pellet, each with its own random spread from the sim's seeded RNG.",
+      "type": "object",
+      "properties": {
+        "pellets": { "description": "Traces per shot.", "type": "integer", "minimum": 1, "maximum": 64 },
+        "damage": { "description": "Damage per pellet that hits.", "type": "number", "exclusiveMinimum": 0 },
+        "spread": { "$ref": "#/$defs/spread" },
+        "range": { "description": "Maximum trace distance in Quake units.", "type": "number", "exclusiveMinimum": 0 }
+      },
+      "required": ["pellets", "damage", "spread", "range"],
+      "additionalProperties": false
+    }
+  }
+}

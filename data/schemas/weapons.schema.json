@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "weapons.schema.json",
+  "title": "Weapons",
+  "description": "Weapon definitions, keyed by weapon id. Ammo is infinite during the spike.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "switching": {
+      "description": "Weapon switch timing. No firing while lowering or raising.",
+      "type": "object",
+      "properties": {
+        "lower_time": { "$ref": "common.schema.json#/$defs/seconds" },
+        "raise_time": { "$ref": "common.schema.json#/$defs/seconds" }
+      },
+      "required": ["lower_time", "raise_time"],
+      "additionalProperties": false
+    },
+    "weapons": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "name": { "description": "Display name for the HUD.", "type": "string" },
+          "slot": { "description": "Number key that selects this weapon; also the weapon-select value in input commands.", "type": "integer", "minimum": 1, "maximum": 9 },
+          "fire_interval": { "$ref": "common.schema.json#/$defs/seconds" },
+          "hitscan": { "$ref": "common.schema.json#/$defs/hitscan" }
+        },
+        "required": ["name", "slot", "fire_interval", "hitscan"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["switching", "weapons"],
+  "additionalProperties": false
+}

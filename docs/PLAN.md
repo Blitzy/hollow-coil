@@ -53,7 +53,7 @@ Out of scope for the spike:
 ```
 /maps        TrenchBroom .map files, game config, FGD
 /textures    Textures (PNG), next to /maps so the repo root is the game root
-/data        weapons.json, enemies.json, movement.json, plus JSON Schemas
+/data        player.json (health, hull, movement), weapons.json, enemies.json, plus JSON Schemas
 /spec        Engine-neutral test scenarios (JSON)
 /tools       compile script, bsp dump tool, schema validation
 /build       Compiled .bsp output (gitignored)
@@ -110,7 +110,7 @@ Done once, before either engine.
   - `test_movement`: steps at 16, 18, and 20 units, slopes, gaps, ledges, and a finish marker
   - `test_combat`: open arena with cover pieces and walls that block line of sight
   - `greybox_01`: room, corridor, room, with two enemies and real lighting
-- [ ] 0.7 Data files and JSON Schemas for movement, weapons, and enemies, using the starting values above, validated in CI.
+- [ ] 0.7 Data files and JSON Schemas for the player (including movement), weapons, and enemies, using the starting values above, validated in CI.
 - [ ] 0.8 Input command format (see Input Commands below), spec scenario format, and the first scenarios (see Testing below).
 
 Done when every map compiles cleanly in CI and all data validates.

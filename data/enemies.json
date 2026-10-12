@@ -1,0 +1,29 @@
+{
+  "$schema": "./schemas/enemies.schema.json",
+  "enemies": {
+    "shotgunner": {
+      "classname": "monster_shotgunner",
+      "health": 40,
+      "hull": { "mins": [-16, -16, -24], "maxs": [16, 16, 32] },
+      "eye_height": 22,
+      "think_interval": 0.1,
+      "run_speed": 110,
+      "sight_range": 1500,
+      "field_of_view": 120,
+      "reaction_delay": 0.6,
+      "attack": {
+        "cooldown": 1.5,
+        "hitscan": {
+          "pellets": 5,
+          "damage": 4,
+          "spread": { "horizontal": 10, "vertical": 10 },
+          "range": 2048
+        }
+      },
+      "pain": {
+        "chance": 0.5,
+        "stun": 0.3
+      }
+    }
+  }
+}

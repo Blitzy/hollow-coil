@@ -28,7 +28,11 @@ jobs:
       - name: Check file sizes
         run: python tools/check_files.py
 
-      # Added by Phase 0.7: python tools/validate.py (data files against JSON Schemas)
+      - name: Validate data
+        run: python tools/validate.py
+
+      - name: Test data validator
+        run: python -m unittest discover -s tools/tests -p "test_validate.py" -v
 
   # Map compiles run in maps.yml, only when map-related files change.
   # Engine jobs (web: Vitest, godot: gdUnit4 headless) are added in milestone M1.

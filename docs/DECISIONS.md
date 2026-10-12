@@ -2,6 +2,18 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-11: Data validation with our own JSON Schema subset; player.json
+
+**Decision:** `tools/validate.py` validates `data/*.json` with a small built-in implementation of the JSON Schema keywords our schemas use, and rejects any other keyword. Player health, hull, eye height, loadout, and movement constants live together in `player.json` (the plan originally named a `movement.json`).
+
+**Why:**
+
+- The `jsonschema` package pulls in several dependencies, including a compiled Rust extension, which would add pip installs to CI and every developer machine. The tools are standard library only by default.
+- Rejecting unknown keywords means a schema can never silently check less than it looks like it does. The schemas stay standard JSON Schema, so editors still validate the files in full.
+- Health and the collision hull are not movement, but they describe the same player; one file keeps the player's definition in one place.
+
+**Alternatives considered:** The `jsonschema` package (full spec, but heavy dependencies); hand-written checks without schemas (no editor support, and the rules would live only in code).
+
 ## 2026-10-11: The repo root is the game root (textures/ next to maps/)
 
 **Decision:** Textures live in a top-level `textures/` folder beside `maps/`, so the repo root is the game root. TrenchBroom's game path and the compilers' `-basedir`/`-gamedir` point at the repo root. This replaces the earlier `maps/textures/` location.

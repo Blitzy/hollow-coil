@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "player.schema.json",
+  "title": "Player",
+  "description": "Player body, health, loadout, and Quake-style movement constants. Units are Quake units and seconds.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "health": { "type": "integer", "minimum": 1 },
+    "hull": { "$ref": "common.schema.json#/$defs/hull" },
+    "eye_height": { "description": "Eye position above the origin.", "type": "number" },
+    "weapons": {
+      "description": "Weapon ids (keys in weapons.json) the player carries.",
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "starting_weapon": { "description": "Weapon id held at spawn; must be in weapons.", "type": "string" },
+    "movement": {
+      "type": "object",
+      "properties": {
+        "max_ground_speed": { "description": "Top running speed, units per second.", "type": "number", "exclusiveMinimum": 0 },
+        "ground_accelerate": { "description": "Quake sv_accelerate.", "type": "number", "exclusiveMinimum": 0 },
+        "friction": { "description": "Quake sv_friction.", "type": "number", "minimum": 0 },
+        "stop_speed": { "description": "Quake sv_stopspeed: below this speed, friction acts as if at this speed.", "type": "number", "minimum": 0 },
+        "air_accelerate": { "description": "Acceleration while airborne.", "type": "number", "minimum": 0 },
+        "air_wish_speed_cap": { "description": "Airborne wish speed is capped to this (Quake 1 uses 30), which allows air strafing.", "type": "number", "minimum": 0 },
+        "gravity": { "description": "Units per second squared.", "type": "number", "exclusiveMinimum": 0 },
+        "jump_velocity": { "description": "Upward speed at the start of a jump, units per second.", "type": "number", "exclusiveMinimum": 0 },
+        "step_height": { "description": "Tallest step walked up without jumping.", "type": "number", "minimum": 0 }
+      },
+      "required": ["max_ground_speed", "ground_accelerate", "friction", "stop_speed", "air_accelerate", "air_wish_speed_cap", "gravity", "jump_velocity", "step_height"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["health", "hull", "eye_height", "weapons", "starting_weapon", "movement"],
+  "additionalProperties": false
+}

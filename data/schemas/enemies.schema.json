@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "enemies.schema.json",
+  "title": "Enemies",
+  "description": "Enemy definitions, keyed by enemy id. Units are Quake units, seconds, and degrees.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "enemies": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "classname": { "description": "Map entity classname that spawns this enemy; must be defined in the FGD.", "type": "string", "pattern": "^monster_[a-z0-9_]+$" },
+          "health": { "type": "integer", "minimum": 1 },
+          "hull": { "$ref": "common.schema.json#/$defs/hull" },
+          "eye_height": { "description": "Eye position above the origin, for line-of-sight checks.", "type": "number" },
+          "think_interval": { "description": "Time between AI decisions. Each enemy also gets a per-enemy offset.", "$ref": "common.schema.json#/$defs/seconds" },
+          "run_speed": { "description": "Chase speed, units per second.", "type": "number", "exclusiveMinimum": 0 },
+          "sight_range": { "description": "Furthest distance at which the player can be noticed.", "type": "number", "exclusiveMinimum": 0 },
+          "field_of_view": { "description": "Full view cone width, in degrees.", "type": "number", "exclusiveMinimum": 0, "maximum": 360 },
+          "reaction_delay": { "description": "Delay between first sighting the player and acting.", "$ref": "common.schema.json#/$defs/seconds" },
+          "attack": {
+            "type": "object",
+            "properties": {
+              "cooldown": { "$ref": "common.schema.json#/$defs/seconds" },
+              "hitscan": { "$ref": "common.schema.json#/$defs/hitscan" }
+            },
+            "required": ["cooldown", "hitscan"],
+            "additionalProperties": false
+          },
+          "pain": {
+            "type": "object",
+            "properties": {
+              "chance": { "description": "Probability of flinching when damaged.", "type": "number", "minimum": 0, "maximum": 1 },
+              "stun": { "description": "How long a flinch stops the enemy acting.", "$ref": "common.schema.json#/$defs/seconds" }
+            },
+            "required": ["chance", "stun"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["classname", "health", "hull", "eye_height", "think_interval", "run_speed", "sight_range", "field_of_view", "reaction_delay", "attack", "pain"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["enemies"],
+  "additionalProperties": false
+}
