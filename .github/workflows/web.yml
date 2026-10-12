@@ -1,0 +1,55 @@
+name: Web
+
+# Type-checks and tests the web build. Runs only when something it reads
+# changes: its own code, or the shared maps, data, and scenarios.
+# Keep these path lists in sync.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "maps/**"
+      - "data/**"
+      - "spec/**"
+      - ".github/workflows/web.yml"
+  pull_request:
+    paths:
+      - "web/**"
+      - "maps/**"
+      - "data/**"
+      - "spec/**"
+      - ".github/workflows/web.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Type-check and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Type-check (including the sim-only check)
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
