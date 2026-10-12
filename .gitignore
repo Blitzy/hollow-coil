@@ -1,0 +1,58 @@
+### Hollow Coil
+# Compiled maps (tools/compile writes here)
+/build/
+
+# ericw-tools side output, in case a compile runs outside /build
+*.bsp
+*.prt
+*.pts
+*.lin
+*.lit
+*.lux
+*.lit2
+
+# TrenchBroom autosaves
+autosave/
+
+# Godot
+.godot/
+/godot/export/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+
+# Claude Code local settings (shared settings.json is kept)
+.claude/settings.local.json
+
+### Node
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+*.tgz
+.npm
+*.log
+
+# dotenv
+.env
+.env.local
+.env.*.local
+
+### OS
+.DS_Store
+._*
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+*~
+
+### VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
