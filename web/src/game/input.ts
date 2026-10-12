@@ -12,18 +12,54 @@ const KEYS = {
   jump: ["Space"],
 } as const;
 
+/** One mouse event moving farther than this, in pixels, is logged as a likely browser glitch. */
+const SUSPICIOUS_MOVEMENT = 300;
+
+/**
+ * Locks the pointer to an element, asking for raw (unadjusted) mouse input where
+ * the browser supports it. Raw input skips the OS's pointer acceleration, like
+ * Quake's m_rawinput, and avoids a Chromium bug on Windows where accelerated
+ * pointer-lock movement now and then reports one huge jump that spins the view.
+ * Falls back to ordinary pointer lock where raw input isn't supported, or when
+ * raw is false. Resolves to whether raw input is in use.
+ */
+export async function lockPointer(element: Pick<Element, "requestPointerLock">, raw = true): Promise<boolean> {
+  if (!raw) {
+    await element.requestPointerLock();
+    return false;
+  }
+  try {
+    await element.requestPointerLock({ unadjustedMovement: true });
+    return true;
+  } catch {
+    await element.requestPointerLock();
+    return false;
+  }
+}
+
 export class BrowserInput {
   /** Radians of turn per pixel of mouse movement. */
-  sensitivity = 0.0022;
+  sensitivity = 0.0033;
   yaw = 0;
   pitch = 0;
   private readonly held = new Set<string>();
   private attack = false;
   private pendingWeapon = 0;
 
-  constructor(private readonly element: HTMLElement) {
+  /** Whether the current pointer lock uses raw mouse input. */
+  rawInput = false;
+
+  /** preferRawInput: ask for raw mouse input when locking (see lockPointer). */
+  constructor(
+    private readonly element: HTMLElement,
+    preferRawInput = true,
+  ) {
     element.addEventListener("click", () => {
-      if (!this.locked) void element.requestPointerLock();
+      if (this.locked) return;
+      lockPointer(element, preferRawInput).then(
+        (raw) => (this.rawInput = raw),
+        (error: unknown) => console.warn("pointer lock failed:", error),
+      );
     });
     window.addEventListener("keydown", (e) => {
       this.held.add(e.code);
@@ -41,6 +77,9 @@ export class BrowserInput {
     });
     document.addEventListener("mousemove", (e) => {
       if (!this.locked) return;
+      if (Math.abs(e.movementX) > SUSPICIOUS_MOVEMENT || Math.abs(e.movementY) > SUSPICIOUS_MOVEMENT) {
+        console.warn(`large mouse movement in one event: ${e.movementX}, ${e.movementY} (raw input: ${this.rawInput})`);
+      }
       this.yaw -= e.movementX * this.sensitivity; // moving right turns clockwise, toward lower yaw
       this.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this.pitch - e.movementY * this.sensitivity));
     });

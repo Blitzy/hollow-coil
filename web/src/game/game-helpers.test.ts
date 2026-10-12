@@ -2,6 +2,39 @@ import { describe, expect, it } from "vitest";
 import { BUTTON_ATTACK, BUTTON_JUMP } from "../sim/input";
 import { buildCommand, MAX_PITCH, type HeldInput } from "./command";
 import { FixedStep } from "./fixed-step";
+import { lockPointer } from "./input";
+
+describe("lockPointer", () => {
+  /** A stand-in element that records each pointer lock request, rejecting raw input if unsupported. */
+  const fakeElement = (rawSupported: boolean) => {
+    const calls: (PointerLockOptions | undefined)[] = [];
+    return {
+      calls,
+      requestPointerLock: (options?: PointerLockOptions): Promise<void> => {
+        calls.push(options);
+        return options?.unadjustedMovement && !rawSupported ? Promise.reject(new DOMException("no raw input", "NotSupportedError")) : Promise.resolve();
+      },
+    };
+  };
+
+  it("asks for raw mouse input", async () => {
+    const element = fakeElement(true);
+    expect(await lockPointer(element)).toBe(true);
+    expect(element.calls).toEqual([{ unadjustedMovement: true }]);
+  });
+
+  it("uses ordinary pointer lock when raw input isn't wanted", async () => {
+    const element = fakeElement(true);
+    expect(await lockPointer(element, false)).toBe(false);
+    expect(element.calls).toEqual([undefined]);
+  });
+
+  it("falls back to ordinary pointer lock where raw input isn't supported", async () => {
+    const element = fakeElement(false);
+    expect(await lockPointer(element)).toBe(false);
+    expect(element.calls).toEqual([{ unadjustedMovement: true }, undefined]);
+  });
+});
 
 const idle: HeldInput = { yaw: 0, pitch: 0, forward: false, back: false, left: false, right: false, jump: false, attack: false, weapon: 0 };
 

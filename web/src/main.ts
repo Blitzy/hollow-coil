@@ -2,7 +2,8 @@
 // renders between ticks.
 //
 // URL options: ?map=<name> (default test_movement), &lighting=off to draw the
-// unlit .map instead of the compiled .bsp, &brightness=<n> to try another lightmap scale.
+// unlit .map instead of the compiled .bsp, &brightness=<n> to try another lightmap scale,
+// &rawinput=off for the OS's accelerated mouse instead of raw input.
 // The sim always loads its collision and entities from the .map.
 
 import * as THREE from "three";
@@ -110,7 +111,8 @@ async function main(): Promise<void> {
 
   const start = level.playerStart ?? { origin: vec3(0, 0, 24), angle: 0 };
   const startYaw = wrapYaw(degreesToUnits(start.angle));
-  const input = new BrowserInput(renderer.domElement);
+  const preferRawInput = params.get("rawinput") !== "off";
+  const input = new BrowserInput(renderer.domElement, preferRawInput);
   input.yaw = angleToRadians(startYaw);
 
   let previous: SimState = createSim(config, { origin: start.origin, yaw: startYaw });
@@ -149,7 +151,9 @@ async function main(): Promise<void> {
       `pos ${p.origin.x.toFixed(1)} ${p.origin.y.toFixed(1)} ${p.origin.z.toFixed(1)}`,
       `speed ${Math.hypot(p.velocity.x, p.velocity.y).toFixed(0)}  ${p.onGround ? "ground" : "air"}`,
       world.lit ? `lit  brightness ${world.lit.brightness.value.toFixed(1)}  ([ and ] adjust)` : world.note,
-      input.locked ? "" : "click to play  (WASD, mouse, space)",
+      input.locked
+        ? `mouse ${input.rawInput ? "raw" : preferRawInput ? "accelerated (raw input unavailable)" : "accelerated (rawinput=off)"}`
+        : "click to play  (WASD, mouse, space)",
     ].join("\n");
     requestAnimationFrame(frame);
   };
