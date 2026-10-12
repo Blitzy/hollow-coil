@@ -7,7 +7,7 @@ import { length, vec3, ZERO, type Vec3 } from "../math/vec3";
 import { box, rampX, world } from "../testing/worlds";
 import { DIST_EPSILON, type CollisionWorld } from "../collision/trace";
 import {
-  accelerate, airAccelerate, categorizePosition, clipVelocity, friction, playerMove,
+  accelerate, airAccelerate, asWallIfSteep, categorizePosition, clipVelocity, friction, playerMove, withoutPushInto,
   type MovementContext, type Mover, type PlayerBody,
 } from "./movement";
 
@@ -183,6 +183,51 @@ describe("walking and steps", () => {
       expect(states[i]!.origin.z, `tick ${i}`).toBeLessThan(states[i - 1]!.origin.z);
       expect(length(states[i]!.velocity), `tick ${i}`).toBeGreaterThan(length(states[i - 1]!.velocity) - 1e-9);
     }
+  });
+
+  describe("steep slopes (a deliberate departure from QuakeWorld)", () => {
+    // 63 degrees: in QuakeWorld, holding forward into it slowly climbs it.
+    const steep = () => context(world(FLOOR, rampX(256, 320, -512, 512, -16, 0, 128), box([320, -512, 0], [640, 512, 128])));
+    const holdForward = (start: PlayerBody, seconds: number, side = 0) =>
+      run(steep(), start, seconds, () => ({ ...RUN_EAST, side }));
+
+    it("can't be climbed by holding forward from the floor; the player stays put like at a wall", () => {
+      const states = holdForward({ ...body(vec3(200, 0, STAND_Z)), onGround: true }, 4);
+      expect(Math.max(...states.map((s) => s.origin.z))).toBeCloseTo(STAND_Z, 6);
+      expect(states.slice(60).every((s) => s.onGround)).toBe(true); // no hopping at the foot
+      // Pressed against the slope's foot (x = 256), minus the hull's 16, give or take the sloped stand-off.
+      expect(states.at(-1)!.origin.x).toBeCloseTo(240, 1);
+    });
+
+    it("can't be climbed by holding forward on it; the player slides down", () => {
+      const states = holdForward(body(vec3(290, 0, 150)), 3);
+      expect(states.at(-1)!.origin.z).toBeCloseTo(STAND_Z, 6);
+      expect(states.slice(-60).every((s) => s.onGround)).toBe(true);
+    });
+
+    it("still allows moving sideways along it", () => {
+      const end = holdForward(body(vec3(290, 0, 150)), 2, 127).at(-1)!;
+      expect(end.origin.y).toBeLessThan(-200); // strafed right (toward -y) while sliding down
+    });
+
+    it("withoutPushInto removes only the horizontal push into the surface", () => {
+      const slope = vec3(-0.894, 0, 0.447); // faces -x and up
+      const into = withoutPushInto(X, 320, slope);
+      expect(into.speed).toBe(0);
+      const diagonal = withoutPushInto(vec3(Math.SQRT1_2, Math.SQRT1_2, 0), 320, slope);
+      expect(diagonal.dir.x).toBeCloseTo(0, 10);
+      expect(diagonal.dir.y).toBeCloseTo(1, 10);
+      expect(diagonal.speed).toBeCloseTo(320 * Math.SQRT1_2, 10);
+      expect(withoutPushInto(vec3(-1, 0, 0), 320, slope)).toEqual({ dir: vec3(-1, 0, 0), speed: 320 }); // moving away is untouched
+    });
+
+    it("asWallIfSteep flattens only too-steep upward surfaces", () => {
+      expect(asWallIfSteep(vec3(-0.894, 0, 0.447))).toEqual(vec3(-1, 0, 0));
+      const walkable = vec3(-0.447, 0, 0.894);
+      expect(asWallIfSteep(walkable)).toBe(walkable);
+      const ceiling = vec3(0, 0, -1);
+      expect(asWallIfSteep(ceiling)).toBe(ceiling);
+    });
   });
 
   it("refuses to step onto a surface too steep to stand on", () => {

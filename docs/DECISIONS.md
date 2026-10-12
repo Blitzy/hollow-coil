@@ -2,6 +2,16 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-12: Steep slopes can't be climbed (a departure from QuakeWorld)
+
+**Decision:** When the player rests against a surface too steep to stand on, air acceleration can't push into it (the horizontal into-surface part of the wish is removed), and walking slides treat such surfaces as vertical walls. Details in docs/MOVEMENT.md, Steep slopes.
+
+**Why:** Playtesting the first web build showed that holding forward slowly climbs the 63° slope in `test_movement`. That follows from QuakeWorld's formulas: air acceleration into the slope outweighs gravity on slopes up to about 66° at 60 Hz. It was hidden until the slide-stall fix, because the stall kept zeroing the velocity. Blocking only the air push left a 12 Hz, half-unit hop at the foot of the slope (walking still pushed into it), so walking slides treat steep surfaces as walls too. Air strafing everywhere else is unchanged.
+
+**Trade-offs:** Running into a steep slope at speed no longer bumps the player a few units up it before they slide back. Movement there is slightly less faithful to QuakeWorld, which the feel pass in M5 can revisit.
+
+**Alternatives considered:** Keeping QuakeWorld's behavior (authentic, but surprising in play); handling it in level design only, with slopes steeper than 66° or clip brushes (leaves the behavior in the engine for mappers to trip over); lowering the air wish speed cap (would weaken air strafing everywhere).
+
 ## 2026-10-11: Data validation with our own JSON Schema subset; player.json
 
 **Decision:** `tools/validate.py` validates `data/*.json` with a small built-in implementation of the JSON Schema keywords our schemas use, and rejects any other keyword. Player health, hull, eye height, loadout, and movement constants live together in `player.json` (the plan originally named a `movement.json`).

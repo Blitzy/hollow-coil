@@ -153,7 +153,10 @@ categorizePosition():
     onGround = t.normal.z >= GROUND_NORMAL_Z      // a miss has normal (0,0,0), so it is not ground
     if onGround and not t.startsolid and not t.allsolid:
         origin = t.endpos                          // settle onto the floor
+    steepNormal = (0 < t.normal.z < GROUND_NORMAL_Z) ? t.normal : none   // see Steep slopes
 ```
+
+`steepNormal` starts each call as none (including the early return) and isn't part of the saved state: it's recomputed from the position every tick.
 
 ### Jump
 
@@ -218,9 +221,10 @@ airMove(cmd):
         velocity.z -= player.movement.gravity * dt
         groundMove()
     else:
+        if steepNormal: wishDir, wishSpeed = withoutPushInto(wishDir, wishSpeed, steepNormal)   // see Steep slopes
         airAccelerate(wishDir, wishSpeed, player.movement.air_accelerate)
         velocity.z -= player.movement.gravity * dt
-        flyMove()
+        flyMove(walking = false)
 ```
 
 On the ground, the gravity step is immediately cancelled by `groundMove` setting `velocity.z = 0`. It is kept so the order matches QuakeWorld exactly.
@@ -257,7 +261,7 @@ clipVelocity(v, normal, overbounce):
 ### Fly move (slide along surfaces)
 
 ```
-flyMove():
+flyMove(walking):
     original = velocity, primal = velocity
     planes = []
     timeLeft = dt
@@ -275,10 +279,11 @@ flyMove():
         if planes.length >= MAX_CLIP_PLANES:
             velocity = 0
             return
-        if dot(t.normal, p) > SAME_PLANE_DOT for any p in planes:
-            velocity += t.normal                    // nudge out along it (see below)
+        normal = walking ? asWallIfSteep(t.normal) : t.normal   // see Steep slopes
+        if dot(normal, p) > SAME_PLANE_DOT for any p in planes:
+            velocity += normal                      // nudge out along it (see below)
             continue
-        planes.push(t.normal)
+        planes.push(normal)
         // find a plane whose clipped velocity doesn't push into any other plane
         found = false
         for each plane i in planes:
@@ -315,13 +320,13 @@ groundMove():
     // try sliding along the floor, and stepping up then sliding; keep whichever goes farther
     startOrigin = origin, startVel = velocity
 
-    flyMove()
+    flyMove(walking = true)
     downOrigin = origin, downVel = velocity
 
     origin = startOrigin, velocity = startVel
     t = trace(origin, origin + (0, 0, STEP))         // STEP = player.movement.step_height
     if not t.startsolid and not t.allsolid: origin = t.endpos
-    flyMove()
+    flyMove(walking = true)
     t = trace(origin, origin - (0, 0, STEP))
     if t.normal.z < GROUND_NORMAL_Z:                 // stepped onto something too steep, or onto nothing
         origin = downOrigin, velocity = downVel
@@ -338,6 +343,25 @@ groundMove():
 ```
 
 A step up succeeds when the box, raised by `STEP` (18), can move forward and then lands on a walkable surface. The 20-unit step in `test_movement` fails because the raised box still hits the step's face.
+
+### Steep slopes (a departure from QuakeWorld)
+
+A surface too steep to stand on (0 < normal z < 0.7, steeper than about 45.6°) is one the player slides down. In QuakeWorld, holding forward into one counts as air control: `airAccelerate` adds up to 30 u/s per tick into the slope, clipping turns part of that into up-slope motion, and on slopes shallower than `atan(air_wish_speed_cap * TICK_RATE / gravity)` (about 66° at 60 Hz) it outweighs gravity, so the player slowly crawls up. Walking into the foot of such a slope also turns forward speed into upward motion, making the player hop. We remove both, deliberately:
+
+```
+withoutPushInto(wishDir, wishSpeed, n):           // used in the air, when resting against a steep surface
+    out = normalize(n.x, n.y, 0)                  // horizontal, pointing away from the surface
+    into = dot(wishDir, out)
+    if into >= 0: return wishDir, wishSpeed       // not pushing into it
+    kept = (wishDir - out * into) * wishSpeed     // the wish without its into-surface part
+    return normalize(kept), length(kept)          // (zero if nothing is left)
+
+asWallIfSteep(n):                                 // used by walking slides
+    if n.z <= 0 or n.z >= GROUND_NORMAL_Z: return n
+    return normalize(n.x, n.y, 0)                 // treat it as a vertical wall
+```
+
+Both use only the horizontal part of the surface's normal. Clipping a horizontal wish against the full slope normal would tilt it up along the slope and bring the climb back. The result: holding forward against a steep slope stops the player at its foot like a wall, a player on the slope slides down even while holding forward, and sideways movement along it still works. Running into the slope at speed no longer bumps the player a few units up it.
 
 ## Constants
 
@@ -383,6 +407,7 @@ Each engine tests these in isolation, in addition to the shared `/spec` scenario
 - Brush building from a .map: plane equation from three points; a wedge gains the expected axial and edge bevels; a box gains none.
 - Box trace: hit fraction and normal against a box and a slope; `startsolid` and `allsolid`; the 1/32 stand-off; a box sliding along a slope's edge doesn't snag (bevels working).
 - Fly move: sliding down a slope too steep to stand on is continuous (height falls and speed never drops until landing).
+- Steep slopes: holding forward neither climbs one (from its foot or from on it) nor hops at its foot; sideways movement along it still works; `withoutPushInto` and `asWallIfSteep` remove only the horizontal push into the surface.
 - Step-up: 18 succeeds and 20 blocks (also covered by the scenarios); stepping onto a too-steep surface is refused.
 - Ground: standing on a 0.7-normal slope counts as ground and a steeper one doesn't; rising faster than 180 is never on ground.
 - Jump: holding jump doesn't re-jump on landing; releasing and pressing again does.

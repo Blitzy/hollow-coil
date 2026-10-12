@@ -42,6 +42,8 @@ interface Mover {
   velocity: Vec3;
   onGround: boolean;
   jumpHeld: boolean;
+  /** Normal of a surface too steep to stand on that the player is resting against, found by categorizePosition. */
+  steepNormal?: Vec3 | null;
 }
 
 const dt = 1 / TICK_RATE;
@@ -63,6 +65,7 @@ export function playerMove(body: PlayerBody, cmd: InputCommand, ctx: MovementCon
 }
 
 export function categorizePosition(m: Mover, ctx: MovementContext): void {
+  m.steepNormal = null;
   if (m.velocity.z > AIRBORNE_SPEED) {
     m.onGround = false;
     return;
@@ -70,6 +73,7 @@ export function categorizePosition(m: Mover, ctx: MovementContext): void {
   const t = traceHull(ctx, m.origin, sub(m.origin, vec3(0, 0, GROUND_PROBE)));
   m.onGround = t.normal.z >= GROUND_NORMAL_Z; // a miss has a zero normal, so it isn't ground
   if (m.onGround && !t.startSolid && !t.allSolid) m.origin = t.endpos;
+  if (t.normal.z > 0 && t.normal.z < GROUND_NORMAL_Z) m.steepNormal = t.normal;
 }
 
 function jump(m: Mover, ctx: MovementContext): void {
@@ -127,10 +131,28 @@ function airMove(m: Mover, cmd: InputCommand, ctx: MovementContext): void {
     m.velocity = vec3(m.velocity.x, m.velocity.y, m.velocity.z - mv.gravity * dt);
     groundMove(m, ctx);
   } else {
-    m.velocity = airAccelerate(m.velocity, dir, speed, mv.air_accelerate, mv.air_wish_speed_cap);
+    const w = m.steepNormal ? withoutPushInto(dir, speed, m.steepNormal) : { dir, speed };
+    m.velocity = airAccelerate(m.velocity, w.dir, w.speed, mv.air_accelerate, mv.air_wish_speed_cap);
     m.velocity = vec3(m.velocity.x, m.velocity.y, m.velocity.z - mv.gravity * dt);
     flyMove(m, ctx);
   }
+}
+
+/**
+ * Removes the horizontal part of a wish that pushes into a steep surface.
+ * Without this, air acceleration into a slope steeper than 45.6 degrees but
+ * shallower than about 66 degrees outweighs gravity and the player slowly
+ * climbs it. A deliberate departure from QuakeWorld; see docs/MOVEMENT.md.
+ */
+export function withoutPushInto(dir: Vec3, speed: number, surfaceNormal: Vec3): { dir: Vec3; speed: number } {
+  const across = Math.hypot(surfaceNormal.x, surfaceNormal.y);
+  if (across === 0 || speed === 0) return { dir, speed };
+  const out = vec3(surfaceNormal.x / across, surfaceNormal.y / across, 0); // horizontal, pointing away from the surface
+  const into = dot(dir, out);
+  if (into >= 0) return { dir, speed };
+  const kept = scale(addScaled(dir, out, -into), speed); // the wish with its into-surface part removed
+  const keptSpeed = length(kept);
+  return keptSpeed > 0 ? { dir: scale(kept, 1 / keptSpeed), speed: keptSpeed } : { dir: ZERO, speed: 0 };
 }
 
 export function accelerate(velocity: Vec3, wishDir: Vec3, wishSpeed: number, accel: number): Vec3 {
@@ -155,8 +177,20 @@ export function clipVelocity(v: Vec3, normal: Vec3, overbounce: number): Vec3 {
   return vec3(snap(v.x - normal.x * backoff), snap(v.y - normal.y * backoff), snap(v.z - normal.z * backoff));
 }
 
-/** Moves along the velocity for one tick, sliding along anything hit. */
-export function flyMove(m: Mover, ctx: MovementContext): void {
+/**
+ * While walking, a surface too steep to stand on is treated as a vertical wall,
+ * so walking into it can't turn into upward motion (which made the player hop
+ * at the foot of steep slopes). A deliberate departure from QuakeWorld; see
+ * docs/MOVEMENT.md, Steep slopes.
+ */
+export function asWallIfSteep(normal: Vec3): Vec3 {
+  if (normal.z <= 0 || normal.z >= GROUND_NORMAL_Z) return normal;
+  const across = Math.hypot(normal.x, normal.y);
+  return vec3(normal.x / across, normal.y / across, 0);
+}
+
+/** Moves along the velocity for one tick, sliding along anything hit. Walking slides treat steep surfaces as walls. */
+export function flyMove(m: Mover, ctx: MovementContext, walking = false): void {
   const original = m.velocity;
   const primal = m.velocity;
   let planes: Vec3[] = [];
@@ -183,11 +217,12 @@ export function flyMove(m: Mover, ctx: MovementContext): void {
     // sliding along a sloped surface; nudge out along it instead of clipping
     // again, which would stop the player dead. From Quake 3 code/game/
     // bg_slidemove.c PM_SlideMove (id Software, GPLv2 or later).
-    if (planes.some((p) => dot(t.normal, p) > SAME_PLANE_DOT)) {
-      m.velocity = add(m.velocity, t.normal);
+    const normal = walking ? asWallIfSteep(t.normal) : t.normal;
+    if (planes.some((p) => dot(normal, p) > SAME_PLANE_DOT)) {
+      m.velocity = add(m.velocity, normal);
       continue;
     }
-    planes.push(t.normal);
+    planes.push(normal);
 
     // Find a plane whose clipped velocity doesn't push into any of the others.
     let found = false;
@@ -226,7 +261,7 @@ export function groundMove(m: Mover, ctx: MovementContext): void {
   const startVelocity = m.velocity;
   const step = ctx.movement.step_height;
 
-  flyMove(m, ctx);
+  flyMove(m, ctx, true);
   const downOrigin = m.origin;
   const downVelocity = m.velocity;
 
@@ -234,7 +269,7 @@ export function groundMove(m: Mover, ctx: MovementContext): void {
   m.velocity = startVelocity;
   const up = traceHull(ctx, m.origin, addScaled(m.origin, vec3(0, 0, 1), step));
   if (!up.startSolid && !up.allSolid) m.origin = up.endpos;
-  flyMove(m, ctx);
+  flyMove(m, ctx, true);
   const down = traceHull(ctx, m.origin, addScaled(m.origin, vec3(0, 0, -1), step));
   if (down.normal.z < GROUND_NORMAL_Z) {
     // Stepped onto something too steep, or onto nothing: use the plain slide.
