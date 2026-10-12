@@ -2,6 +2,25 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-12: Built with agentic coding; players' content is human-authored
+
+**Decision:** Most of the code is written with an AI coding agent (Claude Code), and a human reviews every change before it's committed. The content players experience is human-authored: levels made by hand in TrenchBroom, plus the weapon and enemy tuning, encounter design, and art direction. The README says this openly.
+
+AI-generated art and other assets aren't ruled out, but they're decided case by case under these rules, until a fuller asset policy is written when real art enters the project:
+
+- A human sets the art direction, and generated material has to fit it. Defaults don't ship just because a model produced them.
+- Generated material is curated and edited, not accepted as is.
+- Provenance is recorded for every asset (hand-made, AI-assisted, or AI-generated, and with which tool), so store disclosures and licensing questions can be answered later without guesswork.
+
+**Why:**
+
+- Agentic coding does well on plumbing that has strong references to check against: the `.map` parser, brush bevels, box traces, movement ported from GPL Quake sources, and tooling. That frees time for the hand-made work that gives a game its character.
+- Much of the backlash against AI in games is about generated content replacing craft. Keeping levels and design hand-made is the point of the project (see Design Principles in CLAUDE.md).
+- Being open about it is more honest than leaving people to find out.
+- The game isn't currently meant to be a commercial product, but GPLv3 keeps that option open. Under current US law, purely AI-generated output generally can't be copyrighted, which would weaken any later plan to sell assets separately from the code. Recording provenance keeps that question answerable.
+
+**Alternatives considered:** Not mentioning AI use (dishonest, and would surface eventually); banning AI-generated assets outright (premature, since the asset pipeline doesn't exist yet and some uses, like AI-assisted texture cleanup, may be reasonable); allowing anything (risks the generic look the project is trying to avoid).
+
 ## 2026-10-12: Steep slopes can't be climbed (a departure from QuakeWorld)
 
 **Decision:** When the player rests against a surface too steep to stand on, air acceleration can't push into it (the horizontal into-surface part of the wish is removed), and walking slides treat such surfaces as vertical walls. Details in docs/MOVEMENT.md, Steep slopes.
