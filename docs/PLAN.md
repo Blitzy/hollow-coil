@@ -194,20 +194,20 @@ Mostly hands-on tuning by Ryan, with few tests.
 ## Testing
 
 - **Unit tests** per engine: Vitest for web (sim runs in Node with no Three.js imports), gdUnit4 for Godot via `godot --headless`.
-- **Shared scenarios** in /spec: each names a map, a starting state, an input sequence, and expectations at given ticks with tolerances. Both engines run every scenario.
+- **Shared scenarios** in /spec: each names a map, a start marker, a timeline of inputs, and expectations at given times (in seconds, converted to ticks by exact rules) with tolerances. Both engines run every scenario. Format and conversion rules are in spec/README.md.
 - **Golden demos** in /demos: recorded inputs plus keyframe snapshots and a per-tick state hash. CI replays them and fails at the first divergent tick. Demos are only valid at the tick rate they were recorded with, so any tick rate experiments (such as 35 Hz) happen before recording goldens.
 - **Demos are per engine.** The web build uses 64-bit floats and Godot's vectors use 32-bit floats, so state hashes can't match across engines. Each engine records and replays its own goldens in /demos/web and /demos/godot. Cross-engine agreement is checked by the shared /spec scenarios, which use tolerances. The input command format is shared, so the same recorded inputs can drive both engines.
+- **Compile check**: CI compiles every map in fast check mode and fails on leaks, missing textures, or errors. It runs only when map-related files change (see DECISIONS.md).
+- **Visual smoke tests**: Playwright screenshots per map on web, `--write-movie` frame captures in Godot.
 
 ## Input Commands
 
-The sim's only input is one command per tick, in a format shared by both engines and used by scenarios and demos. Values are quantized so replays are exact:
+The sim's only input is one command per tick, in a format shared by both engines and used by scenarios and demos. Values are quantized so replays are exact. The schema is `spec/schemas/input_command.schema.json`:
 
-- View angles are absolute, not deltas: yaw and pitch as 16-bit integers, 65536 units per full turn (Quake's scheme). Presentation accumulates mouse input at full precision and quantizes when building the command.
-- Movement: forward and side as integers from -127 to 127, scaled to max speed by the sim.
-- Buttons: a bitfield (attack, jump).
+- View angles are absolute, not deltas: yaw and pitch as 16-bit integers, 65536 units per full turn (Quake's scheme). Yaw 0 faces +x (east) and increases counterclockwise; pitch is positive looking up. Presentation accumulates mouse input at full precision and quantizes when building the command.
+- Movement: forward and side as integers from -127 to 127 (positive is forward and right), scaled to max speed by the sim.
+- Buttons: a bitfield (1 = attack, 2 = jump).
 - Weapon select: 0 for no change, otherwise a weapon slot number.
-- **Compile check**: CI compiles every map in fast check mode and fails on leaks, missing textures, or errors. It runs only when map-related files change (see DECISIONS.md).
-- **Visual smoke tests**: Playwright screenshots per map on web, `--write-movie` frame captures in Godot.
 
 ## Evaluation and Decision
 

@@ -1,0 +1,27 @@
+{
+  "$schema": "./schemas/scenario.schema.json",
+  "description": "Running into an 18-unit step walks up it without jumping (step height is 18).",
+  "status": "unverified",
+  "map": "test_movement",
+  "duration": 2.5,
+  "start": { "marker": "step18_start", "yaw": 0 },
+  "inputs": [
+    { "until": 2.5, "forward": 127 }
+  ],
+  "expect": [
+    {
+      "at": 1.0,
+      "note": "Past the step's edge (x = 256) and standing on it: 18 + 24 = 42.",
+      "position": [null, 144, 42],
+      "tolerance": 0.5,
+      "on_ground": true
+    },
+    {
+      "at": 2.5,
+      "note": "Still on the step, stopped by the lane's end wall at x = 640 (640 - 16 = 624).",
+      "position": [624, 144, 42],
+      "tolerance": 0.5,
+      "on_ground": true
+    }
+  ]
+}

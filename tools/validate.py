@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Validate data/*.json against data/schemas/, then run cross-file checks.
+"""Validate data and test scenarios against their schemas, then run cross-file checks.
 
-Each data/<name>.json is validated against data/schemas/<name>.schema.json.
+Each data/<name>.json is validated against data/schemas/<name>.schema.json, and
+each spec/<name>.json scenario against spec/schemas/scenario.schema.json.
 This implements the subset of JSON Schema (draft 2020-12) that our schemas use.
 Any other keyword in a schema is an error, so a schema can never silently check
 less than it appears to. Editors like VS Code still validate the same files
@@ -10,13 +11,18 @@ with full JSON Schema through each file's "$schema" key.
 Supported keywords: type, properties, required, additionalProperties,
 propertyNames, items, minItems, maxItems, minimum, maximum, exclusiveMinimum,
 exclusiveMaximum, enum, const, pattern, and $ref (within a schema file or to
-another file in data/schemas).
+another file in the same schemas folder).
 
 Cross-file checks:
     - the player's weapons and starting weapon exist in weapons.json
     - weapon slots are unique
     - enemy classnames are defined in the TrenchBroom FGD
     - hull mins are below maxs on every axis
+    - each scenario's map exists, and every marker it names is an info_marker in
+      that map (marker names must be unique within a map)
+    - scenario input segments are in order and fit the duration; checks happen
+      within the duration; position and velocity checks have a tolerance
+    - scenario weapon selections are real weapon slots
 
 Usage:
     python tools/validate.py
@@ -33,7 +39,10 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = REPO_ROOT / "data"
 SCHEMA_DIR = DATA_DIR / "schemas"
-FGD_PATH = REPO_ROOT / "maps" / "trenchbroom" / "hollowcoil.fgd"
+SPEC_DIR = REPO_ROOT / "spec"
+SPEC_SCHEMA_DIR = SPEC_DIR / "schemas"
+MAPS_DIR = REPO_ROOT / "maps"
+FGD_PATH = MAPS_DIR / "trenchbroom" / "hollowcoil.fgd"
 
 VALIDATION_KEYWORDS = {
     "type", "properties", "required", "additionalProperties", "propertyNames", "items", "minItems", "maxItems",
@@ -198,35 +207,105 @@ def cross_check(data: dict[str, Any], classnames: set[str]) -> list[str]:
     return errors
 
 
-def main() -> int:
-    validator = Validator()
-    data: dict[str, Any] = {}
+def map_markers(map_path: Path) -> tuple[dict[str, list[float]], list[str]]:
+    """info_marker origins by name from a .map file, plus any problems (such as duplicate names)."""
+    markers: dict[str, list[float]] = {}
+    problems: list[str] = []
+    depth, entity = 0, {}
+    for line in map_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line.startswith("//"):
+            continue
+        if line == "{":
+            depth += 1
+            if depth == 1:
+                entity = {}
+        elif line == "}":
+            if depth == 1 and entity.get("classname") == "info_marker":
+                name = entity.get("name", "")
+                if name in markers:
+                    problems.append(f"{map_path.name}: marker name {name!r} is used more than once")
+                markers[name] = [float(v) for v in entity.get("origin", "0 0 0").split()]
+            depth -= 1
+        elif depth == 1 and line.startswith('"'):
+            match = re.fullmatch(r'"([^"]*)"\s+"([^"]*)"', line)
+            if match:
+                entity[match[1]] = match[2]
+    return markers, problems
+
+
+def scenario_check(name: str, scenario: dict, weapon_slots: set[int], maps_dir: Path = MAPS_DIR) -> list[str]:
+    """Checks on one scenario that its schema can't express. Assumes it passed the schema."""
+    label = f"spec/{name}.json"
+    errors: list[str] = []
+    map_path = maps_dir / f"{scenario['map']}.map"
+    if not map_path.is_file():
+        return [f"{label}: map {scenario['map']!r} not found ({map_path.name})"]
+    markers, problems = map_markers(map_path)
+    errors += problems
+
+    named = [scenario["start"]["marker"]] + [e["near_marker"]["name"] for e in scenario["expect"] if "near_marker" in e]
+    for marker in named:
+        if marker not in markers:
+            errors.append(f"{label}: marker {marker!r} is not an info_marker in {map_path.name}")
+
+    duration = scenario["duration"]
+    previous = 0.0
+    for i, segment in enumerate(scenario["inputs"]):
+        if segment["until"] <= previous:
+            errors.append(f"{label}: inputs[{i}].until ({segment['until']}) must be after {previous}")
+        previous = segment["until"]
+        if segment.get("weapon", 0) and segment["weapon"] not in weapon_slots:
+            errors.append(f"{label}: inputs[{i}].weapon {segment['weapon']} is not a weapon slot in weapons.json")
+    if previous > duration:
+        errors.append(f"{label}: inputs run until {previous}, past the duration {duration}")
+
+    for i, expectation in enumerate(scenario["expect"]):
+        if expectation["at"] > duration:
+            errors.append(f"{label}: expect[{i}].at ({expectation['at']}) is past the duration {duration}")
+        if ("position" in expectation or "velocity" in expectation) and "tolerance" not in expectation:
+            errors.append(f"{label}: expect[{i}] checks position or velocity but has no tolerance")
+    return errors
+
+
+def validate_files(paths: list[Path], label_dir: str, validator: Validator, schema_for) -> tuple[dict[str, Any], bool]:
+    """Validate each file against its schema, printing results. Returns the valid files by name and whether any failed."""
+    valid: dict[str, Any] = {}
     failed = False
-    for path in sorted(DATA_DIR.glob("*.json")):
-        name = path.stem
-        label = f"data/{path.name}"
+    for path in paths:
         try:
             value = json.loads(path.read_text(encoding="utf-8"))
-            errors = validator.validate(value, f"{name}.schema.json")
+            errors = validator.validate(value, schema_for(path))
         except json.JSONDecodeError as e:
             errors = [f"invalid JSON: {e}"]
         except SchemaError as e:
             errors = [f"schema problem: {e}"]
-        print(f"{'ok  ' if not errors else 'FAIL'}  {label}")
+        print(f"{'ok  ' if not errors else 'FAIL'}  {label_dir}/{path.name}")
         for error in errors:
             print(f"        {error}")
         failed |= bool(errors)
         if not errors:
-            data[name] = value
+            valid[path.stem] = value
+    return valid, failed
+
+
+def main() -> int:
+    data, data_failed = validate_files(
+        sorted(DATA_DIR.glob("*.json")), "data", Validator(SCHEMA_DIR), lambda p: f"{p.stem}.schema.json")
+    scenarios, spec_failed = validate_files(
+        sorted(SPEC_DIR.glob("*.json")), "spec", Validator(SPEC_SCHEMA_DIR), lambda p: "scenario.schema.json")
 
     missing = {"player", "weapons", "enemies"} - set(data)
-    if failed or missing:
-        if missing and not failed:
+    if data_failed or spec_failed or missing:
+        if missing and not data_failed:
             print(f"FAIL  missing data files: {', '.join(sorted(missing))}")
         print("cross-file checks skipped until every file is valid")
         return 1
 
     errors = cross_check(data, fgd_classnames())
+    slots = {weapon["slot"] for weapon in data["weapons"]["weapons"].values()}
+    for name, scenario in scenarios.items():
+        errors += scenario_check(name, scenario, slots)
     print(f"{'ok  ' if not errors else 'FAIL'}  cross-file checks")
     for error in errors:
         print(f"        {error}")

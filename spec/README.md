@@ -1,5 +1,32 @@
 # spec
 
-Engine-neutral test scenarios in JSON (Phase 0.8). Each scenario names a map, a starting state, a sequence of per-tick input commands, and expectations at given ticks with tolerances. Both engines run every scenario.
+Engine-neutral test scenarios. Both engines run every scenario here and must pass the same expectations. Run `python tools/validate.py` to check them; CI does on every push.
 
-The input command format is described in `docs/PLAN.md` under Input Commands.
+- `*.json`: scenarios, validated against `schemas/scenario.schema.json`
+- `schemas/input_command.schema.json`: the per-tick input command, shared by both engines, scenarios, and demos
+
+## Scenario format
+
+A scenario names a map, a start (an `info_marker` plus facing), a timeline of input segments, and expectations at given times. See the schema's descriptions for every field, and the existing scenarios for examples.
+
+Each input segment holds one set of inputs until its `until` time. View angles (`yaw`, `pitch`) carry over to later segments when omitted; everything else (`forward`, `side`, `jump`, `attack`, `weapon`) is neutral unless the segment sets it. After the last segment, inputs are neutral with the view held.
+
+Expectations check the player's origin (`position`), `velocity`, `on_ground`, and distance to a marker (`near_marker`). A `null` axis in `position` or `velocity` is not checked.
+
+## Conversion rules
+
+Both engines must convert scenarios to ticks and input commands exactly the same way:
+
+- **Time to ticks:** `ticks(t) = floor(t * tick_rate + 0.5)`, using the sim's tick-rate constant.
+- **Segments:** segment *i* supplies the commands for ticks `ticks(previous until)` up to but not including `ticks(until)`, where the first segment starts at tick 0.
+- **Expectations:** a check `at` time *t* runs after `ticks(t)` ticks have been simulated.
+- **Angles:** `units(degrees) = floor(degrees * 65536 / 360 + 0.5)`. Yaw is then taken modulo 65536. Yaw 0 faces +x (east) and 90 faces +y (north). Pitch is positive looking up.
+- **Buttons:** `jump` sets bit 2 and `attack` sets bit 1 of the command's `buttons`.
+- **Start state:** the player spawns at the start marker's origin, on the ground, at rest, at full health, holding the starting weapon ready to fire. The RNG is seeded with `seed` (default 0).
+
+Scenario times are in seconds, not ticks, so scenarios survive tick-rate experiments. Write times that land on whole ticks at 60 Hz (multiples of 1/60 s, such as 0.05 or 0.1) so the rounding never matters at the current rate.
+
+## Status
+
+- `unverified`: written without running in an engine. The first time an engine runs it, expectations and input timing may be tuned once to match correct behavior, with the reason in the commit message. Then mark it `verified`.
+- `verified`: an engine has passed it. From then on, the testing rules in `CLAUDE.md` apply: never change expectations just to make a failing test pass.

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scenario.schema.json",
+  "title": "Scenario",
+  "description": "An engine-neutral test: a map, a start, a timeline of inputs, and expectations. Times are in seconds and convert to ticks as described in spec/README.md.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "description": { "description": "What the scenario shows, in a sentence or two.", "type": "string" },
+    "status": {
+      "description": "unverified: written without an engine run; expectations may be tuned once on first run. verified: an engine has passed it; expectations change only for intentional behavior changes.",
+      "enum": ["unverified", "verified"]
+    },
+    "map": { "description": "Map name, as in maps/<name>.map.", "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "seed": { "description": "Seed for the sim's RNG. Defaults to 0.", "type": "integer", "minimum": 0 },
+    "duration": { "description": "Total time to simulate, in seconds.", "type": "number", "exclusiveMinimum": 0, "maximum": 600 },
+    "start": {
+      "description": "The player spawns at the marker's origin, on the ground, at rest, holding the starting weapon ready to fire.",
+      "type": "object",
+      "properties": {
+        "marker": { "description": "Name of an info_marker in the map.", "type": "string" },
+        "yaw": { "description": "Facing in degrees; 0 is east (+x), 90 is north (+y).", "type": "number", "minimum": 0, "exclusiveMaximum": 360 },
+        "pitch": { "description": "Pitch in degrees; positive looks up. Defaults to 0.", "type": "number", "minimum": -90, "maximum": 90 }
+      },
+      "required": ["marker", "yaw"],
+      "additionalProperties": false
+    },
+    "inputs": {
+      "description": "Consecutive segments. Each holds one set of inputs from the previous segment's end (or 0) until its own 'until'. After the last segment, inputs are neutral with the view held.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/segment" }
+    },
+    "expect": {
+      "description": "Checks on the player's state at given times.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/expectation" }
+    }
+  },
+  "required": ["description", "status", "map", "duration", "start", "inputs", "expect"],
+  "additionalProperties": false,
+  "$defs": {
+    "segment": {
+      "type": "object",
+      "properties": {
+        "until": { "description": "End time of this segment in seconds; must increase from segment to segment.", "type": "number", "exclusiveMinimum": 0 },
+        "yaw": { "description": "View yaw in degrees. Carries over from the previous segment (or the start) when omitted.", "type": "number", "minimum": 0, "exclusiveMaximum": 360 },
+        "pitch": { "description": "View pitch in degrees, positive up. Carries over when omitted.", "type": "number", "minimum": -90, "maximum": 90 },
+        "forward": { "$ref": "input_command.schema.json#/properties/forward" },
+        "side": { "$ref": "input_command.schema.json#/properties/side" },
+        "jump": { "description": "Hold jump. Defaults to false in each segment.", "type": "boolean" },
+        "attack": { "description": "Hold attack. Defaults to false in each segment.", "type": "boolean" },
+        "weapon": { "$ref": "input_command.schema.json#/properties/weapon" }
+      },
+      "required": ["until"],
+      "additionalProperties": false
+    },
+    "expectation": {
+      "type": "object",
+      "properties": {
+        "at": { "description": "Time in seconds at which to check.", "type": "number", "minimum": 0 },
+        "note": { "description": "Why this check matters, for whoever reads a failure.", "type": "string" },
+        "position": { "description": "Expected player origin; null skips an axis. Needs a tolerance.", "$ref": "#/$defs/vec3_or_null" },
+        "velocity": { "description": "Expected velocity in units per second; null skips an axis. Needs a tolerance.", "$ref": "#/$defs/vec3_or_null" },
+        "tolerance": { "description": "Allowed difference per checked axis of position and velocity.", "type": "number", "minimum": 0 },
+        "on_ground": { "type": "boolean" },
+        "near_marker": {
+          "description": "The player origin is within this distance of a marker's origin.",
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "within": { "type": "number", "exclusiveMinimum": 0 }
+          },
+          "required": ["name", "within"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["at"],
+      "additionalProperties": false
+    },
+    "vec3_or_null": {
+      "type": "array",
+      "items": { "type": ["number", "null"] },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

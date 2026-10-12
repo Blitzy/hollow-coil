@@ -1,0 +1,32 @@
+{
+  "$schema": "./schemas/scenario.schema.json",
+  "description": "A scripted run through the test_movement course reaches the finish: stairs, two ramps, a jump over the gap, a drop, and a jump up the ledge. Jump times are estimated from the movement constants (top speed 320, a full-speed jump covers about 216 units) and are expected to need tuning on the first engine run.",
+  "status": "unverified",
+  "map": "test_movement",
+  "duration": 8.5,
+  "start": { "marker": "course_start", "yaw": 0 },
+  "inputs": [
+    { "until": 4.45, "forward": 127 },
+    { "until": 4.5, "forward": 127, "jump": true },
+    { "until": 6.4, "forward": 127 },
+    { "until": 6.45, "forward": 127, "jump": true },
+    { "until": 8.5, "forward": 127 }
+  ],
+  "expect": [
+    {
+      "at": 5.5,
+      "note": "Cleared the gap: standing on the landing platform (64 + 24 = 88). Takeoff must happen with the origin between about x = 1290 and 1392.",
+      "position": [null, -208, 88],
+      "tolerance": 1,
+      "on_ground": true
+    },
+    {
+      "at": 8.5,
+      "note": "On the finish ledge (32 + 24 = 56). Takeoff for the ledge jump must happen with the origin between about x = 1897 and 2015.",
+      "position": [null, -208, 56],
+      "tolerance": 1,
+      "on_ground": true,
+      "near_marker": { "name": "finish", "within": 64 }
+    }
+  ]
+}

@@ -154,5 +154,87 @@ class CrossCheckTests(unittest.TestCase):
         self.assertEqual(errors, ["player.json: hull mins must be below maxs on every axis"])
 
 
+
+def load_scenario(name: str) -> dict:
+    return json.loads((validate.SPEC_DIR / f"{name}.json").read_text(encoding="utf-8"))
+
+
+class ScenarioTests(unittest.TestCase):
+    SLOTS = {1, 2}
+
+    def setUp(self) -> None:
+        self.validator = validate.Validator(validate.SPEC_SCHEMA_DIR)
+
+    def check(self, scenario: dict) -> list[str]:
+        return validate.scenario_check("test", scenario, self.SLOTS)
+
+    def test_every_scenario_passes_schema_and_checks(self) -> None:
+        for path in sorted(validate.SPEC_DIR.glob("*.json")):
+            with self.subTest(scenario=path.stem):
+                scenario = load_scenario(path.stem)
+                self.assertEqual(self.validator.validate(scenario, "scenario.schema.json"), [])
+                self.assertEqual(validate.scenario_check(path.stem, scenario, self.SLOTS), [])
+
+    def test_schema_catches_mistakes(self) -> None:
+        cases = [
+            (lambda s: s["inputs"][0].__setitem__("forward", 128), "$.inputs[0].forward: 128 is above the maximum 127"),
+            (lambda s: s.__setitem__("status", "done"), "$.status: 'done' is not one of ['unverified', 'verified']"),
+            (lambda s: s["start"].__setitem__("yaw", 360), "$.start.yaw: 360 must be less than 360"),
+            (lambda s: s["expect"][0].__setitem__("position", [1, 2]), "$.expect[0].position: needs at least 3 items, has 2"),
+        ]
+        for mutate, expected in cases:
+            with self.subTest(expected=expected):
+                scenario = load_scenario("step_18_succeeds")
+                mutate(scenario)
+                self.assertIn(expected, self.validator.validate(scenario, "scenario.schema.json"))
+
+    def test_unknown_map(self) -> None:
+        scenario = load_scenario("step_18_succeeds")
+        scenario["map"] = "no_such_map"
+        self.assertEqual(self.check(scenario), ["spec/test.json: map 'no_such_map' not found (no_such_map.map)"])
+
+    def test_unknown_markers(self) -> None:
+        scenario = load_scenario("movement_course")
+        scenario["start"]["marker"] = "nowhere"
+        scenario["expect"][-1]["near_marker"]["name"] = "also_nowhere"
+        errors = self.check(scenario)
+        self.assertIn("spec/test.json: marker 'nowhere' is not an info_marker in test_movement.map", errors)
+        self.assertIn("spec/test.json: marker 'also_nowhere' is not an info_marker in test_movement.map", errors)
+
+    def test_segment_order_and_duration(self) -> None:
+        scenario = load_scenario("movement_course")
+        scenario["inputs"][1]["until"] = 4.0  # before the previous segment's 4.45
+        scenario["duration"] = 8.0  # inputs run until 8.5
+        scenario["expect"][-1]["at"] = 9.0
+        errors = self.check(scenario)
+        self.assertIn("spec/test.json: inputs[1].until (4.0) must be after 4.45", errors)
+        self.assertIn("spec/test.json: inputs run until 8.5, past the duration 8.0", errors)
+        self.assertIn("spec/test.json: expect[1].at (9.0) is past the duration 8.0", errors)
+
+    def test_numeric_checks_need_a_tolerance(self) -> None:
+        scenario = load_scenario("step_20_blocks")
+        del scenario["expect"][0]["tolerance"]
+        self.assertEqual(self.check(scenario), ["spec/test.json: expect[0] checks position or velocity but has no tolerance"])
+
+    def test_weapon_must_be_a_real_slot(self) -> None:
+        scenario = load_scenario("step_18_succeeds")
+        scenario["inputs"][0]["weapon"] = 7
+        self.assertEqual(self.check(scenario), ["spec/test.json: inputs[0].weapon 7 is not a weapon slot in weapons.json"])
+
+    def test_map_markers_reads_names_and_origins(self) -> None:
+        markers, problems = validate.map_markers(validate.MAPS_DIR / "test_movement.map")
+        self.assertEqual(problems, [])
+        self.assertEqual(markers["step18_start"], [64.0, 144.0, 24.0])
+        self.assertIn("finish", markers)
+
+    def test_duplicate_marker_names_are_reported(self) -> None:
+        tmp = Path(tempfile.mkdtemp(prefix="hc-map-"))
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        entity = '{\n"classname" "info_marker"\n"name" "here"\n"origin" "0 0 24"\n}\n'
+        (tmp / "dup.map").write_text('{\n"classname" "worldspawn"\n}\n' + entity + entity, encoding="utf-8")
+        _, problems = validate.map_markers(tmp / "dup.map")
+        self.assertEqual(problems, ["dup.map: marker name 'here' is used more than once"])
+
+
 if __name__ == "__main__":
     unittest.main()

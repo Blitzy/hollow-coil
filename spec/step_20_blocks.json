@@ -1,0 +1,21 @@
+{
+  "$schema": "./schemas/scenario.schema.json",
+  "description": "Running into a 20-unit step is blocked: it is taller than the 18-unit step height, so the player stops at its face.",
+  "status": "unverified",
+  "map": "test_movement",
+  "duration": 2.5,
+  "start": { "marker": "step20_start", "yaw": 0 },
+  "inputs": [
+    { "until": 2.5, "forward": 127 }
+  ],
+  "expect": [
+    {
+      "at": 2.5,
+      "note": "Stopped against the step's face at x = 256 (256 - 16 = 240), still on the lane floor, not moving.",
+      "position": [240, 288, 24],
+      "velocity": [0, 0, 0],
+      "tolerance": 0.5,
+      "on_ground": true
+    }
+  ]
+}

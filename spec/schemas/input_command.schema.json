@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "input_command.schema.json",
+  "title": "Input command",
+  "description": "The sim's only input: one command per tick. All values are integers so commands replay exactly. Shared by both engines, scenarios, and demos.",
+  "type": "object",
+  "properties": {
+    "yaw": {
+      "description": "Absolute view yaw in angle units, 65536 per full turn. 0 faces +x (east), 16384 faces +y (north); increases counterclockwise seen from above.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "pitch": {
+      "description": "Absolute view pitch in angle units, 65536 per full turn. Positive looks up; 16384 is straight up.",
+      "type": "integer",
+      "minimum": -16384,
+      "maximum": 16384
+    },
+    "forward": {
+      "description": "Forward (+) or back (-) movement; 127 is full speed.",
+      "type": "integer",
+      "minimum": -127,
+      "maximum": 127
+    },
+    "side": {
+      "description": "Right (+) or left (-) movement; 127 is full speed.",
+      "type": "integer",
+      "minimum": -127,
+      "maximum": 127
+    },
+    "buttons": {
+      "description": "Bitfield of held buttons: 1 = attack, 2 = jump.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "weapon": {
+      "description": "Weapon slot to switch to this tick, or 0 for no change. Slots are defined in data/weapons.json.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9
+    }
+  },
+  "required": ["yaw", "pitch", "forward", "side", "buttons", "weapon"],
+  "additionalProperties": false
+}
