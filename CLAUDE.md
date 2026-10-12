@@ -45,6 +45,15 @@ The simulation is strictly separated from presentation. These rules are not opti
 - Godot: GDScript with static typing. Keep game logic in plain classes so most tests run without scenes.
 - Prefer small, readable modules over clever abstractions.
 
+## Commit Messages
+
+Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`, with the summary in the imperative and lowercase, no trailing period.
+
+- Types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`, `ci`, `build`, `style`, `revert`.
+- Scope is optional. Use the area touched: `web`, `godot`, `sim`, `maps`, `data`, `spec`, `demos`, `tools`, `ci`.
+- Breaking changes to data formats, scenario formats, or demo compatibility get a `!` after the type (`feat(data)!: ...`) and a `BREAKING CHANGE:` footer.
+- Examples: `feat(sim): add air acceleration`, `fix(godot): stop step-up through ceilings`, `test(spec): add 20-unit step scenario`, `chore: update gitignore`.
+
 ## Licensing
 
 - Code is GPLv3 or later, with an additional permission for platform SDKs (`LICENSE`, `LICENSE-EXCEPTION.md`).
