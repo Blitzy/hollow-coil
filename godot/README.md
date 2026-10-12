@@ -15,9 +15,12 @@ Run these from the repo root. The test runner finds Godot through the `GODOT` en
 - `src/sim/`: the simulation, in plain statically typed classes (`RefCounted`, never nodes), so tests run without scenes. `tests/test_sim_purity.gd` rejects scene-tree, clock, random, file, input, and rendering APIs, and 32-bit `Vector3`, in this folder.
   - `math/vec3.gd`: `Vec3`, a 64-bit vector. Official Godot builds have 32-bit `Vector3`; the sim uses `Vec3` so its math matches the web build's. `to_vector3()` converts for rendering.
   - `map/`: the `.map` parser (`MapParser`, also reads `.bsp` entity text), with `MapEntity` and `MapFace`
-  - `collision/`: planes (`CollisionPlane`, named to avoid Godot's built-in `Plane`), windings, and brushes with qbsp-matching bevels
+  - `collision/`: planes (`CollisionPlane`, named to avoid Godot's built-in `Plane`), windings, brushes with qbsp-matching bevels, and box traces (`Trace`)
+  - `player/`: Quake-style player movement (`PlayerMovement`) and the player's physical state (`PlayerBody`)
+  - `input_command.gd`: the per-tick input command, matching `spec/schemas/input_command.schema.json`
+  - `player_data.gd`: `data/player.json` as the sim uses it (callers load the file)
   - `constants.gd`: the tick rate and contents bits
 - `src/content_paths.gd`: finds `maps/`, `textures/`, and `data/` files in the content directories listed in `HOLLOWCOIL_CONTENT`, then the repo root. The game reads them from outside the Godot project, so the same files serve both engines and the tools.
-- `tests/`: gdUnit4 suites, mirroring `src/`. The qbsp bevel fixture is shared with the web build (`web/tests/fixtures/bevels`).
+- `tests/`: gdUnit4 suites, mirroring `src/`. `tests/helpers/worlds.gd` builds small box-and-ramp worlds. The qbsp bevel fixture is shared with the web build (`web/tests/fixtures/bevels`).
 
 Commit the `.gd.uid` files Godot creates next to scripts; they are the scripts' stable IDs. Movement and collision follow `docs/MOVEMENT.md`, and the code is ported from the web build's sim, file for file where possible, so the two stay easy to compare.
