@@ -54,7 +54,7 @@ Out of scope for the spike:
 /spec        Engine-neutral test scenarios (JSON)
 /tools       compile script, bsp dump tool, schema validation
 /build       Compiled .bsp output (gitignored)
-/demos       Golden demo recordings for regression tests
+/demos       Golden demo recordings for regression tests, per engine (/demos/web, /demos/godot)
 /web         TypeScript + Three.js implementation
 /godot       Godot 4.7 implementation
 /docs        PLAN.md, DECISIONS.md
@@ -108,7 +108,7 @@ Done once, before either engine.
   - `test_combat`: open arena with cover pieces and walls that block line of sight
   - `greybox_01`: room, corridor, room, with two enemies and real lighting
 - [ ] 0.7 Data files and JSON Schemas for movement, weapons, and enemies, using the starting values above, validated in CI.
-- [ ] 0.8 Spec scenario format plus the first scenarios (see Testing below).
+- [ ] 0.8 Input command format (see Input Commands below), spec scenario format, and the first scenarios (see Testing below).
 
 Done when every map compiles cleanly in CI and all data validates.
 
@@ -193,6 +193,16 @@ Mostly hands-on tuning by Ryan, with few tests.
 - **Unit tests** per engine: Vitest for web (sim runs in Node with no Three.js imports), gdUnit4 for Godot via `godot --headless`.
 - **Shared scenarios** in /spec: each names a map, a starting state, an input sequence, and expectations at given ticks with tolerances. Both engines run every scenario.
 - **Golden demos** in /demos: recorded inputs plus keyframe snapshots and a per-tick state hash. CI replays them and fails at the first divergent tick. Demos are only valid at the tick rate they were recorded with, so any tick rate experiments (such as 35 Hz) happen before recording goldens.
+- **Demos are per engine.** The web build uses 64-bit floats and Godot's vectors use 32-bit floats, so state hashes can't match across engines. Each engine records and replays its own goldens in /demos/web and /demos/godot. Cross-engine agreement is checked by the shared /spec scenarios, which use tolerances. The input command format is shared, so the same recorded inputs can drive both engines.
+
+## Input Commands
+
+The sim's only input is one command per tick, in a format shared by both engines and used by scenarios and demos. Values are quantized so replays are exact:
+
+- View angles are absolute, not deltas: yaw and pitch as 16-bit integers, 65536 units per full turn (Quake's scheme). Presentation accumulates mouse input at full precision and quantizes when building the command.
+- Movement: forward and side as integers from -127 to 127, scaled to max speed by the sim.
+- Buttons: a bitfield (attack, jump).
+- Weapon select: 0 for no change, otherwise a weapon slot number.
 - **Compile check**: CI compiles every map and fails on leaks or errors.
 - **Visual smoke tests**: Playwright screenshots per map on web, `--write-movie` frame captures in Godot.
 
