@@ -45,6 +45,13 @@ The simulation is strictly separated from presentation. These rules are not opti
 - Godot: GDScript with static typing. Keep game logic in plain classes so most tests run without scenes.
 - Prefer small, readable modules over clever abstractions.
 
+## Licensing
+
+- Code is GPLv3 or later, with an additional permission for platform SDKs (`LICENSE`, `LICENSE-EXCEPTION.md`).
+- Adapting code from Quake, ericw-tools, or other GPLv2-or-later / GPLv3 projects is allowed. Credit the source in a comment next to the adapted code.
+- Do not copy code from GPLv2-only projects; it cannot be combined with GPLv3.
+- New dependencies must have GPLv3-compatible licenses (MIT, BSD, Apache-2.0, LGPL, GPLv3, and similar). Ask before adding anything else.
+
 ## Commands
 
 To be filled in during Phase 0: install, run each engine, run tests, compile maps, dump a .bsp.

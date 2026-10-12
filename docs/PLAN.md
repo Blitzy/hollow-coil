@@ -44,6 +44,7 @@ Out of scope for the spike:
 - Enemy animation is stepped at about 10 fps rather than smoothly blended.
 - Lighting is baked by ericw-tools, not by Blender or Godot LightmapGI.
 - Sim and presentation are strictly separated (rules in CLAUDE.md).
+- License: GPLv3 or later, with an additional permission for platform SDKs (see DECISIONS.md).
 
 ## Repo Layout
 
@@ -206,4 +207,3 @@ After M4 in both engines, or earlier if the answer is obvious, compare against t
 - Collision source for .bsp builds: qbsp `-wrbrushes` (BSPX brush list), Quake 2 BSP format (brushes are native), or load the .map alongside the .bsp. Investigate in Phase 0.
 - Enemy navigation: Quake-style `movetogoal` (step toward the goal, try other directions when blocked) versus something smarter. Start with the Quake approach.
 - Cross-browser determinism (custom trig or lookup tables), deferred until demos need to play across browsers
-- License: GPL or MIT
