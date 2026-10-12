@@ -2,6 +2,14 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-11: The repo root is the game root (textures/ next to maps/)
+
+**Decision:** Textures live in a top-level `textures/` folder beside `maps/`, so the repo root is the game root. TrenchBroom's game path and the compilers' `-basedir`/`-gamedir` point at the repo root. This replaces the earlier `maps/textures/` location.
+
+**Why:** ericw-tools and Quake-family tools assume the standard layout: the folder containing `maps/` is the game folder, with `textures/` beside it. Tools that infer paths from a map's location, such as lightpreview's viewer, which ignores path options, couldn't find textures under `maps/textures/`. With the standard layout, qbsp finds every texture with no path options at all.
+
+**Alternatives considered:** Keeping `maps/textures/` and passing paths everywhere (works for our scripts but not for tools that infer paths); a link from `textures/` to `maps/textures/` (fragile on Windows and confusing).
+
 ## 2026-10-11: CI compiles maps in check mode, only when maps change
 
 **Decision:** `tools/compile.py` has two lighting modes: `check` (fast, the default) and `release` (full quality, `-extra4`). CI compiles every map in check mode, in a separate `maps.yml` workflow that runs only when map-related files change (maps, textures, the compile and setup scripts, the tool versions). Release builds run locally or through a manual run of that workflow, which uploads the .bsp files as an artifact. Compiled-output caching is deferred until the number of maps makes it worthwhile.

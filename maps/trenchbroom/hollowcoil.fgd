@@ -17,6 +17,11 @@
     angle(integer) : "Facing direction in degrees (0 = east, 90 = north)" : 0
 ]
 
+@PointClass size(-8 -8 -8, 8 8 8) color(255 0 255) = info_marker : "Named position for test scenarios and tools. Not used by gameplay."
+[
+    name(string) : "Marker name, unique within the map"
+]
+
 @PointClass size(-8 -8 -8, 8 8 8) color(255 255 64) = light : "Point light, baked into lightmaps by ericw-tools"
 [
     light(integer) : "Brightness" : 300

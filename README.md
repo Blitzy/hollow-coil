@@ -27,7 +27,7 @@ Then install the pinned map compiler ([ericw-tools](https://ericw.github.io/eric
 python tools/setup.py
 ```
 
-To edit maps, link the Hollow Coil game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Hollow Coil and set the game path to this repo's `maps` folder:
+To edit maps, link the Hollow Coil game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Hollow Coil and set the game path to the repo root (the folder containing `maps` and `textures`):
 
 ```
 python tools/install_trenchbroom.py
@@ -39,7 +39,8 @@ Build, run, and test instructions for each engine are coming as the prototype ta
 
 | Folder | Contents |
 |---|---|
-| `maps/` | TrenchBroom maps, textures, and editor config |
+| `maps/` | TrenchBroom maps and editor config |
+| `textures/` | Textures (PNG), referenced by name from maps |
 | `data/` | Weapons, enemies, and movement values, with JSON Schemas |
 | `spec/` | Engine-neutral test scenarios |
 | `demos/` | Golden demo recordings, per engine |

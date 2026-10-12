@@ -6,7 +6,7 @@ TrenchBroom always reads the repo's current config and FGD. On Windows this is
 a directory junction (no admin rights needed); elsewhere it is a symlink.
 
 After installing, set the game path in TrenchBroom under
-Preferences > Games > Hollow Coil to this repo's maps folder.
+Preferences > Games > Hollow Coil to the repo root (the folder holding maps/ and textures/).
 
 Usage:
     python tools/install_trenchbroom.py              create the link
@@ -85,7 +85,7 @@ def install(link: Path) -> None:
         raise InstallError(f"{link} exists and is not a link; move or delete it first")
     create_link(link, CONFIG_DIR)
     print(f"installed: {link} -> {CONFIG_DIR}")
-    print(f"Next, in TrenchBroom: Preferences > Games > Hollow Coil, set the game path to {REPO_ROOT / 'maps'}")
+    print(f"Next, in TrenchBroom: Preferences > Games > Hollow Coil, set the game path to {REPO_ROOT}")
 
 
 def uninstall(link: Path) -> None:

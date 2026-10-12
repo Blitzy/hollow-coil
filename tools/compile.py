@@ -29,6 +29,8 @@ from pathlib import Path
 from setup import ericw_tool
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+# The game root holds maps/ and textures/ side by side, the standard Quake layout.
+GAME_DIR = REPO_ROOT
 MAPS_DIR = REPO_ROOT / "maps"
 BUILD_DIR = REPO_ROOT / "build"
 
@@ -89,7 +91,7 @@ def warnings_in(output: str) -> list[str]:
     return [w for w in WARNING.findall(output) if not any(p.search(w) for p in IGNORED_WARNINGS)]
 
 
-def compile_map(map_path: Path, out_dir: Path = BUILD_DIR, mode: str = "check", texture_root: Path = MAPS_DIR) -> Result:
+def compile_map(map_path: Path, out_dir: Path = BUILD_DIR, mode: str = "check", game_dir: Path = GAME_DIR) -> Result:
     """Compile one map to out_dir/<name>.bsp. Side files (logs, .prt, .pts) land next to it."""
     result = Result(map_path.stem)
     start = time.monotonic()
@@ -97,7 +99,8 @@ def compile_map(map_path: Path, out_dir: Path = BUILD_DIR, mode: str = "check", 
     for suffix in OUTPUT_SUFFIXES:
         (out_dir / f"{map_path.stem}{suffix}").unlink(missing_ok=True)
     bsp = out_dir / f"{map_path.stem}.bsp"
-    paths = ["-basedir", str(texture_root), "-gamedir", str(texture_root)]
+    # Passed explicitly because out_dir is not the maps/ folder qbsp would infer them from.
+    paths = ["-basedir", str(game_dir), "-gamedir", str(game_dir)]
 
     rc, output = run([str(ericw_tool("qbsp")), *QBSP_ARGS, *paths, str(map_path), str(bsp)])
     leak = LEAK.search(output)

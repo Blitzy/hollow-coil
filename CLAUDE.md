@@ -17,7 +17,7 @@ The current work plan lives in `docs/PLAN.md`. Decisions and their reasons go in
 
 - Levels are authored in TrenchBroom. The `.map` file is the source of truth.
 - ericw-tools compiles `.map` to `.bsp` and bakes lighting. Both use the Quake 2 file formats (`qbsp -q2bsp`); gameplay is still Quake 1 style.
-- Textures are loose PNGs at `textures/<folder>/<name>.png`, referenced by name. No WADs.
+- Textures are loose PNGs at `textures/<folder>/<name>.png` (top level, next to `maps/`), referenced by name. No WADs. The repo root is the game root, the standard Quake layout that ericw-tools and TrenchBroom expect.
 - Engines load `.map` for fast iteration and tests, and `.bsp` for lit, optimized builds.
 - One entity parser serves both formats. Gameplay collision comes from brush planes, never from engine physics bodies.
 
@@ -70,7 +70,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 - `python -m unittest discover -s tools/tests`: test the tools (needs ericw-tools installed).
 - `python tools/check_files.py`: fail if any tracked file is over 2 MB (runs in CI).
 - `python tools/install_trenchbroom.py`: link `maps/trenchbroom` into TrenchBroom's games folder as "Hollow Coil". `--uninstall` removes the link.
-- `python tools/make_placeholder_textures.py`: regenerate the placeholder PNGs in `maps/textures/dev/`.
+- `python tools/make_placeholder_textures.py`: regenerate the placeholder PNGs in `textures/dev/`.
 
 Still to come: run each engine, run engine tests.
 

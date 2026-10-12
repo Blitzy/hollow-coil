@@ -51,7 +51,8 @@ Out of scope for the spike:
 ## Repo Layout
 
 ```
-/maps        TrenchBroom .map files, game config, FGD, textures
+/maps        TrenchBroom .map files, game config, FGD
+/textures    Textures (PNG), next to /maps so the repo root is the game root
 /data        weapons.json, enemies.json, movement.json, plus JSON Schemas
 /spec        Engine-neutral test scenarios (JSON)
 /tools       compile script, bsp dump tool, schema validation
@@ -103,9 +104,9 @@ Done once, before either engine.
 - [x] 0.1 Scaffold the repo layout and a CI workflow that runs validation and compiles.
 - [x] 0.2 TrenchBroom game config and FGD with worldspawn, info_player_start, monster_shotgunner, and light (including a lightstyle key).
 - [x] 0.3 Placeholder textures: a small set of grid and solid-color PNGs.
-- [x] 0.4 `tools/compile`: runs qbsp (`-q2bsp`) and light on every map, writes to /build, and exits non-zero on leaks or errors with a readable text summary. Missing textures are only warnings in qbsp, so the script treats them as errors. Pass the texture root explicitly (`-basedir`) since output isn't under a `maps/` folder.
+- [x] 0.4 `tools/compile`: runs qbsp (`-q2bsp`) and light on every map, writes to /build, and exits non-zero on leaks or errors with a readable text summary. Missing textures are only warnings in qbsp, so the script treats them as errors. Pass the game root explicitly (`-basedir`, `-gamedir`) since output isn't under a `maps/` folder.
 - [x] 0.5 `tools/bspdump`: prints a .bsp's entities, face count, and lightmap stats as JSON.
-- [ ] 0.6 Maps:
+- [x] 0.6 Maps:
   - `test_movement`: steps at 16, 18, and 20 units, slopes, gaps, ledges, and a finish marker
   - `test_combat`: open arena with cover pieces and walls that block line of sight
   - `greybox_01`: room, corridor, room, with two enemies and real lighting

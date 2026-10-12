@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the placeholder textures in maps/textures/dev/.
+"""Generate the placeholder textures in textures/dev/.
 
 Grid textures are 64x64 with a line every 16 texels and a darker line on the
 tile edge, so at the default scale of 1 they show 16- and 64-unit measurements
@@ -18,7 +18,7 @@ import zlib
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-OUT_DIR = REPO_ROOT / "maps" / "textures" / "dev"
+OUT_DIR = REPO_ROOT / "textures" / "dev"
 SIZE = 64
 MINOR_STEP = 16
 
