@@ -16,7 +16,8 @@ The current work plan lives in `docs/PLAN.md`. Decisions and their reasons go in
 ## Pipeline
 
 - Levels are authored in TrenchBroom. The `.map` file is the source of truth.
-- ericw-tools compiles `.map` to `.bsp` and bakes lighting.
+- ericw-tools compiles `.map` to `.bsp` and bakes lighting. Both use the Quake 2 file formats (`qbsp -q2bsp`); gameplay is still Quake 1 style.
+- Textures are loose PNGs at `textures/<folder>/<name>.png`, referenced by name. No WADs.
 - Engines load `.map` for fast iteration and tests, and `.bsp` for lit, optimized builds.
 - One entity parser serves both formats. Gameplay collision comes from brush planes, never from engine physics bodies.
 

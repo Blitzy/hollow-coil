@@ -13,6 +13,8 @@
 *.lit
 *.lux
 *.lit2
+*.texinfo.json
+*.content.json
 
 # TrenchBroom autosaves
 autosave/

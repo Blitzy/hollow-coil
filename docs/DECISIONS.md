@@ -2,6 +2,35 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-11: Quake 2 map and .bsp formats, with loose PNG textures
+
+**Decision:** Maps are authored in TrenchBroom's Quake 2 (Valve) format and compiled with `qbsp -q2bsp` to Quake 2 .bsp files (IBSP v38). Textures are loose PNGs at `textures/<folder>/<name>.png`. Gameplay stays Quake 1 style; only the file formats come from Quake 2. This settles three open decisions: texture format, colored light storage, and the collision source for .bsp builds.
+
+**Why:** We compiled the same test room (walls, a pillar, a ramp with a sloped plane, three lights, two of them colored) three ways with ericw-tools 2.0.0-alpha11 and opened the results in TrenchBroom 2026.2:
+
+| | Quake 2 + loose PNGs (chosen) | Quake 1 + WAD | Quake 1 + loose PNGs |
+|---|---|---|---|
+| Textures | Referenced by name; engine loads full-color PNGs | 8-bit copies embedded in the .bsp, quantized to a 256-color palette | qbsp cannot find them in any layout |
+| Texture names | Up to 32 characters, folders | Up to 15 characters, flat | n/a |
+| Build step | None | PNG to WAD conversion with palette quantization | n/a |
+| Collision data | Native brushes and sides, including bevel planes added by qbsp | BSPX BRUSHLIST via `-wrbrushes`: exact brushes, no bevels | Same as Quake 1 + WAD |
+| Colored light | Native RGB lightmaps | `.lit` file or BSPX RGBLIGHTING (both worked) | Same as Quake 1 + WAD |
+| TrenchBroom | Works with a custom config (`"extensions": [".png"]`) | Works with a custom config and our own palette | Not tested |
+
+- Quake 2 gives everything we need with no extra build step, and textures stay ordinary PNGs in git that any image editor can open.
+- The bevel planes help directly with box-versus-brush collision, the hardest part of M1.
+- The Quake 1 WAD route works, but visibly shifts texture colors (the palette quantization was obvious in TrenchBroom) and limits names to 15 characters with no folders.
+
+**Notes for implementation:**
+
+- qbsp only warns about missing textures in Quake 2 mode, so the compile script must treat that warning as an error.
+- Quake 2 lightmaps came out about 3x brighter than Quake 1 for the same light values; calibrate in M2.
+- ericw-tools also writes `.texinfo.json`, `.content.json`, `.prt`, and `.log` files next to the output.
+- TrenchBroom picks the game config from the `// Game:` comment at the top of a .map, so it must match our config's name exactly.
+- Optional `.wal_json` files next to textures can set per-texture defaults (contents, surface flags, light value) later.
+
+**Alternatives considered:** Quake 1 + WAD (works, but adds a lossy conversion step and name limits); Quake 1 + loose PNGs (qbsp doesn't support it); always loading collision from the .map alongside the .bsp (unnecessary now that the .bsp has brushes).
+
 ## 2026-10-11: Tools are Python, with pinned versions
 
 **Decision:** Scripts in /tools are written in Python using the standard library. Third-party tool versions live in `tools/versions.json`. ericw-tools is downloaded by `tools/setup.py` into a gitignored `.tools/` folder, checked against a pinned SHA-256, and verified by its version banner. Godot and TrenchBroom are installed by each developer and are not pinned for now.

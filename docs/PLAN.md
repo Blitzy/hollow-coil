@@ -35,6 +35,8 @@ Out of scope for the spike:
 
 - TrenchBroom is the level editor. The .map file is the source of truth.
 - ericw-tools compiles maps: qbsp and light. vis is skipped until profiling shows a need.
+- Maps use the Quake 2 file formats: Quake 2 (Valve) .map files compiled to Quake 2 .bsp (IBSP v38) with `qbsp -q2bsp`. Gameplay stays Quake 1 style; only the file formats are Quake 2's. This gives native brush data for collision (including the compiler's bevel planes) and native colored lightmaps.
+- Textures are loose PNG files in folders, `textures/<folder>/<name>.png`, referenced by name from maps and .bsp files. Engines load the PNGs directly. No WADs and no palette conversion in the pipeline.
 - Both engines load .map (fast iteration and tests, no baked lighting) and .bsp (lightmaps, hidden faces removed).
 - One entity parser serves both loaders. The .bsp entity lump uses the same key/value text as the .map.
 - Gameplay collision is built from brush planes in both loaders, never from engine physics bodies.
@@ -100,8 +102,8 @@ Done once, before either engine.
 
 - [ ] 0.1 Scaffold the repo layout and a CI workflow that runs validation and compiles.
 - [ ] 0.2 TrenchBroom game config and FGD with worldspawn, info_player_start, monster_shotgunner, and light (including a lightstyle key).
-- [ ] 0.3 Placeholder textures: a small set of grid and solid-color textures in a format TrenchBroom and ericw-tools both accept.
-- [ ] 0.4 `tools/compile`: runs qbsp and light on every map, writes to /build, and exits non-zero on leaks or errors with a readable text summary.
+- [ ] 0.3 Placeholder textures: a small set of grid and solid-color PNGs.
+- [ ] 0.4 `tools/compile`: runs qbsp (`-q2bsp`) and light on every map, writes to /build, and exits non-zero on leaks or errors with a readable text summary. Missing textures are only warnings in qbsp, so the script treats them as errors. Pass the texture root explicitly (`-basedir`) since output isn't under a `maps/` folder.
 - [ ] 0.5 `tools/bspdump`: prints a .bsp's entities, face count, and lightmap stats as JSON.
 - [ ] 0.6 Maps:
   - `test_movement`: steps at 16, 18, and 20 units, slopes, gaps, ledges, and a finish marker
@@ -136,13 +138,13 @@ Tests:
 
 - .bsp loader: faces, entities, lightmap data
 - Pack face lightmaps into an atlas and render with a lightmap shader
-- Colored light (see Open Decisions)
+- Colored light from the Quake 2 .bsp's RGB lightmaps. Quake 2 lightmaps came out about 3x brighter than Quake 1 for the same light values in the format spike, so calibrate brightness here.
 - Animated lightstyles as shader uniforms
 
 Tests:
 
 - Entities parsed from .map and .bsp match
-- Collision built from .map and .bsp matches
+- Collision built from .map and .bsp matches. qbsp adds bevel planes to .bsp brushes, so either the .map loader adds the same bevels or the test compares sweep results rather than plane lists.
 - Atlas packing has no overlaps and covers every lit face
 
 ### M3: Weapons
@@ -212,9 +214,6 @@ After M4 in both engines, or earlier if the answer is obvious, compare against t
 
 ## Open Decisions
 
-- Colored light storage: .lit file or BSPX lump
-- Texture source format for TrenchBroom and ericw-tools
-- Collision source for .bsp builds: qbsp `-wrbrushes` (BSPX brush list), Quake 2 BSP format (brushes are native), or load the .map alongside the .bsp. Investigate in Phase 0.
 - Enemy navigation: Quake-style `movetogoal` (step toward the goal, try other directions when blocked) versus something smarter. Start with the Quake approach.
 - Cross-browser determinism (custom trig or lookup tables), deferred until demos need to play across browsers
 - Single entry point for project scripts (an `npm install` / `npm run` equivalent), deferred until after the engine decision
