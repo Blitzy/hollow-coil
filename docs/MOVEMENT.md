@@ -8,6 +8,7 @@ The algorithms are adapted from GPL source code, which our GPLv3 license allows 
 
 - **Player movement:** QuakeWorld `QW/client/pmove.c` (id Software, GPLv2 or later): `PlayerMove`, `PM_CatagorizePosition`, `JumpButton`, `PM_Friction`, `PM_Accelerate`, `PM_AirAccelerate`, `PM_AirMove`, `PM_GroundMove`, `PM_FlyMove`, `PM_ClipVelocity`.
 - **Edge friction:** Quake `WinQuake/sv_user.c` `SV_UserFriction` (id Software, GPLv2 or later).
+- **Same-plane nudge in the slide move:** Quake 3 `code/game/bg_slidemove.c` `PM_SlideMove` (id Software, GPLv2 or later).
 - **Box traces against brushes:** Quake 2 `qcommon/cmodel.c` (id Software, GPLv2 or later): `CM_ClipBoxToBrush`, `CM_TestBoxInBrush`, `CM_BoxTrace`.
 - **Brush planes and bevels from .map files:** ericw-tools 2.0.0-alpha11 `qbsp/map.cc` (GPLv2 or later): `mapface_t::set_planepts`, `AddBrushBevels`.
 
@@ -274,6 +275,9 @@ flyMove():
         if planes.length >= MAX_CLIP_PLANES:
             velocity = 0
             return
+        if dot(t.normal, p) > SAME_PLANE_DOT for any p in planes:
+            velocity += t.normal                    // nudge out along it (see below)
+            continue
         planes.push(t.normal)
         // find a plane whose clipped velocity doesn't push into any other plane
         found = false
@@ -293,6 +297,8 @@ flyMove():
 ```
 
 `original` is the velocity at the start of the call and is not updated between bumps; this matches QuakeWorld.
+
+The same-plane nudge is not in QuakeWorld; it comes from Quake 3, which pairs a slide loop like this one with brush collision like ours. After sliding along a sloped plane, the box rests `DIST_EPSILON` off it, and on the next bump rounding can make the trace report the same plane again with fraction 0. Without the nudge, the plane goes into the list twice, no clipped velocity satisfies both copies, the crease between a plane and itself is zero, and the player stops dead. This showed up as stuttering slides down steep slopes. Nudging the velocity out by the plane's normal (1 unit per second) and retrying avoids it.
 
 ### Ground move (walking, with step-up)
 
@@ -360,6 +366,7 @@ Fixed, in sim code (part of the algorithm, not tuning):
 | `GROUND_NORMAL_Z` | 0.7 | steepest walkable surface (about 45.6°) |
 | `BUMP_COUNT` | 4 | `flyMove` iterations |
 | `MAX_CLIP_PLANES` | 5 | `flyMove` plane limit |
+| `SAME_PLANE_DOT` | 0.99 | `flyMove`: a hit this close to a plane already hit is the same plane |
 | airborne speed | 180 | `categorizePosition`: rising faster than this is never on ground |
 | ground probe | 1 | `categorizePosition` trace distance |
 | edge probe | 16 ahead, 34 down | `friction` drop-off check |
@@ -375,6 +382,7 @@ Each engine tests these in isolation, in addition to the shared `/spec` scenario
 - `friction`: stop-speed floor; edge friction doubles near a drop-off and not on open floor; no friction in the air or on the jump tick.
 - Brush building from a .map: plane equation from three points; a wedge gains the expected axial and edge bevels; a box gains none.
 - Box trace: hit fraction and normal against a box and a slope; `startsolid` and `allsolid`; the 1/32 stand-off; a box sliding along a slope's edge doesn't snag (bevels working).
+- Fly move: sliding down a slope too steep to stand on is continuous (height falls and speed never drops until landing).
 - Step-up: 18 succeeds and 20 blocks (also covered by the scenarios); stepping onto a too-steep surface is refused.
 - Ground: standing on a 0.7-normal slope counts as ground and a steeper one doesn't; rising faster than 180 is never on ground.
 - Jump: holding jump doesn't re-jump on landing; releasing and pressing again does.

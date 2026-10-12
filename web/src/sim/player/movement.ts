@@ -1,9 +1,10 @@
 // Quake-style player movement. Follows docs/MOVEMENT.md, "Player movement".
 // Adapted from QuakeWorld QW/client/pmove.c (id Software, GPLv2 or later), with
-// edge friction from Quake WinQuake/sv_user.c SV_UserFriction (GPLv2 or later).
+// edge friction from Quake WinQuake/sv_user.c SV_UserFriction and the slide
+// move's same-plane nudge from Quake 3 code/game/bg_slidemove.c (both GPLv2 or later).
 
 import { CONTENTS, TICK_RATE } from "../constants";
-import { addScaled, cross, dot, length, scale, sub, vec3, ZERO, type Vec3 } from "../math/vec3";
+import { add, addScaled, cross, dot, length, scale, sub, vec3, ZERO, type Vec3 } from "../math/vec3";
 import { trace, type CollisionWorld, type TraceResult } from "../collision/trace";
 import type { Hull, PlayerData } from "../data";
 import { angleToRadians, BUTTON_JUMP, type InputCommand } from "../input";
@@ -15,6 +16,7 @@ export const STOP_EPSILON = 0.1;
 export const GROUND_NORMAL_Z = 0.7;
 const BUMP_COUNT = 4;
 const MAX_CLIP_PLANES = 5;
+const SAME_PLANE_DOT = 0.99;
 const AIRBORNE_SPEED = 180;
 const GROUND_PROBE = 1;
 const EDGE_PROBE_AHEAD = 16;
@@ -176,6 +178,14 @@ export function flyMove(m: Mover, ctx: MovementContext): void {
     if (planes.length >= MAX_CLIP_PLANES) {
       m.velocity = ZERO;
       return;
+    }
+    // Hitting a plane already hit during this move is a rounding artifact of
+    // sliding along a sloped surface; nudge out along it instead of clipping
+    // again, which would stop the player dead. From Quake 3 code/game/
+    // bg_slidemove.c PM_SlideMove (id Software, GPLv2 or later).
+    if (planes.some((p) => dot(t.normal, p) > SAME_PLANE_DOT)) {
+      m.velocity = add(m.velocity, t.normal);
+      continue;
     }
     planes.push(t.normal);
 

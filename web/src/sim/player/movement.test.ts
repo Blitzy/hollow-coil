@@ -170,6 +170,21 @@ describe("walking and steps", () => {
     expect(end.velocity.x).toBe(0);
   });
 
+  it("slides smoothly down a slope too steep to stand on, without stopping", () => {
+    // Rises 128 over 64 (63 degrees). Sliding along it used to stop dead every so often,
+    // when rounding made the slide hit the same plane twice (fixed with Quake 3's nudge).
+    const steep = context(world(FLOOR, rampX(256, 320, -512, 512, -16, 0, 128), box([320, -512, 0], [640, 512, 128])));
+    const states = run(steep, body(vec3(290, 0, 150)), 1, () => NEUTRAL_COMMAND);
+    const firstContact = states.findIndex((s) => s.velocity.x < 0);
+    const landed = states.findIndex((s) => s.onGround);
+    expect(firstContact).toBeGreaterThan(0);
+    expect(landed).toBeGreaterThan(firstContact);
+    for (let i = firstContact + 1; i < landed; i++) {
+      expect(states[i]!.origin.z, `tick ${i}`).toBeLessThan(states[i - 1]!.origin.z);
+      expect(length(states[i]!.velocity), `tick ${i}`).toBeGreaterThan(length(states[i - 1]!.velocity) - 1e-9);
+    }
+  });
+
   it("refuses to step onto a surface too steep to stand on", () => {
     // Rises 128 over 64 (63 degrees) from x = 256, then a 128-high block.
     const steep = context(world(FLOOR, rampX(256, 320, -512, 512, -16, 0, 128), box([320, -512, 0], [640, 512, 128])));
