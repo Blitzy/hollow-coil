@@ -69,7 +69,7 @@ These are starting points to tune in the feel pass, not final numbers. Units are
 
 Movement (Quake reference values):
 
-- Max ground speed 320, ground accelerate 10, friction 4, stop speed 100
+- Max ground speed 320, ground accelerate 10, friction 4 (doubled over drop-offs), stop speed 100
 - Gravity 800, jump velocity 270, step height 18
 - Air acceleration: accelerate 10 with wish speed capped at 30 (Quake 1 style, allows air strafing)
 
@@ -120,6 +120,8 @@ Done when every map compiles cleanly in CI and all data validates.
 Do each milestone in both engines before moving on, alternating which engine goes first. Record observations in DECISIONS.md after each pair.
 
 ### M1: Walk Around
+
+Both engines follow `docs/MOVEMENT.md` for movement and collision.
 
 - Parse .map, build render geometry, and build collision from brush planes
 - Fixed-tick sim loop, per-tick input commands, snapshot and state hash functions

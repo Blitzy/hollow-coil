@@ -9,6 +9,7 @@
     "max_ground_speed": 320,
     "ground_accelerate": 10,
     "friction": 4,
+    "edge_friction": 2,
     "stop_speed": 100,
     "air_accelerate": 10,
     "air_wish_speed_cap": 30,
