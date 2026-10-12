@@ -2,6 +2,26 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-12: Keep a commercial option open: public code, separable content
+
+**Decision:** This repo holds all code, tools, schemas, test maps, and placeholder content, all under the GPL, and is meant to be public when the project is ready (it's private for now). If Hollow Coil becomes a commercial product, its final content (maps, textures, audio, music, and final tuning data) will live in a separate private repo with its own license. Nothing changes yet, but new work must keep that split possible:
+
+- Engines and tools load content from a content directory (a game directory, like Quake's `id1/`) passed in or configured, with the repo root as the default. Don't hardcode the repo root as the only place content can come from.
+- Content is data only: maps, images, audio, and JSON. No code (scripts, GDScript attached to scenes, map scripting) goes into content; it belongs in this repo under the GPL.
+- This repo stays buildable and playable on its own, with free content such as the test maps and possibly a small free episode later.
+- The project's name and logo may be protected as trademarks, which the GPL doesn't cover.
+
+**Why:**
+
+- This is how id Software shipped Quake after releasing its source under the GPL: the engine is free, and what people buy is the game data. The code and setup docs being public doesn't get in the way of selling content.
+- Under the usual reading of the GPL, data loaded at runtime is a separate work that can have its own license, but code that runs with the engine is covered by the GPL. Keeping code out of content is what makes the split hold up.
+- Anything published under the GPL stays available under it, even if the repo goes private again. The deadline for deciding where an asset lives is before it's committed, so the split has to be planned before real art and levels arrive.
+- Making the content path configurable is cheap now and expensive once both engines and all the tools assume one layout.
+
+**Not yet decided:** The license for free content in this repo (for example CC BY-SA), whether the final levels count as commercial content or stay free, and whether to ask contributors to sign a CLA. Get a short consult with a lawyer who knows open-source licensing before selling anything.
+
+**Alternatives considered:** Keeping the code private for good (loses the open-source goal); everything in one public repo under the GPL (gives up selling content); a non-free license for the code (rejected when GPLv3 was chosen).
+
 ## 2026-10-12: Built with agentic coding; players' content is human-authored
 
 **Decision:** Most of the code is written with an AI coding agent (Claude Code), and a human reviews every change before it's committed. The content players experience is human-authored: levels made by hand in TrenchBroom, plus the weapon and enemy tuning, encounter design, and art direction. The README says this openly.
