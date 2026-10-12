@@ -65,11 +65,13 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 ## Commands
 
 - `python tools/setup.py`: install pinned third-party tools (ericw-tools) into `.tools/`. `--check` verifies without changing anything; `--force` reinstalls.
+- `python tools/compile.py [map ...] [--mode check|release]`: compile maps to `build/<name>.bsp`. Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
+- `python -m unittest discover -s tools/tests`: test the tools (needs ericw-tools installed).
 - `python tools/check_files.py`: fail if any tracked file is over 2 MB (runs in CI).
 - `python tools/install_trenchbroom.py`: link `maps/trenchbroom` into TrenchBroom's games folder as "Hollow Coil". `--uninstall` removes the link.
 - `python tools/make_placeholder_textures.py`: regenerate the placeholder PNGs in `maps/textures/dev/`.
 
-Still to come in Phase 0: run each engine, run tests, compile maps, dump a .bsp.
+Still to come: run each engine, run engine tests, dump a .bsp.
 
 ## Tools
 

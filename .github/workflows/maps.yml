@@ -1,0 +1,74 @@
+name: Maps
+
+# Compiles maps only when something that affects them changes, to save CI
+# minutes (see "CI compiles maps in check mode" in docs/DECISIONS.md).
+# Keep these path lists in sync.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "maps/**"
+      - "tools/compile.py"
+      - "tools/setup.py"
+      - "tools/versions.json"
+      - "tools/tests/**"
+      - ".github/workflows/maps.yml"
+  pull_request:
+    paths:
+      - "maps/**"
+      - "tools/compile.py"
+      - "tools/setup.py"
+      - "tools/versions.json"
+      - "tools/tests/**"
+      - ".github/workflows/maps.yml"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Lighting quality
+        type: choice
+        options: [check, release]
+        default: check
+
+concurrency:
+  group: maps-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    name: Compile maps
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MODE: ${{ inputs.mode || 'check' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Cache tool downloads
+        uses: actions/cache@v6
+        with:
+          path: .tools/downloads
+          key: tools-${{ runner.os }}-${{ hashFiles('tools/versions.json') }}
+
+      - name: Install pinned tools
+        run: python tools/setup.py
+
+      - name: Test tools
+        run: python -m unittest discover -s tools/tests -v
+
+      - name: Compile maps (${{ env.MODE }} mode)
+        run: python tools/compile.py --mode "$MODE"
+
+      - name: Upload release build
+        if: env.MODE == 'release'
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: maps-release
+          path: build/*.bsp
+          retention-days: 7

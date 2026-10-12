@@ -205,7 +205,7 @@ The sim's only input is one command per tick, in a format shared by both engines
 - Movement: forward and side as integers from -127 to 127, scaled to max speed by the sim.
 - Buttons: a bitfield (attack, jump).
 - Weapon select: 0 for no change, otherwise a weapon slot number.
-- **Compile check**: CI compiles every map and fails on leaks or errors.
+- **Compile check**: CI compiles every map in fast check mode and fails on leaks, missing textures, or errors. It runs only when map-related files change (see DECISIONS.md).
 - **Visual smoke tests**: Playwright screenshots per map on web, `--write-movie` frame captures in Godot.
 
 ## Evaluation and Decision

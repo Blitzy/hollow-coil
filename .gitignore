@@ -19,6 +19,10 @@
 # TrenchBroom autosaves
 autosave/
 
+# TrenchBroom per-user settings, written through the install link
+maps/trenchbroom/GameEngineProfiles.cfg
+maps/trenchbroom/CompilationProfiles.cfg
+
 # Godot
 .godot/
 /godot/export/

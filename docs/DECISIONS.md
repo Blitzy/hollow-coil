@@ -2,6 +2,19 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-11: CI compiles maps in check mode, only when maps change
+
+**Decision:** `tools/compile.py` has two lighting modes: `check` (fast, the default) and `release` (full quality, `-extra4`). CI compiles every map in check mode, in a separate `maps.yml` workflow that runs only when map-related files change (maps, textures, the compile and setup scripts, the tool versions). Release builds run locally or through a manual run of that workflow, which uploads the .bsp files as an artifact. Compiled-output caching is deferred until the number of maps makes it worthwhile.
+
+**Why:**
+
+- The repo is private on GitHub's free plan, with 2,000 CI minutes a month, and each job rounds up to a whole minute. Quake-era compiles get slow as maps grow, mostly from high-quality lighting (vis is already skipped).
+- Almost every way a map breaks (leaks, missing textures, bad brushes) is caught by qbsp, which is fast. Lighting quality doesn't affect whether a map is valid.
+- Docs-only and engine-only commits don't need map compiles at all.
+- If the repo goes public, GitHub's standard runners are free and this matters much less.
+
+**Alternatives considered:** Compiling everything at full quality on every push (simple, but minutes scale with map count and size); compiling only changed maps by diffing against the base commit (fragile when textures or tools change; caching by content hash is the better version of this, later).
+
 ## 2026-10-11: Quake 2 map and .bsp formats, with loose PNG textures
 
 **Decision:** Maps are authored in TrenchBroom's Quake 2 (Valve) format and compiled with `qbsp -q2bsp` to Quake 2 .bsp files (IBSP v38). Textures are loose PNGs at `textures/<folder>/<name>.png`. Gameplay stays Quake 1 style; only the file formats come from Quake 2. This settles three open decisions: texture format, colored light storage, and the collision source for .bsp builds.
