@@ -104,7 +104,7 @@ Done once, before either engine.
 - [x] 0.2 TrenchBroom game config and FGD with worldspawn, info_player_start, monster_shotgunner, and light (including a lightstyle key).
 - [x] 0.3 Placeholder textures: a small set of grid and solid-color PNGs.
 - [x] 0.4 `tools/compile`: runs qbsp (`-q2bsp`) and light on every map, writes to /build, and exits non-zero on leaks or errors with a readable text summary. Missing textures are only warnings in qbsp, so the script treats them as errors. Pass the texture root explicitly (`-basedir`) since output isn't under a `maps/` folder.
-- [ ] 0.5 `tools/bspdump`: prints a .bsp's entities, face count, and lightmap stats as JSON.
+- [x] 0.5 `tools/bspdump`: prints a .bsp's entities, face count, and lightmap stats as JSON.
 - [ ] 0.6 Maps:
   - `test_movement`: steps at 16, 18, and 20 units, slopes, gaps, ledges, and a finish marker
   - `test_combat`: open arena with cover pieces and walls that block line of sight
@@ -137,7 +137,7 @@ Tests:
 ### M2: Compiled Maps and Lighting
 
 - .bsp loader: faces, entities, lightmap data
-- Pack face lightmaps into an atlas and render with a lightmap shader
+- Pack face lightmaps into an atlas and render with a lightmap shader. Read each face's lightmap from its stored offset: ericw-tools pads each face's data to a multiple of 4 samples, so faces are not packed back to back. Lightmap size per face is computed from texture-space extents at 16 texels per luxel (see `tools/bspdump.py`).
 - Colored light from the Quake 2 .bsp's RGB lightmaps. Quake 2 lightmaps came out about 3x brighter than Quake 1 for the same light values in the format spike, so calibrate brightness here.
 - Animated lightstyles as shader uniforms
 
