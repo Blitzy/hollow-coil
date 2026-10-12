@@ -1,0 +1,248 @@
+// Quake-style player movement. Follows docs/MOVEMENT.md, "Player movement".
+// Adapted from QuakeWorld QW/client/pmove.c (id Software, GPLv2 or later), with
+// edge friction from Quake WinQuake/sv_user.c SV_UserFriction (GPLv2 or later).
+
+import { CONTENTS, TICK_RATE } from "../constants";
+import { addScaled, cross, dot, length, scale, sub, vec3, ZERO, type Vec3 } from "../math/vec3";
+import { trace, type CollisionWorld, type TraceResult } from "../collision/trace";
+import type { Hull, PlayerData } from "../data";
+import { angleToRadians, BUTTON_JUMP, type InputCommand } from "../input";
+
+export const PLAYER_MASK = CONTENTS.SOLID | CONTENTS.WINDOW | CONTENTS.PLAYERCLIP;
+
+// Fixed parts of the algorithm (docs/MOVEMENT.md, "Constants"). Tunable values come from data.
+export const STOP_EPSILON = 0.1;
+export const GROUND_NORMAL_Z = 0.7;
+const BUMP_COUNT = 4;
+const MAX_CLIP_PLANES = 5;
+const AIRBORNE_SPEED = 180;
+const GROUND_PROBE = 1;
+const EDGE_PROBE_AHEAD = 16;
+const EDGE_PROBE_DOWN = 34;
+
+export interface PlayerBody {
+  readonly origin: Vec3;
+  readonly velocity: Vec3;
+  readonly onGround: boolean;
+  /** Jump was held last tick; a new jump needs a release first. */
+  readonly jumpHeld: boolean;
+}
+
+export interface MovementContext {
+  readonly world: CollisionWorld;
+  readonly hull: Hull;
+  readonly movement: PlayerData["movement"];
+}
+
+/** The working copy one tick of movement updates in place. */
+interface Mover {
+  origin: Vec3;
+  velocity: Vec3;
+  onGround: boolean;
+  jumpHeld: boolean;
+}
+
+const dt = 1 / TICK_RATE;
+
+function traceHull(ctx: MovementContext, start: Vec3, end: Vec3): TraceResult {
+  return trace(ctx.world, start, end, ctx.hull.mins, ctx.hull.maxs, PLAYER_MASK);
+}
+
+/** Runs one tick of player movement and returns the new body. */
+export function playerMove(body: PlayerBody, cmd: InputCommand, ctx: MovementContext): PlayerBody {
+  const m: Mover = { ...body };
+  categorizePosition(m, ctx);
+  if (cmd.buttons & BUTTON_JUMP) jump(m, ctx);
+  else m.jumpHeld = false;
+  friction(m, ctx);
+  airMove(m, cmd, ctx);
+  categorizePosition(m, ctx);
+  return { origin: m.origin, velocity: m.velocity, onGround: m.onGround, jumpHeld: m.jumpHeld };
+}
+
+export function categorizePosition(m: Mover, ctx: MovementContext): void {
+  if (m.velocity.z > AIRBORNE_SPEED) {
+    m.onGround = false;
+    return;
+  }
+  const t = traceHull(ctx, m.origin, sub(m.origin, vec3(0, 0, GROUND_PROBE)));
+  m.onGround = t.normal.z >= GROUND_NORMAL_Z; // a miss has a zero normal, so it isn't ground
+  if (m.onGround && !t.startSolid && !t.allSolid) m.origin = t.endpos;
+}
+
+function jump(m: Mover, ctx: MovementContext): void {
+  if (!m.onGround) return;
+  if (m.jumpHeld) return; // no pogo-sticking: release before jumping again
+  m.onGround = false;
+  m.velocity = vec3(m.velocity.x, m.velocity.y, m.velocity.z + ctx.movement.jump_velocity);
+  m.jumpHeld = true;
+}
+
+export function friction(m: Mover, ctx: MovementContext): void {
+  const v = m.velocity;
+  const speed = length(v);
+  if (speed < 1) {
+    m.velocity = vec3(0, 0, v.z);
+    return;
+  }
+  if (!m.onGround) return;
+
+  let f = ctx.movement.friction;
+  // Edge friction: stop faster when the leading edge is over a drop-off.
+  const horizontal = Math.hypot(v.x, v.y);
+  if (horizontal > 0) {
+    const start = vec3(
+      m.origin.x + (v.x / horizontal) * EDGE_PROBE_AHEAD,
+      m.origin.y + (v.y / horizontal) * EDGE_PROBE_AHEAD,
+      m.origin.z + ctx.hull.mins.z,
+    );
+    const down = trace(ctx.world, start, sub(start, vec3(0, 0, EDGE_PROBE_DOWN)), ZERO, ZERO, PLAYER_MASK);
+    if (down.fraction === 1) f *= ctx.movement.edge_friction;
+  }
+
+  const control = Math.max(speed, ctx.movement.stop_speed);
+  const newSpeed = Math.max(speed - control * f * dt, 0);
+  m.velocity = scale(v, newSpeed / speed);
+}
+
+/** Movement direction and speed the player is asking for, from the view's yaw. */
+export function wish(cmd: InputCommand, maxSpeed: number): { dir: Vec3; speed: number } {
+  const yaw = angleToRadians(cmd.yaw);
+  const forward = vec3(Math.cos(yaw), Math.sin(yaw), 0);
+  const right = vec3(Math.sin(yaw), -Math.cos(yaw), 0);
+  const wishVel = addScaled(scale(forward, (cmd.forward / 127) * maxSpeed), right, (cmd.side / 127) * maxSpeed);
+  const speed = length(wishVel);
+  return { dir: speed > 0 ? scale(wishVel, 1 / speed) : ZERO, speed: Math.min(speed, maxSpeed) };
+}
+
+function airMove(m: Mover, cmd: InputCommand, ctx: MovementContext): void {
+  const mv = ctx.movement;
+  const { dir, speed } = wish(cmd, mv.max_ground_speed);
+  if (m.onGround) {
+    m.velocity = vec3(m.velocity.x, m.velocity.y, 0);
+    m.velocity = accelerate(m.velocity, dir, speed, mv.ground_accelerate);
+    // Cancelled straight away by groundMove; kept so the order matches QuakeWorld.
+    m.velocity = vec3(m.velocity.x, m.velocity.y, m.velocity.z - mv.gravity * dt);
+    groundMove(m, ctx);
+  } else {
+    m.velocity = airAccelerate(m.velocity, dir, speed, mv.air_accelerate, mv.air_wish_speed_cap);
+    m.velocity = vec3(m.velocity.x, m.velocity.y, m.velocity.z - mv.gravity * dt);
+    flyMove(m, ctx);
+  }
+}
+
+export function accelerate(velocity: Vec3, wishDir: Vec3, wishSpeed: number, accel: number): Vec3 {
+  const add = wishSpeed - dot(velocity, wishDir);
+  if (add <= 0) return velocity;
+  return addScaled(velocity, wishDir, Math.min(accel * dt * wishSpeed, add));
+}
+
+/**
+ * The cap limits speed gained along the wish direction, but the rate uses the
+ * uncapped wish speed. That mismatch is what makes air strafing work; keep it.
+ */
+export function airAccelerate(velocity: Vec3, wishDir: Vec3, wishSpeed: number, accel: number, cap: number): Vec3 {
+  const add = Math.min(wishSpeed, cap) - dot(velocity, wishDir);
+  if (add <= 0) return velocity;
+  return addScaled(velocity, wishDir, Math.min(accel * wishSpeed * dt, add));
+}
+
+export function clipVelocity(v: Vec3, normal: Vec3, overbounce: number): Vec3 {
+  const backoff = dot(v, normal) * overbounce;
+  const snap = (c: number): number => (c > -STOP_EPSILON && c < STOP_EPSILON ? 0 : c);
+  return vec3(snap(v.x - normal.x * backoff), snap(v.y - normal.y * backoff), snap(v.z - normal.z * backoff));
+}
+
+/** Moves along the velocity for one tick, sliding along anything hit. */
+export function flyMove(m: Mover, ctx: MovementContext): void {
+  const original = m.velocity;
+  const primal = m.velocity;
+  let planes: Vec3[] = [];
+  let timeLeft = dt;
+
+  for (let bump = 0; bump < BUMP_COUNT; bump++) {
+    const t = traceHull(ctx, m.origin, addScaled(m.origin, m.velocity, timeLeft));
+    if (t.startSolid || t.allSolid) {
+      m.velocity = ZERO; // trapped
+      return;
+    }
+    if (t.fraction > 0) {
+      m.origin = t.endpos;
+      planes = [];
+    }
+    if (t.fraction === 1) return;
+
+    timeLeft -= timeLeft * t.fraction;
+    if (planes.length >= MAX_CLIP_PLANES) {
+      m.velocity = ZERO;
+      return;
+    }
+    planes.push(t.normal);
+
+    // Find a plane whose clipped velocity doesn't push into any of the others.
+    let found = false;
+    for (let i = 0; i < planes.length && !found; i++) {
+      m.velocity = clipVelocity(original, planes[i]!, 1);
+      found = planes.every((p, j) => j === i || dot(m.velocity, p) >= 0);
+    }
+    if (!found) {
+      if (planes.length !== 2) {
+        m.velocity = ZERO;
+        return;
+      }
+      const crease = cross(planes[0]!, planes[1]!); // slide along the crease
+      m.velocity = scale(crease, dot(crease, m.velocity));
+    }
+    if (dot(m.velocity, primal) <= 0) {
+      m.velocity = ZERO; // turned back on itself: stop dead to avoid jitter in corners
+      return;
+    }
+  }
+}
+
+/** Walking: slides along the floor or steps up, whichever gets farther. */
+export function groundMove(m: Mover, ctx: MovementContext): void {
+  m.velocity = vec3(m.velocity.x, m.velocity.y, 0);
+  if (m.velocity.x === 0 && m.velocity.y === 0) return;
+
+  const dest = vec3(m.origin.x + m.velocity.x * dt, m.origin.y + m.velocity.y * dt, m.origin.z);
+  const direct = traceHull(ctx, m.origin, dest);
+  if (direct.fraction === 1) {
+    m.origin = direct.endpos;
+    return;
+  }
+
+  const startOrigin = m.origin;
+  const startVelocity = m.velocity;
+  const step = ctx.movement.step_height;
+
+  flyMove(m, ctx);
+  const downOrigin = m.origin;
+  const downVelocity = m.velocity;
+
+  m.origin = startOrigin;
+  m.velocity = startVelocity;
+  const up = traceHull(ctx, m.origin, addScaled(m.origin, vec3(0, 0, 1), step));
+  if (!up.startSolid && !up.allSolid) m.origin = up.endpos;
+  flyMove(m, ctx);
+  const down = traceHull(ctx, m.origin, addScaled(m.origin, vec3(0, 0, -1), step));
+  if (down.normal.z < GROUND_NORMAL_Z) {
+    // Stepped onto something too steep, or onto nothing: use the plain slide.
+    m.origin = downOrigin;
+    m.velocity = downVelocity;
+    return;
+  }
+  if (!down.startSolid && !down.allSolid) m.origin = down.endpos;
+  const upOrigin = m.origin;
+
+  const downDist = (downOrigin.x - startOrigin.x) ** 2 + (downOrigin.y - startOrigin.y) ** 2;
+  const upDist = (upOrigin.x - startOrigin.x) ** 2 + (upOrigin.y - startOrigin.y) ** 2;
+  if (downDist > upDist) {
+    m.origin = downOrigin;
+    m.velocity = downVelocity;
+  } else {
+    m.velocity = vec3(m.velocity.x, m.velocity.y, downVelocity.z);
+  }
+}
+
+export type { Mover };

@@ -135,6 +135,10 @@ playerMove(cmd):
     categorizePosition()
 ```
 
+### Spawning
+
+A box exactly touching a surface counts as inside it: the trace treats a distance of exactly 0 as behind the plane. Every move stops `DIST_EPSILON` short of surfaces, so a standing player rests at 24 + 1/32 above the floor, never exactly 24. But spawn points (`info_player_start`, `info_marker`) sit at exactly 24, so a player spawned there would start stuck. Spawn the player with its origin **raised by 1 unit** (Quake 2 raises spawns for the same reason), at rest, with `onGround` false. The first tick's `categorizePosition` settles it onto the floor.
+
 Swimming, water jumps, and death handling from Quake are out of scope for the spike. QuakeWorld's `NudgePosition` is not used: it repairs origins quantized for networking, and our origins aren't quantized.
 
 ### Categorize position

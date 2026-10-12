@@ -15,7 +15,7 @@
     "seed": { "description": "Seed for the sim's RNG. Defaults to 0.", "type": "integer", "minimum": 0 },
     "duration": { "description": "Total time to simulate, in seconds.", "type": "number", "exclusiveMinimum": 0, "maximum": 600 },
     "start": {
-      "description": "The player spawns at the marker's origin, on the ground, at rest, holding the starting weapon ready to fire.",
+      "description": "The player spawns at the marker's origin raised by 1 unit, at rest, holding the starting weapon ready to fire; the first tick settles it onto the floor.",
       "type": "object",
       "properties": {
         "marker": { "description": "Name of an info_marker in the map.", "type": "string" },
