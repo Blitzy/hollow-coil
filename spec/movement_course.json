@@ -1,7 +1,7 @@
 {
   "$schema": "./schemas/scenario.schema.json",
-  "description": "A scripted run through the test_movement course reaches the finish: stairs, two ramps, a jump over the gap, a drop, and a jump up the ledge. Jump times are estimated from the movement constants (top speed 320, a full-speed jump covers about 216 units) and are expected to need tuning on the first engine run.",
-  "status": "unverified",
+  "description": "A scripted run through the test_movement course reaches the finish: stairs, two ramps, a jump over the gap, a drop, and a jump up the ledge. Jump times were estimated from the movement constants (top speed 320, a full-speed jump covers about 216 units) and passed unchanged on the first web run: takeoffs at x = 1349.6 for the gap and 1973.6 for the ledge.",
+  "status": "verified",
   "map": "test_movement",
   "duration": 8.5,
   "start": { "marker": "course_start", "yaw": 0 },

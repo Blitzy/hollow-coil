@@ -15,6 +15,11 @@ npm run typecheck    # whole project, plus the sim-only check
   - `map/`: the `.map` parser (also reads `.bsp` entity text)
   - `collision/`: planes, windings, brushes with qbsp-matching bevels, and box traces
   - `player/`: Quake-style player movement
+  - `level.ts`: a map's collision world, markers, and player start
+  - `sim.ts`: sim state, spawning, and `step()`, which advances one tick and returns events
+  - `snapshot.ts`: snapshots (JSON) and the per-tick state hash
+  - `rng.ts`: the seeded RNG (mulberry32), with reference values in its test
+  - `scenario.ts`: runs `/spec` scenarios; `tests/scenarios.test.ts` runs every one
   - `testing/`: small box-and-ramp worlds for tests
 - `tests/helpers/`: Node-only test helpers, such as loading `/data` files
 - `tests/`: cross-cutting tests and fixtures. `fixtures/bevels/` holds brushes compiled by qbsp; regenerate with `python web/tests/fixtures/bevels/generate.py`.

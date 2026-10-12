@@ -1,7 +1,7 @@
 {
   "$schema": "./schemas/scenario.schema.json",
   "description": "Running into a 20-unit step is blocked: it is taller than the 18-unit step height, so the player stops at its face.",
-  "status": "unverified",
+  "status": "verified",
   "map": "test_movement",
   "duration": 2.5,
   "start": { "marker": "step20_start", "yaw": 0 },

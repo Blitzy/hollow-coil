@@ -1,7 +1,7 @@
 {
   "$schema": "./schemas/scenario.schema.json",
   "description": "Running into an 18-unit step walks up it without jumping (step height is 18).",
-  "status": "unverified",
+  "status": "verified",
   "map": "test_movement",
   "duration": 2.5,
   "start": { "marker": "step18_start", "yaw": 0 },
