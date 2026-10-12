@@ -63,4 +63,11 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 
 ## Commands
 
-To be filled in during Phase 0: install, run each engine, run tests, compile maps, dump a .bsp.
+- `python tools/setup.py`: install pinned third-party tools (ericw-tools) into `.tools/`. `--check` verifies without changing anything; `--force` reinstalls.
+
+Still to come in Phase 0: run each engine, run tests, compile maps, dump a .bsp.
+
+## Tools
+
+- Scripts in `/tools` are Python 3.11+, standard library only unless a dependency is clearly worth it.
+- Third-party tool versions are pinned in `tools/versions.json`. Bump versions there, never by hand-installing a different build.

@@ -217,3 +217,4 @@ After M4 in both engines, or earlier if the answer is obvious, compare against t
 - Collision source for .bsp builds: qbsp `-wrbrushes` (BSPX brush list), Quake 2 BSP format (brushes are native), or load the .map alongside the .bsp. Investigate in Phase 0.
 - Enemy navigation: Quake-style `movetogoal` (step toward the goal, try other directions when blocked) versus something smarter. Start with the Quake approach.
 - Cross-browser determinism (custom trig or lookup tables), deferred until demos need to play across browsers
+- Single entry point for project scripts (an `npm install` / `npm run` equivalent), deferred until after the engine decision

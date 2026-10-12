@@ -2,6 +2,9 @@
 # Compiled maps (tools/compile writes here)
 /build/
 
+# Pinned third-party tools installed by tools/setup.py
+/.tools/
+
 # ericw-tools side output, in case a compile runs outside /build
 *.bsp
 *.prt
@@ -25,6 +28,11 @@ blob-report/
 
 # Claude Code local settings (shared settings.json is kept)
 .claude/settings.local.json
+
+### Python
+__pycache__/
+*.pyc
+.venv/
 
 ### Node
 node_modules/
