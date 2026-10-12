@@ -16,7 +16,31 @@ See [docs/PLAN.md](docs/PLAN.md) for the current plan.
 
 ## Getting Started
 
-Setup, build, and test instructions are coming once the project scaffolding is in place.
+You'll need:
+
+- Python 3.11 or newer
+- [TrenchBroom](https://trenchbroom.github.io/) 2026.2 or newer, to edit maps
+
+Then install the pinned map compiler ([ericw-tools](https://ericw.github.io/ericw-tools/)) into `.tools/`:
+
+```
+python tools/setup.py
+```
+
+Build, run, and test instructions for each engine are coming as the prototype takes shape.
+
+## Repository Layout
+
+| Folder | Contents |
+|---|---|
+| `maps/` | TrenchBroom maps, textures, and editor config |
+| `data/` | Weapons, enemies, and movement values, with JSON Schemas |
+| `spec/` | Engine-neutral test scenarios |
+| `demos/` | Golden demo recordings, per engine |
+| `tools/` | Setup, map compiling, and validation scripts (Python) |
+| `web/` | TypeScript + Three.js implementation |
+| `godot/` | Godot 4.7 implementation |
+| `docs/` | Plan and decision log |
 
 ## Contributing
 

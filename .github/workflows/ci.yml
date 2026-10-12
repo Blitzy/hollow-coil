@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  shared:
+    name: Validate and compile
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Check file sizes
+        run: python tools/check_files.py
+
+      - name: Cache tool downloads
+        uses: actions/cache@v6
+        with:
+          path: .tools/downloads
+          key: tools-${{ runner.os }}-${{ hashFiles('tools/versions.json') }}
+
+      - name: Install pinned tools
+        run: python tools/setup.py
+
+      # Steps added by later Phase 0 tasks:
+      #   0.7  python tools/validate.py   (data files against JSON Schemas)
+      #   0.4  python tools/compile.py    (every map; fails on leaks, errors, missing textures)
+
+  # Engine jobs (web: Vitest, godot: gdUnit4 headless) are added in milestone M1.

@@ -65,6 +65,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 ## Commands
 
 - `python tools/setup.py`: install pinned third-party tools (ericw-tools) into `.tools/`. `--check` verifies without changing anything; `--force` reinstalls.
+- `python tools/check_files.py`: fail if any tracked file is over 2 MB (runs in CI).
 
 Still to come in Phase 0: run each engine, run tests, compile maps, dump a .bsp.
 
