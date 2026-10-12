@@ -110,7 +110,7 @@ Done once, before either engine.
   - `test_movement`: steps at 16, 18, and 20 units, slopes, gaps, ledges, and a finish marker
   - `test_combat`: open arena with cover pieces and walls that block line of sight
   - `greybox_01`: room, corridor, room, with two enemies and real lighting
-- [ ] 0.7 Data files and JSON Schemas for the player (including movement), weapons, and enemies, using the starting values above, validated in CI.
+- [x] 0.7 Data files and JSON Schemas for the player (including movement), weapons, and enemies, using the starting values above, validated in CI.
 - [ ] 0.8 Input command format (see Input Commands below), spec scenario format, and the first scenarios (see Testing below).
 
 Done when every map compiles cleanly in CI and all data validates.
