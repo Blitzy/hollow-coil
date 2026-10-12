@@ -10,8 +10,9 @@
 import * as THREE from "three";
 import { SURF, texelCoords, type Bsp } from "../sim/map/bsp";
 import { cross, length, sub } from "../sim/math/vec3";
-import { composeLightmaps, lightmapUv, packLightmaps, type LightmapAtlas } from "./lightmap-atlas";
 import { toThree } from "./coords";
+import { LightStyleAnimator, type LightStyleData } from "./light-styles";
+import { lightmapUv, packLightmaps, type LightmapAtlas } from "./lightmap-atlas";
 
 /** Faces that are never drawn as world surfaces. Sky gets its own pass later. */
 const HIDDEN = SURF.NODRAW | SURF.SKY;
@@ -93,24 +94,34 @@ void main() {
 export interface LitWorld {
   readonly group: THREE.Group;
   readonly atlas: LightmapAtlas;
-  /** The atlas's RGBA bytes; re-compose into it, then set lightmap.needsUpdate. */
-  readonly image: Uint8Array;
   readonly lightmap: THREE.DataTexture;
   /** Multiplies every lightmap; shared by all world materials. */
   readonly brightness: { value: number };
+  /** Steps animated light styles to a sim tick, re-uploading the lightmap if it changed. */
+  animate(tick: number): void;
 }
 
-/** Light style values (1 is normal) for every style, until animated styles arrive. */
-const STEADY_STYLES = new Array<number>(256).fill(1);
+/**
+ * Lightmap brightness: a lightmap value of 255 / BRIGHTNESS shows a texture at
+ * its true colors, and brighter values up to 255 brighten past it. Between
+ * Quake 2's 1x and Quake's 2x overbright GL renderers, chosen by eye on the
+ * test maps. Keep it fixed so light values mean the same in every map.
+ */
+export const DEFAULT_BRIGHTNESS = 1.5;
 
 /**
  * Meshes for the world model. Textures should be loaded with no color space
  * conversion (see loadTextures), so the shader sees their stored values.
  */
-export function buildBspMeshes(bsp: Bsp, textures: ReadonlyMap<string, THREE.Texture>, brightness = 1): LitWorld {
+export function buildBspMeshes(
+  bsp: Bsp,
+  textures: ReadonlyMap<string, THREE.Texture>,
+  lightStyles: LightStyleData,
+  brightness = DEFAULT_BRIGHTNESS,
+): LitWorld {
   const atlas = packLightmaps(bsp);
   const image = new Uint8Array(atlas.width * atlas.height * 4);
-  composeLightmaps(bsp, atlas, STEADY_STYLES, image);
+  const animator = new LightStyleAnimator(bsp, atlas, lightStyles, image);
   const lightmap = new THREE.DataTexture(image, atlas.width, atlas.height, THREE.RGBAFormat);
   lightmap.magFilter = THREE.LinearFilter;
   lightmap.minFilter = THREE.LinearFilter;
@@ -140,7 +151,15 @@ export function buildBspMeshes(bsp: Bsp, textures: ReadonlyMap<string, THREE.Tex
     mesh.name = batch.texture;
     group.add(mesh);
   }
-  return { group, atlas, image, lightmap, brightness: shared.brightness };
+  return {
+    group,
+    atlas,
+    lightmap,
+    brightness: shared.brightness,
+    animate(tick) {
+      if (animator.update(tick)) lightmap.needsUpdate = true;
+    },
+  };
 }
 
 /** Names of the textures the world model draws, for loading. */

@@ -17,6 +17,7 @@ Cross-file checks:
     - the player's weapons and starting weapon exist in weapons.json
     - weapon slots are unique
     - enemy classnames are defined in the TrenchBroom FGD
+    - the FGD's light style choices match lightstyles.json, number and name
     - hull mins are below maxs on every axis
     - each scenario's map exists, and every marker it names is an info_marker in
       that map (marker names must be unique within a map)
@@ -176,6 +177,29 @@ def fgd_classnames(fgd_path: Path = FGD_PATH) -> set[str]:
     return set(re.findall(r"^@\w+Class\b[^=]*=\s*(\w+)", fgd_path.read_text(encoding="utf-8"), re.MULTILINE))
 
 
+def fgd_style_choices(fgd_path: Path = FGD_PATH) -> dict[int, str]:
+    """The light entity's style choices in the FGD, as {number: name}."""
+    text = fgd_path.read_text(encoding="utf-8")
+    block = re.search(r"\bstyle\(choices\)[^\[]*\[(.*?)\]", text, re.DOTALL)
+    if not block:
+        return {}
+    return {int(n): name for n, name in re.findall(r'^\s*(\d+)\s*:\s*"([^"]*)"', block[1], re.MULTILINE)}
+
+
+def lightstyle_check(lightstyles: dict, choices: dict[int, str]) -> list[str]:
+    """The FGD offers exactly the styles lightstyles.json defines, under the same names."""
+    defined = {int(n): style["name"] for n, style in lightstyles["styles"].items()}
+    errors = []
+    for n in sorted(defined.keys() | choices.keys()):
+        if n not in choices:
+            errors.append(f"lightstyles.json: style {n} ({defined[n]!r}) is not a style choice in the FGD")
+        elif n not in defined:
+            errors.append(f"FGD: light style choice {n} ({choices[n]!r}) is not defined in lightstyles.json")
+        elif defined[n] != choices[n]:
+            errors.append(f"lightstyles.json: style {n} is named {defined[n]!r} but the FGD calls it {choices[n]!r}")
+    return errors
+
+
 def check_hull(hull: dict, where: str) -> list[str]:
     if all(hull["mins"][i] < hull["maxs"][i] for i in range(3)):
         return []
@@ -295,7 +319,7 @@ def main() -> int:
     scenarios, spec_failed = validate_files(
         sorted(SPEC_DIR.glob("*.json")), "spec", Validator(SPEC_SCHEMA_DIR), lambda p: "scenario.schema.json")
 
-    missing = {"player", "weapons", "enemies"} - set(data)
+    missing = {"player", "weapons", "enemies", "lightstyles"} - set(data)
     if data_failed or spec_failed or missing:
         if missing and not data_failed:
             print(f"FAIL  missing data files: {', '.join(sorted(missing))}")
@@ -303,6 +327,7 @@ def main() -> int:
         return 1
 
     errors = cross_check(data, fgd_classnames())
+    errors += lightstyle_check(data["lightstyles"], fgd_style_choices())
     slots = {weapon["slot"] for weapon in data["weapons"]["weapons"].values()}
     for name, scenario in scenarios.items():
         errors += scenario_check(name, scenario, slots)

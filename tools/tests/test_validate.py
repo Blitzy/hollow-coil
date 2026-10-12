@@ -91,7 +91,7 @@ class RealDataTests(unittest.TestCase):
         self.validator = validate.Validator()
 
     def test_every_data_file_is_valid(self) -> None:
-        for name in ("player", "weapons", "enemies"):
+        for name in ("player", "weapons", "enemies", "lightstyles"):
             with self.subTest(name=name):
                 self.assertEqual(self.validator.validate(load_real(name), f"{name}.schema.json"), [])
 
@@ -109,6 +109,10 @@ class RealDataTests(unittest.TestCase):
              "$.enemies.shotgunner.pain.chance: 1.5 is above the maximum 1"),
             ("player", lambda d: d["hull"].__setitem__("mins", [-16, -16]),
              "$.hull.mins: needs at least 3 items, has 2"),
+            ("lightstyles", lambda d: d["styles"]["1"].__setitem__("pattern", "mmNmm"),
+             "$.styles.1.pattern: 'mmNmm' does not match ^[a-z]+$"),
+            ("lightstyles", lambda d: d["styles"].__setitem__("32", {"name": "Switched", "pattern": "m"}),
+             "$.styles (property name '32'): '32' does not match ^([0-9]|[12][0-9]|3[01])$"),
         ]
         for name, mutate, expected in cases:
             with self.subTest(expected=expected):
@@ -152,6 +156,35 @@ class CrossCheckTests(unittest.TestCase):
     def test_inverted_hull(self) -> None:
         errors = self.errors_after(lambda d: d["player"]["hull"].__setitem__("maxs", [16, 16, -30]))
         self.assertEqual(errors, ["player.json: hull mins must be below maxs on every axis"])
+
+
+class LightStyleCheckTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.lightstyles = load_real("lightstyles")
+        self.choices = validate.fgd_style_choices()
+
+    def test_fgd_style_choices(self) -> None:
+        self.assertEqual(self.choices[0], "Normal")
+        self.assertEqual(self.choices[10], "Fluorescent flicker")
+        self.assertEqual(sorted(self.choices), list(range(12)))
+
+    def test_real_data_matches_the_fgd(self) -> None:
+        self.assertEqual(validate.lightstyle_check(self.lightstyles, self.choices), [])
+
+    def test_style_missing_from_the_fgd(self) -> None:
+        self.lightstyles["styles"]["12"] = {"name": "Sputter", "pattern": "maz"}
+        self.assertEqual(validate.lightstyle_check(self.lightstyles, self.choices),
+                         ["lightstyles.json: style 12 ('Sputter') is not a style choice in the FGD"])
+
+    def test_fgd_choice_missing_from_the_data(self) -> None:
+        del self.lightstyles["styles"]["11"]
+        self.assertEqual(validate.lightstyle_check(self.lightstyles, self.choices),
+                         ["FGD: light style choice 11 ('Slow pulse, not fading to black') is not defined in lightstyles.json"])
+
+    def test_names_must_match(self) -> None:
+        self.lightstyles["styles"]["4"]["name"] = "Strobe"
+        self.assertEqual(validate.lightstyle_check(self.lightstyles, self.choices),
+                         ["lightstyles.json: style 4 is named 'Strobe' but the FGD calls it 'Fast strobe'"])
 
 
 

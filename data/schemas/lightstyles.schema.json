@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lightstyles.schema.json",
+  "title": "Light styles",
+  "description": "Animated brightness patterns for lights, keyed by style number (a light entity's style key). The patterns are Quake's, from Quake 2's g_spawn.c (GPLv2 or later, id Software). Presentation only: the sim doesn't read them.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "step_time": {
+      "description": "Seconds each letter of a pattern lasts. Quake steps patterns 10 times a second.",
+      "$ref": "common.schema.json#/$defs/seconds"
+    },
+    "styles": {
+      "description": "Styles 0 to 31. ericw-tools assigns 32 and up to switchable lights, which stay at normal brightness until switching exists.",
+      "type": "object",
+      "propertyNames": { "pattern": "^([0-9]|[12][0-9]|3[01])$" },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "name": { "description": "Shown in TrenchBroom's style choices; must match the FGD.", "type": "string" },
+          "pattern": {
+            "description": "Brightness per step, looping: 'a' is dark, 'm' is normal, 'z' is a little over double.",
+            "type": "string",
+            "pattern": "^[a-z]+$"
+          }
+        },
+        "required": ["name", "pattern"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["step_time", "styles"],
+  "additionalProperties": false
+}

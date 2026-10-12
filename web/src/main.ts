@@ -2,15 +2,16 @@
 // renders between ticks.
 //
 // URL options: ?map=<name> (default test_movement), &lighting=off to draw the
-// unlit .map instead of the compiled .bsp, &brightness=<n> for the lightmap scale.
+// unlit .map instead of the compiled .bsp, &brightness=<n> to try another lightmap scale.
 // The sim always loads its collision and entities from the .map.
 
 import * as THREE from "three";
 import { buildCommand } from "./game/command";
 import { FixedStep } from "./game/fixed-step";
 import { BrowserInput } from "./game/input";
-import { buildBspMeshes, bspTextureNames, type LitWorld } from "./render/bsp-mesh";
+import { buildBspMeshes, bspTextureNames, DEFAULT_BRIGHTNESS, type LitWorld } from "./render/bsp-mesh";
 import { cameraRotation, toThree, verticalFov } from "./render/coords";
+import type { LightStyleData } from "./render/light-styles";
 import { buildLevelMeshes, loadTextures, textureNames } from "./render/level-mesh";
 import { TICK_RATE } from "./sim/constants";
 import type { PlayerData } from "./sim/data";
@@ -22,7 +23,6 @@ import { createSim, movementContext, step, type SimState } from "./sim/sim";
 
 const GAME = "/game"; // served from the repo root by vite.config.ts
 const HORIZONTAL_FOV = 90;
-const DEFAULT_BRIGHTNESS = 1;
 const BRIGHTNESS_STEP = 0.1;
 
 async function fetchText(url: string): Promise<string> {
@@ -37,7 +37,13 @@ const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => vec3(a.x + (b.x - a.x) * t, 
  * The world's meshes: lit from the compiled .bsp when it loads, otherwise
  * unlit from the .map, with the reason. The dev server compiles stale maps on request.
  */
-async function loadWorld(mapName: string, level: Level, lighting: boolean, brightness: number): Promise<{ group: THREE.Group; lit: LitWorld | null; note: string }> {
+async function loadWorld(
+  mapName: string,
+  level: Level,
+  lightStyles: LightStyleData,
+  lighting: boolean,
+  brightness: number,
+): Promise<{ group: THREE.Group; lit: LitWorld | null; note: string }> {
   let reason = "lighting=off";
   if (lighting) {
     try {
@@ -45,7 +51,7 @@ async function loadWorld(mapName: string, level: Level, lighting: boolean, brigh
       if (response.ok) {
         const bsp = readBsp(await response.arrayBuffer());
         const textures = await loadTextures(bspTextureNames(bsp), `${GAME}/textures`, THREE.NoColorSpace);
-        const lit = buildBspMeshes(bsp, textures, brightness);
+        const lit = buildBspMeshes(bsp, textures, lightStyles, brightness);
         return { group: lit.group, lit, note: "" };
       }
       const report = (await response.text()).trim();
@@ -66,9 +72,14 @@ async function main(): Promise<void> {
   const overlay = document.getElementById("overlay")!;
   overlay.textContent = `loading ${mapName}...`;
 
-  const [mapText, playerText] = await Promise.all([fetchText(`${GAME}/maps/${mapName}.map`), fetchText(`${GAME}/data/player.json`)]);
+  const [mapText, playerText, lightStylesText] = await Promise.all([
+    fetchText(`${GAME}/maps/${mapName}.map`),
+    fetchText(`${GAME}/data/player.json`),
+    fetchText(`${GAME}/data/lightstyles.json`),
+  ]);
   const level = levelFromMap(mapText);
   const config = { player: JSON.parse(playerText) as PlayerData };
+  const lightStyles = JSON.parse(lightStylesText) as LightStyleData;
   const ctx = movementContext(level, config);
 
   const renderer = new THREE.WebGLRenderer({ antialias: false });
@@ -77,7 +88,7 @@ async function main(): Promise<void> {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x101014);
   const brightness = Number(params.get("brightness") ?? DEFAULT_BRIGHTNESS);
-  const world = await loadWorld(mapName, level, params.get("lighting") !== "off", Number.isFinite(brightness) ? brightness : DEFAULT_BRIGHTNESS);
+  const world = await loadWorld(mapName, level, lightStyles, params.get("lighting") !== "off", Number.isFinite(brightness) ? brightness : DEFAULT_BRIGHTNESS);
   scene.add(world.group);
   // Brightness keys, for calibrating lightmaps by eye.
   window.addEventListener("keydown", (e) => {
@@ -123,6 +134,7 @@ async function main(): Promise<void> {
     camera.position.set(...toThree(vec3(origin.x, origin.y, origin.z + config.player.eye_height)));
     const rot = cameraRotation(input.yaw, input.pitch);
     camera.rotation.set(rot.x, rot.y, 0);
+    world.lit?.animate(current.tick);
     renderer.render(scene, camera);
 
     frames++;

@@ -1,0 +1,18 @@
+{
+  "$schema": "./schemas/lightstyles.schema.json",
+  "step_time": 0.1,
+  "styles": {
+    "0": { "name": "Normal", "pattern": "m" },
+    "1": { "name": "Flicker A", "pattern": "mmnmmommommnonmmonqnmmo" },
+    "2": { "name": "Slow strong pulse", "pattern": "abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba" },
+    "3": { "name": "Candle A", "pattern": "mmmmmaaaaammmmmaaaaaabcdefgabcdefg" },
+    "4": { "name": "Fast strobe", "pattern": "mamamamamama" },
+    "5": { "name": "Gentle pulse", "pattern": "jklmnopqrstuvwxyzyxwvutsrqponmlkj" },
+    "6": { "name": "Flicker B", "pattern": "nmonqnmomnmomomno" },
+    "7": { "name": "Candle B", "pattern": "mmmaaaabcdefgmmmmaaaammmaamm" },
+    "8": { "name": "Candle C", "pattern": "mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa" },
+    "9": { "name": "Slow strobe", "pattern": "aaaaaaaazzzzzzzz" },
+    "10": { "name": "Fluorescent flicker", "pattern": "mmamammmmammamamaaamammma" },
+    "11": { "name": "Slow pulse, not fading to black", "pattern": "abcdefghijklmnopqrrqponmlkjihgfedcba" }
+  }
+}
