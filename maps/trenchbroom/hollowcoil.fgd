@@ -1,0 +1,39 @@
+// Hollow Coil entity definitions for TrenchBroom.
+//
+// Sizes are in Quake units. Player and enemy hulls match the values in docs/PLAN.md.
+
+@SolidClass = worldspawn : "World entity"
+[
+    message(string) : "Level name"
+]
+
+@PointClass size(-16 -16 -24, 16 16 32) color(0 255 0) = info_player_start : "Player start"
+[
+    angle(integer) : "Facing direction in degrees (0 = east, 90 = north)" : 0
+]
+
+@PointClass size(-16 -16 -24, 16 16 32) color(255 64 32) = monster_shotgunner : "Shotgunner: hitscan enemy that chases the player and shoots back"
+[
+    angle(integer) : "Facing direction in degrees (0 = east, 90 = north)" : 0
+]
+
+@PointClass size(-8 -8 -8, 8 8 8) color(255 255 64) = light : "Point light, baked into lightmaps by ericw-tools"
+[
+    light(integer) : "Brightness" : 300
+    _color(color1) : "Color (red green blue, 0 to 1)" : "1 1 1"
+    style(choices) : "Light style: an animated brightness pattern. Patterns are defined by the game, following Quake's" : 0 =
+    [
+        0 : "Normal"
+        1 : "Flicker A"
+        2 : "Slow strong pulse"
+        3 : "Candle A"
+        4 : "Fast strobe"
+        5 : "Gentle pulse"
+        6 : "Flicker B"
+        7 : "Candle B"
+        8 : "Candle C"
+        9 : "Slow strobe"
+        10 : "Fluorescent flicker"
+        11 : "Slow pulse, not fading to black"
+    ]
+]
