@@ -73,7 +73,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 - `python tools/install_trenchbroom.py`: link `maps/trenchbroom` into TrenchBroom's games folder as "Hollow Coil". `--uninstall` removes the link.
 - `python tools/make_placeholder_textures.py`: regenerate the placeholder PNGs in `textures/dev/`.
 
-Web (run in `web/`): `npm install`, then `npm test` (Vitest) and `npm run typecheck` (includes the sim-only check).
+Web (run in `web/`): `npm install`, then `npm run dev` (play at http://localhost:5173/?map=test_movement), `npm test` (Vitest), and `npm run typecheck` (includes the sim-only check).
 
 Still to come: run each engine, Godot tests.
 

@@ -21,4 +21,10 @@ export const ANGLE_UNITS_PER_TURN = 65536;
 
 export const angleToRadians = (units: number): number => (units * 2 * Math.PI) / ANGLE_UNITS_PER_TURN;
 
+/** Degrees to angle units, rounding to the nearest unit (spec/README.md, Conversion rules). */
+export const degreesToUnits = (degrees: number): number => Math.floor((degrees * ANGLE_UNITS_PER_TURN) / 360 + 0.5);
+
+/** Wraps a yaw in angle units into 0..65535. */
+export const wrapYaw = (units: number): number => ((units % ANGLE_UNITS_PER_TURN) + ANGLE_UNITS_PER_TURN) % ANGLE_UNITS_PER_TURN;
+
 export const NEUTRAL_COMMAND: InputCommand = { yaw: 0, pitch: 0, forward: 0, side: 0, buttons: 0, weapon: 0 };

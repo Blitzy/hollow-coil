@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hollow Coil</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #101014; }
+      canvas { display: block; }
+      #overlay {
+        position: fixed; top: 8px; left: 8px; margin: 0;
+        font: 13px/1.4 ui-monospace, Consolas, monospace; color: #e8e8e8;
+        text-shadow: 1px 1px 0 #000; white-space: pre; pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <pre id="overlay"></pre>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

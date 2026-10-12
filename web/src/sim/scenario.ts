@@ -2,7 +2,7 @@
 // spec/README.md. The caller loads the scenario JSON, the level, and the data.
 
 import { TICK_RATE } from "./constants";
-import { ANGLE_UNITS_PER_TURN, BUTTON_ATTACK, BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "./input";
+import { BUTTON_ATTACK, BUTTON_JUMP, degreesToUnits, NEUTRAL_COMMAND, wrapYaw, type InputCommand } from "./input";
 import type { Level } from "./level";
 import { length, sub, type Vec3 } from "./math/vec3";
 import { createSim, movementContext, step, type SimConfig, type SimState } from "./sim";
@@ -55,10 +55,7 @@ export interface ScenarioResult {
 
 export const secondsToTicks = (seconds: number, tickRate = TICK_RATE): number => Math.floor(seconds * tickRate + 0.5);
 
-export const degreesToUnits = (degrees: number): number => Math.floor((degrees * ANGLE_UNITS_PER_TURN) / 360 + 0.5);
-
-const yawUnits = (degrees: number): number =>
-  ((degreesToUnits(degrees) % ANGLE_UNITS_PER_TURN) + ANGLE_UNITS_PER_TURN) % ANGLE_UNITS_PER_TURN;
+const yawUnits = (degrees: number): number => wrapYaw(degreesToUnits(degrees));
 
 /** The input command for every tick of the scenario, by the segment rules in spec/README.md. */
 export function scenarioCommands(scenario: Scenario, tickRate = TICK_RATE): InputCommand[] {
