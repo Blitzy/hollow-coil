@@ -101,8 +101,8 @@ All spread uses the simulation's seeded RNG.
 Done once, before either engine.
 
 - [x] 0.1 Scaffold the repo layout and a CI workflow that runs validation and compiles.
-- [ ] 0.2 TrenchBroom game config and FGD with worldspawn, info_player_start, monster_shotgunner, and light (including a lightstyle key).
-- [ ] 0.3 Placeholder textures: a small set of grid and solid-color PNGs.
+- [x] 0.2 TrenchBroom game config and FGD with worldspawn, info_player_start, monster_shotgunner, and light (including a lightstyle key).
+- [x] 0.3 Placeholder textures: a small set of grid and solid-color PNGs.
 - [ ] 0.4 `tools/compile`: runs qbsp (`-q2bsp`) and light on every map, writes to /build, and exits non-zero on leaks or errors with a readable text summary. Missing textures are only warnings in qbsp, so the script treats them as errors. Pass the texture root explicitly (`-basedir`) since output isn't under a `maps/` folder.
 - [ ] 0.5 `tools/bspdump`: prints a .bsp's entities, face count, and lightmap stats as JSON.
 - [ ] 0.6 Maps:
