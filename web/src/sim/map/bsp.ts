@@ -10,6 +10,18 @@ import { vec3, type Vec3 } from "../math/vec3";
 
 /** Lightmap samples are one per 16 texels in Quake 2. */
 export const LUXEL_SIZE = 16;
+/** Quake 2 surface flags, from texinfo flags (qfiles.h). */
+export const SURF = {
+  LIGHT: 0x1,
+  SLICK: 0x2,
+  SKY: 0x4,
+  WARP: 0x8,
+  TRANS33: 0x10,
+  TRANS66: 0x20,
+  FLOWING: 0x40,
+  NODRAW: 0x80,
+} as const;
+
 /** Marks an unused slot in a face's four light styles. */
 const NO_STYLE = 255;
 const MAX_STYLES = 4;

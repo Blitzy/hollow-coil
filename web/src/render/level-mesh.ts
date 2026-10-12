@@ -1,5 +1,6 @@
-// Three.js meshes for a level's world brushes: one mesh per texture. Until baked
-// lightmaps arrive in M2, faces get a flat shade by direction so shapes read clearly.
+// Three.js meshes for a level's world brushes from a .map: one mesh per texture.
+// This is the unlit fallback when no compiled .bsp is available (see bsp-mesh.ts);
+// faces get a flat shade by direction so shapes read clearly.
 
 import * as THREE from "three";
 import type { Level } from "../sim/level";
@@ -69,7 +70,15 @@ export function buildLevelMeshes(level: Level, textures: ReadonlyMap<string, THR
   return group;
 }
 
-export async function loadTextures(names: readonly string[], baseUrl: string): Promise<Map<string, THREE.Texture>> {
+/**
+ * Loads textures by name. Use THREE.NoColorSpace for shaders that light in gamma
+ * space (the .bsp world shader), and sRGB for Three's built-in materials.
+ */
+export async function loadTextures(
+  names: readonly string[],
+  baseUrl: string,
+  colorSpace: THREE.ColorSpace = THREE.SRGBColorSpace,
+): Promise<Map<string, THREE.Texture>> {
   const loader = new THREE.TextureLoader();
   const entries = await Promise.all(
     names.map(async (name): Promise<[string, THREE.Texture]> => {
@@ -78,7 +87,7 @@ export async function loadTextures(names: readonly string[], baseUrl: string): P
         tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
         tex.magFilter = THREE.NearestFilter;
         tex.minFilter = THREE.NearestMipmapLinearFilter;
-        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.colorSpace = colorSpace;
         tex.flipY = false; // texel t increases downward, as in the image
         return [name, tex];
       } catch {
