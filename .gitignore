@@ -28,6 +28,10 @@ maps/trenchbroom/CompilationProfiles.cfg
 # Godot
 .godot/
 /godot/export/
+# gdUnit4, installed by tools/setup.py, and its test reports
+/godot/addons/gdUnit4/
+/godot/addons/gdUnit4.partial/
+/godot/reports/
 
 # Playwright
 test-results/

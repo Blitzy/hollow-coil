@@ -2,6 +2,24 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-12: Godot setup: our own parser and meshes, a 64-bit vector, gdUnit4 installed by setup.py
+
+**Decision:** The Godot build of M1 follows the web build's structure:
+
+- Level meshes come from our own `.map` parser, not the func_godot addon.
+- Sim math uses `Vec3`, a 64-bit vector class, instead of Godot's `Vector3`.
+- Tests use gdUnit4 6.2.1, pinned in `tools/versions.json` and installed by `tools/setup.py` into a gitignored `godot/addons/gdUnit4`, the same way as ericw-tools. CI pins the Godot 4.7.2 Linux build by checksum.
+
+**Why:**
+
+- The sim needs our own parser for collision anyway. With func_godot drawing the level, Godot would have two `.map` parsers that could disagree in small ways (texture projection, plane precision, epsilons), so what you see and what you collide with could drift apart. M2 draws the lit world from `.bsp` faces, which func_godot doesn't read, so its meshes would be replaced a milestone later. Porting the web build's mesh code (about 150 tested lines) also keeps the engine comparison like for like. Its config (entity definitions, texture paths) would also duplicate our FGD and `textures/` layout.
+- Official Godot builds have 32-bit `Vector3`. The web sim does its math in 64-bit numbers, and the shared scenarios and fixtures are checked against those results.
+- gdUnit4 is 300+ files; installing it keeps third-party code out of the repo and pinned like our other tools.
+
+**Trade-offs:** No preview of maps in Godot's editor viewport (a tool script could add one later). `Vec3` allocates an object per operation, which is slower than `Vector3`; fine for M1, worth measuring if movement or traces show up in profiles.
+
+**Alternatives considered:** func_godot for meshes (above); a double-precision Godot build (custom engine builds for every platform and for CI); vendoring gdUnit4 into the repo; GUT, the other common GDScript test framework (also MIT, but gdUnit4 has a maintained headless runner for CI).
+
 ## 2026-10-12: Keep a commercial option open: public code, separable content
 
 **Decision:** This repo holds all code, tools, schemas, test maps, and placeholder content, all under the GPL, and is meant to be public when the project is ready (it's private for now). If Hollow Coil becomes a commercial product, its final content (maps, textures, audio, music, and final tuning data) will live in a separate private repo with its own license. Nothing changes yet, but new work must keep that split possible:

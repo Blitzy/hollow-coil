@@ -128,7 +128,7 @@ Both engines follow `docs/MOVEMENT.md` for movement and collision.
 - Quake-style movement with step-up, air control, and jumping
 - Interpolated rendering and mouse look
 
-Godot note: func_godot may build the visual mesh, but sim collision comes from our own brush parser so it matches the web build.
+Godot note: Godot builds its level meshes from our own `.map` parser too, not func_godot, so visuals and collision come from the same brushes in both engines (see docs/DECISIONS.md).
 
 Tests:
 

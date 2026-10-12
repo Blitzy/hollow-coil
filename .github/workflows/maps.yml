@@ -61,7 +61,7 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('tools/versions.json') }}
 
       - name: Install pinned tools
-        run: python tools/setup.py
+        run: python tools/setup.py ericw-tools
 
       - name: Test tools
         run: python -m unittest discover -s tools/tests -v

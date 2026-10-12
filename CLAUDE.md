@@ -64,7 +64,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 
 ## Commands
 
-- `python tools/setup.py`: install pinned third-party tools (ericw-tools) into `.tools/`. `--check` verifies without changing anything; `--force` reinstalls.
+- `python tools/setup.py [tool ...]`: install pinned third-party tools: ericw-tools into `.tools/`, and gdUnit4 into `godot/addons/` (gitignored). Name tools (`ericw-tools`, `gdunit4`) to install only those. `--check` verifies without changing anything; `--force` reinstalls.
 - `python tools/compile.py [map ...] [--mode check|release]`: compile maps to `build/<name>.bsp`. Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
 - `python tools/bspdump.py build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON.
 - `python -m unittest discover -s tools/tests`: test the tools (needs ericw-tools installed).
@@ -75,7 +75,9 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 
 Web (run in `web/`): `npm install`, then `npm run dev` (play at http://localhost:5173/?map=test_movement), `npm test` (Vitest), and `npm run typecheck` (includes the sim-only check).
 
-Still to come: run each engine, Godot tests.
+Godot (run from the repo root): `python tools/test_godot.py [res://tests/...]` runs the gdUnit4 suites headless. It needs the `GODOT` environment variable pointing at the Godot 4.7 executable (on Windows, the `_console.exe`), or `godot` on PATH. See `godot/README.md`.
+
+Still to come: running the Godot build.
 
 ## Tools
 

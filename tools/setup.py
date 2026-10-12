@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Download and install pinned third-party tools into .tools/.
+"""Download and install pinned third-party tools.
 
-Currently installs ericw-tools (qbsp, light, vis, bsputil, bspinfo) at the
-version and checksum pinned in tools/versions.json, so every machine and CI
-compile maps with the same build.
+Installs, at the versions and checksums pinned in tools/versions.json, so every
+machine and CI use the same builds:
+    - ericw-tools (qbsp, light, vis, bsputil, bspinfo) into .tools/
+    - the gdUnit4 test framework into godot/addons/gdUnit4 (gitignored)
 
 Usage:
-    python tools/setup.py           install anything missing
-    python tools/setup.py --check   verify installs; exit 1 if anything is missing
-    python tools/setup.py --force   reinstall even if already installed
+    python tools/setup.py             install anything missing
+    python tools/setup.py gdunit4     only the named tools (ericw-tools, gdunit4)
+    python tools/setup.py --check     verify installs; exit 1 if anything is missing
+    python tools/setup.py --force     reinstall even if already installed
 """
 
 from __future__ import annotations
@@ -184,18 +186,108 @@ def check_ericw(versions: dict) -> bool:
     return True
 
 
+def gdunit_dir(versions: dict | None = None) -> Path:
+    """Where the gdUnit4 addon is installed inside the Godot project."""
+    versions = versions or load_versions()
+    return REPO_ROOT / versions["gdunit4"]["install_dir"]
+
+
+def extract_subdir(archive: Path, prefix: str, dest: Path) -> None:
+    """Extract only the archive entries under prefix/, with that prefix removed."""
+    prefix = prefix.rstrip("/") + "/"
+    dest_resolved = dest.resolve()
+    with zipfile.ZipFile(archive) as z:
+        members = [info for info in z.infolist() if info.filename.startswith(prefix) and info.filename != prefix]
+        if not members:
+            raise SetupError(f"{archive.name} has nothing under {prefix}")
+        for info in members:
+            target = (dest / info.filename[len(prefix):]).resolve()
+            if not target.is_relative_to(dest_resolved):
+                raise SetupError(f"refusing to extract {info.filename!r}: path escapes {dest}")
+            if info.is_dir():
+                target.mkdir(parents=True, exist_ok=True)
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with z.open(info) as src, target.open("wb") as out:
+                shutil.copyfileobj(src, out)
+
+
+def verify_gdunit(install_dir: Path, version: str) -> None:
+    plugin = install_dir / "plugin.cfg"
+    if not plugin.is_file():
+        raise SetupError(f"gdUnit4 install is missing {plugin.name}")
+    if f'version="{version}"' not in plugin.read_text(encoding="utf-8"):
+        raise SetupError(f"{plugin.name} does not say version {version}")
+
+
+def install_gdunit(versions: dict, force: bool) -> Path:
+    entry = versions["gdunit4"]
+    version = entry["version"]
+    install_dir = gdunit_dir(versions)
+    marker = install_dir / MARKER
+    if not force and marker.is_file() and marker.read_text(encoding="utf-8").strip() == entry["sha256"]:
+        print(f"gdUnit4 {version}: already installed")
+        return install_dir
+
+    print(f"gdUnit4 {version}: installing")
+    archive = DOWNLOADS_DIR / entry["file"]
+    download(entry["url"].format(version=version), archive, entry["sha256"])
+
+    staging = install_dir.with_name(install_dir.name + ".partial")
+    shutil.rmtree(staging, ignore_errors=True)
+    staging.mkdir(parents=True)
+    extract_subdir(archive, entry["archive_dir"], staging)
+    verify_gdunit(staging, version)
+    (staging / MARKER).write_text(entry["sha256"] + "\n", encoding="utf-8")
+    shutil.rmtree(install_dir, ignore_errors=True)
+    staging.rename(install_dir)
+
+    print(f"  installed to {install_dir.relative_to(REPO_ROOT).as_posix()}")
+    return install_dir
+
+
+def check_gdunit(versions: dict) -> bool:
+    version = versions["gdunit4"]["version"]
+    install_dir = gdunit_dir(versions)
+    if not (install_dir / MARKER).is_file():
+        print(f"gdUnit4 {version}: not installed (run python tools/setup.py)")
+        return False
+    try:
+        verify_gdunit(install_dir, version)
+    except SetupError as e:
+        print(f"gdUnit4 {version}: broken install: {e}")
+        return False
+    print(f"gdUnit4 {version}: ok")
+    return True
+
+
+# Each tool by its versions.json key: (install, check).
+TOOLS = {
+    "ericw-tools": (install_ericw, check_ericw),
+    "gdunit4": (install_gdunit, check_gdunit),
+}
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Install pinned third-party tools into .tools/.")
+    parser = argparse.ArgumentParser(description="Install pinned third-party tools.")
+    parser.add_argument("tools", nargs="*", metavar="tool",
+                        help=f"tools to install or check: {', '.join(TOOLS)} (default: all)")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--check", action="store_true", help="verify installs without changing anything")
     mode.add_argument("--force", action="store_true", help="reinstall even if already installed")
     args = parser.parse_args(argv)
+    unknown = [name for name in args.tools if name not in TOOLS]
+    if unknown:
+        parser.error(f"unknown tool(s): {', '.join(unknown)} (choose from {', '.join(TOOLS)})")
+    selected = args.tools or list(TOOLS)
 
     try:
         versions = load_versions()
         if args.check:
-            return 0 if check_ericw(versions) else 1
-        install_ericw(versions, args.force)
+            results = [TOOLS[name][1](versions) for name in selected]
+            return 0 if all(results) else 1
+        for name in selected:
+            TOOLS[name][0](versions, args.force)
     except KeyError as e:
         print(f"setup failed: {VERSIONS_FILE.name} is missing key {e}", file=sys.stderr)
         return 1
