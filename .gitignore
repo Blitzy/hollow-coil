@@ -70,8 +70,8 @@ $RECYCLE.BIN/
 *~
 
 ### VS Code
+# settings.json stays local: it tends to hold machine-specific paths (such as the Godot executable)
 .vscode/*
-!.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json

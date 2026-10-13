@@ -1,6 +1,6 @@
 # spec
 
-Engine-neutral test scenarios. Both engines run every scenario here and must pass the same expectations. Run `python tools/validate.py` to check them; CI does on every push.
+Engine-neutral test scenarios. Both engines run every scenario here and must pass the same expectations: `web/tests/scenarios.test.ts` and `godot/tests/test_spec_scenarios.gd`. Run `python tools/validate.py` to check them; CI does on every push.
 
 - `*.json`: scenarios, validated against `schemas/scenario.schema.json`
 - `schemas/input_command.schema.json`: the per-tick input command, shared by both engines, scenarios, and demos
@@ -22,7 +22,7 @@ Both engines must convert scenarios to ticks and input commands exactly the same
 - **Expectations:** a check `at` time *t* runs after `ticks(t)` ticks have been simulated.
 - **Angles:** `units(degrees) = floor(degrees * 65536 / 360 + 0.5)`. Yaw is then taken modulo 65536. Yaw 0 faces +x (east) and 90 faces +y (north). Pitch is positive looking up.
 - **Buttons:** `jump` sets bit 2 and `attack` sets bit 1 of the command's `buttons`.
-- **Start state:** the player spawns at the start marker's origin raised by 1 unit (see `docs/MOVEMENT.md`, Spawning), at rest, at full health, holding the starting weapon ready to fire. The first tick settles it onto the floor, 1/32 above it, so standing heights in expectations are 24 + 1/32 above the floor; the tolerances cover that. The RNG is seeded with `seed` (default 0). Every engine implements the same RNG, mulberry32, so seeded results match: see `web/src/sim/rng.ts`, and the reference outputs in `web/src/sim/rng.test.ts`.
+- **Start state:** the player spawns at the start marker's origin raised by 1 unit (see `docs/MOVEMENT.md`, Spawning), at rest, at full health, holding the starting weapon ready to fire. The first tick settles it onto the floor, 1/32 above it, so standing heights in expectations are 24 + 1/32 above the floor; the tolerances cover that. The RNG is seeded with `seed` (default 0). Every engine implements the same RNG, mulberry32, so seeded results match: see `web/src/sim/rng.ts` and `godot/src/sim/sim_random.gd`, and the reference outputs in `web/src/sim/rng.test.ts` (checked by `godot/tests/sim/test_sim_random.gd` too).
 
 Scenario times are in seconds, not ticks, so scenarios survive tick-rate experiments. Write times that land on whole ticks at 60 Hz (multiples of 1/60 s, such as 0.05 or 0.1) so the rounding never matters at the current rate.
 

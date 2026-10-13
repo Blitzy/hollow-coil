@@ -19,7 +19,12 @@ Run these from the repo root. The test runner finds Godot through the `GODOT` en
   - `player/`: Quake-style player movement (`PlayerMovement`) and the player's physical state (`PlayerBody`)
   - `input_command.gd`: the per-tick input command, matching `spec/schemas/input_command.schema.json`
   - `player_data.gd`: `data/player.json` as the sim uses it (callers load the file)
-  - `constants.gd`: the tick rate and contents bits
+  - `level.gd`: a map's collision world, markers, and player start
+  - `sim.gd` and `sim_state.gd`: sim state, spawning, and `Sim.step()`, which advances one tick and returns events
+  - `snapshot.gd`: snapshots and the per-tick state hash. The hash and the state's shape match the web build, so equal states hash equally in both engines. Snapshots use Godot's binary format rather than JSON, because Godot's JSON parser can read a float back one bit off.
+  - `sim_random.gd`: the seeded RNG (mulberry32), matching the web build's reference values
+  - `scenario.gd`: runs `/spec` scenarios; `tests/test_spec_scenarios.gd` runs every one
+  - `constants.gd`: the tick rate, seconds-to-ticks conversion, and contents bits
 - `src/content_paths.gd`: finds `maps/`, `textures/`, and `data/` files in the content directories listed in `HOLLOWCOIL_CONTENT`, then the repo root. The game reads them from outside the Godot project, so the same files serve both engines and the tools.
 - `tests/`: gdUnit4 suites, mirroring `src/`. `tests/helpers/worlds.gd` builds small box-and-ramp worlds. The qbsp bevel fixture is shared with the web build (`web/tests/fixtures/bevels`).
 
