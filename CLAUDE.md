@@ -75,9 +75,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 
 Web (run in `web/`): `npm install`, then `npm run dev` (play at http://localhost:5173/?map=test_movement), `npm test` (Vitest), and `npm run typecheck` (includes the sim-only check).
 
-Godot (run from the repo root): `python tools/test_godot.py [res://tests/...]` runs the gdUnit4 suites headless. It needs the `GODOT` environment variable pointing at the Godot 4.7 executable (on Windows, the `_console.exe`), or `godot` on PATH. See `godot/README.md`.
-
-Still to come: running the Godot build.
+Godot (run from the repo root): `python tools/test_godot.py [res://tests/...]` runs the gdUnit4 suites headless. It needs the `GODOT` environment variable pointing at the Godot 4.7 executable (on Windows, the `_console.exe`), or `godot` on PATH. To play, open `godot/project.godot` in the editor and press F5, or run `"$GODOT" --path godot -- --map=<name>`. See `godot/README.md`.
 
 ## Tools
 

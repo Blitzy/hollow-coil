@@ -8,7 +8,9 @@ python tools/test_godot.py        # every test suite, headless
 python tools/test_godot.py res://tests/sim/map    # one folder or suite
 ```
 
-Run these from the repo root. The test runner finds Godot through the `GODOT` environment variable (the path to the Godot 4.7 executable; on Windows, the `_console.exe` so output reaches the terminal), or `godot` on PATH. It imports the project first, so Godot knows every script's `class_name`, then runs gdUnit4. CI runs the same script against a pinned Linux build of Godot (`.github/workflows/godot.yml`).
+To play, open `godot/project.godot` in the Godot editor and press Play (F5). Click to capture the mouse, then move with WASD, look with the mouse, and jump with space; Esc frees the mouse. To pick a map, select the `Game` node in `scenes/main.tscn` and set **Map Name** in the inspector, or run from a terminal: `"$GODOT" --path godot -- --map=greybox_01`. The game reads maps, textures, and data from the repo (through the content search path below), so saving a map in TrenchBroom and restarting picks it up. Levels draw unlit from the `.map` for now; lightmaps come with M2.
+
+Run the commands above from the repo root. The test runner finds Godot through the `GODOT` environment variable (the path to the Godot 4.7 executable; on Windows, the `_console.exe` so output reaches the terminal), or `godot` on PATH. It imports the project first, so Godot knows every script's `class_name`, then runs gdUnit4. CI runs the same script against a pinned Linux build of Godot (`.github/workflows/godot.yml`).
 
 ## Layout
 
@@ -25,6 +27,9 @@ Run these from the repo root. The test runner finds Godot through the `GODOT` en
   - `sim_random.gd`: the seeded RNG (mulberry32), matching the web build's reference values
   - `scenario.gd`: runs `/spec` scenarios; `tests/test_spec_scenarios.gd` runs every one
   - `constants.gd`: the tick rate, seconds-to-ticks conversion, and contents bits
+- `src/render/`: presentation: level meshes from `.map` brushes (`LevelMesh`), texture projection (`TextureAxes`), and Quake-to-Godot coordinates (`QuakeCoords`)
+- `src/game/`: the main scene's script (`game.gd`: loading, the fixed-tick loop, interpolation, mouse look, and the overlay) and input commands from held keys (`CommandBuilder`). The sim steps in `_physics_process`, with Godot's physics rate set from `SimConstants.TICK_RATE`.
+- `scenes/main.tscn`: the main scene
 - `src/content_paths.gd`: finds `maps/`, `textures/`, and `data/` files in the content directories listed in `HOLLOWCOIL_CONTENT`, then the repo root. The game reads them from outside the Godot project, so the same files serve both engines and the tools.
 - `tests/`: gdUnit4 suites, mirroring `src/`. `tests/helpers/worlds.gd` builds small box-and-ramp worlds. The qbsp bevel fixture is shared with the web build (`web/tests/fixtures/bevels`).
 
