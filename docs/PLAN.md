@@ -149,7 +149,7 @@ Tests:
 
 ### M3: Weapons
 
-In progress. Done: the weapon state machine (switching and firing, following Quake 3; see `docs/WEAPONS.md`) and hitscan, with fired and hit events and scenarios. Remaining: switching and hit marks in the game.
+Done (2026-10-14). The pistol and shotgun switch and fire by Quake 3's rules (see `docs/WEAPONS.md`), with hitscan against walls and entity boxes, fired and hit events, and scenarios. In the game: number keys and the mouse wheel switch weapons, the overlay shows the weapon, and shots leave placeholder marks where they hit.
 
 - Weapon state machine: ready, firing (with its cooldown), lowering, raising
 - Pistol and shotgun from data, hitscan against world and entities

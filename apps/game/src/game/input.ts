@@ -3,6 +3,7 @@
 
 import type { HeldInput } from "./command.ts";
 import { MAX_PITCH } from "./command.ts";
+import { WheelSteps } from "./weapon-select.ts";
 
 const KEYS = {
   forward: ["KeyW", "ArrowUp"],
@@ -45,6 +46,7 @@ export class BrowserInput {
   private readonly held = new Set<string>();
   private attack = false;
   private pendingWeapon = 0;
+  private readonly wheel = new WheelSteps();
 
   /** Whether the current pointer lock uses raw mouse input. */
   rawInput = false;
@@ -75,6 +77,11 @@ export class BrowserInput {
     window.addEventListener("mouseup", (e) => {
       if (e.button === 0) this.attack = false;
     });
+    element.addEventListener("wheel", (e) => {
+      if (!this.locked) return;
+      e.preventDefault();
+      this.wheel.add(e.deltaY, e.deltaMode);
+    }, { passive: false }); // so preventDefault can stop the page from scrolling
     document.addEventListener("mousemove", (e) => {
       if (!this.locked) return;
       if (Math.abs(e.movementX) > SUSPICIOUS_MOVEMENT || Math.abs(e.movementY) > SUSPICIOUS_MOVEMENT) {
@@ -91,6 +98,11 @@ export class BrowserInput {
 
   private isHeld(codes: readonly string[]): boolean {
     return codes.some((c) => this.held.has(c));
+  }
+
+  /** Mouse wheel steps since the last call: positive for the next weapon, negative for the previous. */
+  takeWeaponSteps(): number {
+    return this.wheel.take();
   }
 
   /** The input to build this tick's command from. A weapon press is consumed by the first tick that reads it. */

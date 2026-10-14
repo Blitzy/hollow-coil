@@ -11,8 +11,10 @@ import * as THREE from "three";
 import { buildCommand } from "./game/command.ts";
 import { FixedStep } from "./game/fixed-step.ts";
 import { BrowserInput } from "./game/input.ts";
+import { cycleSlot } from "./game/weapon-select.ts";
 import { buildBspMeshes, bspTextureNames, DEFAULT_BRIGHTNESS, type LitWorld } from "@hollow-coil/render/bsp-mesh";
 import { cameraRotation, toThree, verticalFov } from "@hollow-coil/render/coords";
+import { ImpactMarks } from "@hollow-coil/render/impacts";
 import type { LightStyleData } from "@hollow-coil/render/light-styles";
 import { buildLevelMeshes, loadTextures, textureNames } from "@hollow-coil/render/level-mesh";
 import { TICK_RATE } from "@hollow-coil/sim/constants";
@@ -98,6 +100,8 @@ async function main(): Promise<void> {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x101014);
   scene.add(world.group);
+  const impacts = new ImpactMarks();
+  scene.add(impacts.group);
   // Brightness keys, for calibrating lightmaps by eye.
   window.addEventListener("keydown", (e) => {
     if (!world.lit || (e.code !== "BracketLeft" && e.code !== "BracketRight")) return;
@@ -121,6 +125,8 @@ async function main(): Promise<void> {
   const preferRawInput = params.get("rawinput") !== "off";
   const input = new BrowserInput(renderer.domElement, preferRawInput);
   input.yaw = angleToRadians(startYaw);
+  const weaponData = config.weapons.weapons;
+  const slots = config.player.weapons.map((id) => weaponData[id]!.slot).sort((a, b) => a - b);
 
   let previous: SimState = createSim(config, { origin: start.origin, yaw: startYaw });
   let current = previous;
@@ -134,8 +140,14 @@ async function main(): Promise<void> {
     const ticks = stepper.advance((now - lastTime) / 1000);
     lastTime = now;
     for (let i = 0; i < ticks; i++) {
+      const held = input.read();
+      // A number key wins; otherwise the wheel steps on from the weapon last asked for.
+      const steps = input.takeWeaponSteps();
+      const weapon = held.weapon || (steps !== 0 ? cycleSlot(slots, weaponData[current.player.weapon.desired]!.slot, steps) : 0);
+      const result = step(current, buildCommand({ ...held, weapon }), ctx);
       previous = current;
-      current = step(current, buildCommand(input.read()), ctx).state;
+      current = result.state;
+      for (const event of result.events) if (event.type === "hitWall") impacts.add(event.point, event.normal, now / 1000);
     }
 
     // Interpolate position between the last two ticks; view angles come straight from the mouse for low latency.
@@ -144,6 +156,7 @@ async function main(): Promise<void> {
     const rot = cameraRotation(input.yaw, input.pitch);
     camera.rotation.set(rot.x, rot.y, 0);
     world.lit?.animate(current.tick);
+    impacts.update(now / 1000);
     renderer.render(scene, camera);
 
     frames++;
@@ -157,10 +170,11 @@ async function main(): Promise<void> {
       `${world.file}  ${fps} fps  tick ${current.tick}`,
       `pos ${p.origin.x.toFixed(1)} ${p.origin.y.toFixed(1)} ${p.origin.z.toFixed(1)}`,
       `speed ${Math.hypot(p.velocity.x, p.velocity.y).toFixed(0)}  ${p.onGround ? "ground" : "air"}`,
+      `${weaponData[p.weapon.current]!.name}  ${p.weapon.phase}`,
       world.lit ? `lit  brightness ${world.lit.brightness.value.toFixed(1)}  ([ and ] adjust)` : world.note,
       input.locked
         ? `mouse ${input.rawInput ? "raw" : preferRawInput ? "accelerated (raw input unavailable)" : "accelerated (rawinput=off)"}`
-        : "click to play  (WASD, mouse, space)",
+        : "click to play  (WASD, mouse, space; click to fire; 1-2 or wheel to switch)",
     ].join("\n");
     requestAnimationFrame(frame);
   };

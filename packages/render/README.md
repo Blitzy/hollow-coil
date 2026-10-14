@@ -7,6 +7,7 @@ Three.js presentation shared by the game and future editors, so tools show exact
 - `light-styles.ts`: animated light styles from `data/lightstyles.json`
 - `level-mesh.ts`: unlit meshes from a `.map`'s brushes, and texture loading
 - `uv.ts`: texture projection for `.map` faces
+- `impacts.ts`: fading marks where shots hit walls (placeholders until real effects)
 - `coords.ts`: Quake-to-Three coordinates, camera angles, and field of view
 
 All in `src/`; tests are in `tests/`. The lightmap tests use the compiled fixture room from `packages/sim/tests/fixtures/bsp`.
