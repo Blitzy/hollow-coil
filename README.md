@@ -48,7 +48,43 @@ To edit maps, link the Mandrel.js Example game config into TrenchBroom, then in 
 npm run install-trenchbroom
 ```
 
-Other root commands: `npm test` (every app, package, and tool), `npm run typecheck`, `npm run build`, `npm run compile` (all maps, or name some; `-- --mode release` for full-quality lighting), `npm run validate`, `npm run bspdump -- build/example/<name>.bsp`, and `npm run check-files`.
+Every command is listed under [Commands](#commands).
+
+## Commands
+
+Run everything from the repo root. Options go after `--`, as in `npm run compile -- greybox_01 --mode release`. Commands that work on a game take `--game <dir>` and use the example game without it.
+
+**Setup**
+
+| Command | What it does |
+|---|---|
+| `npm run setup` | Installs the pinned ericw-tools into `.tools/`. `--check` verifies the install without changing anything; `--force` reinstalls. |
+| `npm run install-trenchbroom` | Links the game's config into TrenchBroom, and checks TrenchBroom's game path for it. `--uninstall` removes the links. |
+
+**Play and build**
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Starts the dev server at http://localhost:5173, compiling maps as you save them. Vite options work too, such as `-- --port 5199`. |
+| `npm run build` | Type-checks, then builds the game client to `apps/game-client/dist`. |
+
+**Maps**
+
+| Command | What it does |
+|---|---|
+| `npm run compile` | Compiles every map to `build/<game>/`, failing on leaks, missing textures, and compiler errors. Name maps to compile only those; `--mode release` for full-quality lighting. |
+| `npm run bspdump -- <file>` | Prints a compiled map's entities, counts, textures, and lightmap stats as JSON, such as `-- build/example/greybox_01.bsp`. `--no-entities` leaves out the entity list. |
+| `npm run make-placeholder-textures` | Regenerates the example game's placeholder textures in `example/textures/dev/`. |
+
+**Checks** (CI runs all of these except `test:watch`)
+
+| Command | What it does |
+|---|---|
+| `npm test` | Runs every test. The compile tests need ericw-tools, and skip without it. |
+| `npm run test:watch` | Reruns the tests as you edit. |
+| `npm run typecheck` | Type-checks everything, plus a check that the sim uses no browser or Node APIs. |
+| `npm run validate` | Checks a game's data, the engine's light styles, and the scenarios against their schemas, plus the rules between files. |
+| `npm run check-files` | Fails if any tracked file is over 2 MB. |
 
 ## Making Your Own Game
 
