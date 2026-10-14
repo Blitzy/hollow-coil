@@ -25,7 +25,12 @@ export const MAPS_DIR = repoPath("maps");
 export const BUILD_DIR = repoPath("build");
 
 const QBSP_ARGS = ["-q2bsp", "-leaktest", "-noverbose"];
-export const LIGHT_ARGS = { check: [], release: ["-extra4"] } as const satisfies Record<string, string[]>;
+// For Quake 2 maps, light bounces light once by default and keeps each light's
+// style on its bounced light, so a flickering light's bounce flickers in rooms
+// it doesn't reach. -bouncestyled 0 keeps the bounce but bounces only steady
+// light, as Quake 2's own qrad3 did.
+const LIGHT_COMMON = ["-bouncestyled", "0"];
+export const LIGHT_ARGS = { check: [...LIGHT_COMMON], release: ["-extra4", ...LIGHT_COMMON] } as const satisfies Record<string, string[]>;
 export type Mode = keyof typeof LIGHT_ARGS;
 
 const LEAK = /Reached occupant "([^"]+)" at \(([^)]*)\)/;

@@ -2,6 +2,18 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-14: Light bounces, but only steady light
+
+**Decision:** Maps compile with ericw-tools' bounce lighting on (its default for Quake 2 maps) but with `-bouncestyled 0`, so only steady light bounces. A light with a `style` (flickering, pulsing) lights only what it reaches directly.
+
+**Why:**
+
+- With ericw's Quake 2 defaults, bounced light keeps its light's style. In `greybox_01`, the corridor's flickering light (light 180, so about 180 units of reach) bounced into the first room, and 247 of the map's 385 faces flickered with it; only 68 are in its direct reach. Ryan saw boxes 700 units away flickering in time with the corridor.
+- Quake 2's own light tool (qrad3) bounced only steady light, so this is also the era's behavior.
+- Bounce stays on because it softens shadows and fills rooms, and turning it off darkens everything lit only indirectly.
+
+**Alternatives considered:** No bounce (`-bounce 0`: harsher, darker, more Quake 1 than Quake 2); keeping styled bounce (flicker everywhere a styled light's bounce reaches, which reads as a bug).
+
 ## 2026-10-14: Golden demos carry their own data
 
 **Decision:** A golden demo stores a copy of the `/data` files it was recorded with (player, weapons, enemies), and replays with that copy instead of the current files. When a code change alters behavior on purpose, a command rebaselines a demo: it replays the recorded inputs on the new code and saves the new state hashes, and the commit message says so. Ryan records demos by playing, with an in-game recorder.
