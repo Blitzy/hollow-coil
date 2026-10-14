@@ -1,10 +1,11 @@
 // Browser entry point: loads a map, runs the sim at its fixed tick rate, and
 // renders between ticks.
 //
-// URL options: ?map=<name> (default test_movement), &lighting=off to draw the
+// URL options: ?map=<name> (default test_movement), &lighting=off to load the
 // unlit .map instead of the compiled .bsp, &brightness=<n> to try another lightmap scale,
 // &rawinput=off for the OS's accelerated mouse instead of raw input.
-// The sim always loads its collision and entities from the .map.
+// Everything comes from one file: the .bsp (drawing, collision, and entities),
+// or the .map when there's no usable .bsp or lighting is off.
 
 import * as THREE from "three";
 import { buildCommand } from "./game/command.ts";
@@ -17,7 +18,7 @@ import { buildLevelMeshes, loadTextures, textureNames } from "@hollow-coil/rende
 import { TICK_RATE } from "@hollow-coil/sim/constants";
 import type { PlayerData } from "@hollow-coil/sim/data";
 import { angleToRadians, degreesToUnits, wrapYaw } from "@hollow-coil/sim/input";
-import { levelFromMap, type MapLevel } from "@hollow-coil/sim/level";
+import { levelFromBsp, levelFromMap, type Level } from "@hollow-coil/sim/level";
 import { readBsp } from "@hollow-coil/sim/map/bsp";
 import { vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
 import { createSim, movementContext, step, type SimState } from "@hollow-coil/sim/sim";
@@ -34,26 +35,31 @@ async function fetchText(url: string): Promise<string> {
 
 const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => vec3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
 
+interface LoadedLevel {
+  readonly level: Level;
+  readonly group: THREE.Group;
+  readonly lit: LitWorld | null;
+  /** The file everything came from, for the overlay. */
+  readonly file: string;
+  /** Why the level is unlit, or "" if it's lit. */
+  readonly note: string;
+}
+
 /**
- * The world's meshes: lit from the compiled .bsp when it loads, otherwise
+ * The level and its meshes, from the compiled .bsp when it loads, otherwise
  * unlit from the .map, with the reason. The dev server compiles stale maps on request.
  */
-async function loadWorld(
-  mapName: string,
-  level: MapLevel,
-  lightStyles: LightStyleData,
-  lighting: boolean,
-  brightness: number,
-): Promise<{ group: THREE.Group; lit: LitWorld | null; note: string }> {
+async function loadLevel(mapName: string, lightStyles: LightStyleData, lighting: boolean, brightness: number): Promise<LoadedLevel> {
   let reason = "lighting=off";
   if (lighting) {
     try {
       const response = await fetch(`${GAME}/build/${mapName}.bsp`);
       if (response.ok) {
         const bsp = readBsp(await response.arrayBuffer());
+        const level = levelFromBsp(bsp);
         const textures = await loadTextures(bspTextureNames(bsp), `${GAME}/textures`, THREE.NoColorSpace);
         const lit = buildBspMeshes(bsp, textures, lightStyles, brightness);
-        return { group: lit.group, lit, note: "" };
+        return { level, group: lit.group, lit, file: `${mapName}.bsp`, note: "" };
       }
       const report = (await response.text()).trim();
       console.warn(`no lit build of ${mapName}:\n${report}`);
@@ -63,8 +69,9 @@ async function loadWorld(
       reason = error instanceof Error ? error.message : String(error);
     }
   }
+  const level = levelFromMap(await fetchText(`${GAME}/maps/${mapName}.map`));
   const group = buildLevelMeshes(level, await loadTextures(textureNames(level), `${GAME}/textures`));
-  return { group, lit: null, note: `unlit (${reason})` };
+  return { level, group, lit: null, file: `${mapName}.map`, note: `unlit (${reason})` };
 }
 
 async function main(): Promise<void> {
@@ -73,14 +80,12 @@ async function main(): Promise<void> {
   const overlay = document.getElementById("overlay")!;
   overlay.textContent = `loading ${mapName}...`;
 
-  const [mapText, playerText, lightStylesText] = await Promise.all([
-    fetchText(`${GAME}/maps/${mapName}.map`),
-    fetchText(`${GAME}/data/player.json`),
-    fetchText(`${GAME}/data/lightstyles.json`),
-  ]);
-  const level = levelFromMap(mapText);
+  const [playerText, lightStylesText] = await Promise.all([fetchText(`${GAME}/data/player.json`), fetchText(`${GAME}/data/lightstyles.json`)]);
   const config = { player: JSON.parse(playerText) as PlayerData };
   const lightStyles = JSON.parse(lightStylesText) as LightStyleData;
+  const brightness = Number(params.get("brightness") ?? DEFAULT_BRIGHTNESS);
+  const world = await loadLevel(mapName, lightStyles, params.get("lighting") !== "off", Number.isFinite(brightness) ? brightness : DEFAULT_BRIGHTNESS);
+  const level = world.level;
   const ctx = movementContext(level, config);
 
   const renderer = new THREE.WebGLRenderer({ antialias: false });
@@ -88,8 +93,6 @@ async function main(): Promise<void> {
   document.body.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x101014);
-  const brightness = Number(params.get("brightness") ?? DEFAULT_BRIGHTNESS);
-  const world = await loadWorld(mapName, level, lightStyles, params.get("lighting") !== "off", Number.isFinite(brightness) ? brightness : DEFAULT_BRIGHTNESS);
   scene.add(world.group);
   // Brightness keys, for calibrating lightmaps by eye.
   window.addEventListener("keydown", (e) => {
@@ -147,7 +150,7 @@ async function main(): Promise<void> {
     }
     const p = current.player;
     overlay.textContent = [
-      `${mapName}  ${fps} fps  tick ${current.tick}`,
+      `${world.file}  ${fps} fps  tick ${current.tick}`,
       `pos ${p.origin.x.toFixed(1)} ${p.origin.y.toFixed(1)} ${p.origin.z.toFixed(1)}`,
       `speed ${Math.hypot(p.velocity.x, p.velocity.y).toFixed(0)}  ${p.onGround ? "ground" : "air"}`,
       world.lit ? `lit  brightness ${world.lit.brightness.value.toFixed(1)}  ([ and ] adjust)` : world.note,
