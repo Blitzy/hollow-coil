@@ -2,6 +2,72 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-14: The engine and the game are separate, and the engine gets its own name
+
+**Decision:** This repo is an engine: its code, tools, and a free example game to play and test it with. Hollow Coil is the name of a game made with the engine. Hollow Coil's own content (levels, art, audio, models, and final tuning) lives in a separate repo under a license that doesn't allow reuse, as planned in "Keep a commercial option open" below. The engine gets its own name, not yet chosen. Until it has one, packages stay `@hollow-coil/*` and the docs keep their current wording; the rename is one change once the name is picked.
+
+**Why:**
+
+- With one name for both, it's unclear whether the free example content is the game, and whether "Hollow Coil" means the GPL code anyone may use or the game whose content they may not.
+- The GPL doesn't cover names. A game name kept apart from the engine's can be protected as a trademark without affecting what people do with the engine.
+- It's how the era's engines are known today: id Tech and Quake, ioquake3 and Quake III Arena, Freedoom and Doom.
+
+**Alternatives considered:** One name for both (fine while the engine has no other users, but confusing once it has free example content and modders of its own).
+
+## 2026-10-14: Example content is CC BY 4.0
+
+**Decision:** The example content in this repo is licensed under Creative Commons Attribution 4.0 (CC BY 4.0) instead of the GPL: the maps (`maps/*.map`, including `greybox_01`), the textures (`textures/`), the gameplay data values (`data/player.json`, `data/weapons.json`, `data/enemies.json`), and future example audio and models. Everything else stays GPLv3 or later: code, tools, schemas, the TrenchBroom config and FGD, `data/lightstyles.json`, `/spec` scenarios, demos, and docs. `LICENSE-EXCEPTION.md` lists which is which. Art source files (layered images, project files) aren't included in the repo.
+
+**Why:**
+
+- The GPL is written for code. It's unclear what the "source" of a texture or sound is, and we don't want to ship art source files. Creative Commons licenses are made for this kind of work.
+- CC BY lets anyone use the example content for anything, including commercial games and mods, as long as they give credit. That suits content whose job is to be built on.
+- Maps take the same license as art so the whole example game has one license that's easy to state and follow.
+- The FSF lists CC BY 4.0 as compatible with GPLv3, so example data can be copied into GPL files, such as golden demos, which carry their own copy of `/data`.
+- `data/lightstyles.json` stays GPL: its patterns are Quake's, taken from GPL source, and it's engine vocabulary that the FGD must match, not tuning.
+- Ryan is the only contributor so far, so these files can be relicensed without anyone else's agreement.
+
+**Supersedes:** "until then, everything in the repo is under the GPL" in "License is GPLv3 or later" below, and the open question of the license for free content in "Keep a commercial option open" below. Whether to ask contributors to sign a CLA is still open.
+
+**Alternatives considered:** The GPL for everything (above); CC BY-SA 4.0 (keeps changed versions free, but it's unclear whether using an asset in a level or game counts as a changed version, which puts modders off); CC0 (no conditions, but contributors get no guaranteed credit); GPL maps with CC art (maps are text that compiles to `.bsp`, which suits the GPL, but two licenses for one example game is harder to follow).
+
+## 2026-10-14: The engine repo ships a free example game, built separately
+
+**Decision:** The example content (test maps, `greybox_01`, placeholder textures, and example weapons, enemies, and movement data) stays in this repo as a game directory, like Quake's `id1/`. In a later change it moves from the repo root into `base/` (like Quake 2's `baseq2/`), and Hollow Coil's content becomes a sibling game directory checked out from its own repo. From then on:
+
+- The engine build contains no content. Content is packed per game directory, and a release is the engine plus one game.
+- `npm run dev` plays the example game by default, and an option points it at another game directory.
+- Every engine behavior is used by at least one piece of example content, with tests. Nothing Hollow Coil relies on goes untested, and modders always have a working example to copy. Tests never need Hollow Coil's content.
+
+**Why:**
+
+- The example content is the engine's test fixture: `/spec` scenarios, golden demos, and compile tests all need maps, weapons, and enemies. A new engine behavior, the example content that uses it, and its scenario go in one commit. In a separate repo, every behavior would be a change across two repos.
+- It keeps this repo "buildable and playable on its own" ("Keep a commercial option open" below) without any private content.
+- Building the engine and the content separately means a Hollow Coil release carries no example content it doesn't use, and an engine release carries no Hollow Coil content.
+
+**Trade-offs:** The move into `base/` touches the compile tool, the dev server, the TrenchBroom config, the validator, and the docs that assume the repo root is the game directory. It's mechanical, and cheapest while there's little content.
+
+**Alternatives considered:** A separate repo for the example game (Freedoom and LibreQuake are separate projects from the engines that run them; worth it once the example grows into a game with its own contributors and releases, and easy to split out then); no example content (the engine couldn't be tested or played without the private repo).
+
+## 2026-10-14: Mods add behavior through engine actions, not code
+
+**Decision:** Content never contains code, so the behavior of a monster or weapon is data: a table of states, each naming an engine action (such as chase, face the target, or fire a hitscan volley), how long it lasts, and the state that follows. This is the model of Doom's state tables, which DeHackEd patches and ZDoom's DECORATE later edited to make new monsters without code.
+
+- Actions are generic engine code under the GPL, named for what they do, never for a monster. A new behavior, even one only a Hollow Coil boss uses, is a new generic action, plus example content and tests that use it.
+- Mods that need new code are source mods: a fork of the GPL engine, as with Quake 2 and Quake 3 total conversions. Entity types stay registered by classname in one place, so a fork adds a module instead of patching the core.
+- `data/enemies.json` keeps its current shape (one attack, one pain reaction) until the second enemy type. That's when it becomes a state table.
+
+**Why:**
+
+- It keeps the content split sound: data loaded at runtime can have its own license, but code that runs in the engine is covered by the GPL ("Keep a commercial option open" below).
+- No untrusted code runs in the browser or Electron ("User-made levels are a design goal" below).
+- It fits the simulation rules: an entity's place in its table is a state index and a tick count, which is plain, serializable, deterministic data, checked by schemas and `npm run validate`.
+- Doom had no scripting, and mods built a huge range of monsters and weapons by rearranging its states and actions.
+
+**Trade-offs:** Mods can do only what the actions allow. ZDoom eventually added a scripting language (ZScript) under that pressure.
+
+**Alternatives considered:** Our own scripting language and VM, like QuakeC (a language to design, build, and maintain); embedded scripting such as Lua or sandboxed JavaScript (untrusted code, and deterministic, serializable state is hard to keep); sandboxed WebAssembly modules (deterministic and isolated, the way to revisit scripting if actions prove too limiting, but not needed now); behavior written per monster in engine code (every new monster would need an engine change, and its behavior would be named for one piece of content).
+
 ## 2026-10-14: Light bounces, but only steady light
 
 **Decision:** Maps compile with ericw-tools' bounce lighting on (its default for Quake 2 maps) but with `-bouncestyled 0`, so only steady light bounces. A light with a `style` (flickering, pulsing) lights only what it reaches directly.

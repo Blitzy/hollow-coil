@@ -18,6 +18,18 @@ This permission does not extend to any other non-free software, such as third-pa
 
 By contributing to Hollow Coil, you agree that your contributions are licensed under the terms above, including the additional permission.
 
-## Game assets
+## Example content
 
-Everything in this repository is currently covered by the license above, including placeholder art and audio. Final game assets (textures, audio, models, and possibly levels) may be released under a separate license. Any such asset will have its license stated alongside it.
+The example content in this repository is licensed under the [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/) (CC BY 4.0) instead of the GNU GPL:
+
+- maps: `maps/*.map`
+- textures: everything in `textures/`
+- gameplay data: `data/player.json`, `data/weapons.json`, and `data/enemies.json`
+
+Files compiled from them, such as `.bsp` files, are covered by the same license. Credit them as "example content by Ryan Cook and Hollow Coil contributors, licensed under CC BY 4.0", with a link to this repository where possible.
+
+Everything else in this repository, including the TrenchBroom game config and FGD, `data/lightstyles.json`, schemas, test scenarios, demos, and documentation, is covered by the GNU GPL as stated above.
+
+## Hollow Coil's content
+
+The levels, art, audio, models, and final tuning of the game Hollow Coil are not in this repository and have their own license.

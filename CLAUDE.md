@@ -4,6 +4,8 @@
 
 Hollow Coil is an open-source first-person shooter in the spirit of mid-90s shooters like Doom and Quake. Levels are hand-authored and abstract rather than realistic, built for fun, variety, and fast combat. The game is not currently intended to be a commercial product.
 
+This repo is the engine (its own name is still to be chosen) plus a free example game to play and test it with. Hollow Coil's own content lives in a separate repo under its own license; never commit it here (see DECISIONS.md, 2026-10-14).
+
 The current work plan lives in `docs/PLAN.md`. Decisions and their reasons go in `docs/DECISIONS.md`. Player movement and world collision must follow `docs/MOVEMENT.md`, weapons `docs/WEAPONS.md`, and enemies `docs/ENEMIES.md`.
 
 The game is built for the web (TypeScript + Three.js); desktop builds will wrap it in Electron. A Godot version was built through M1 for comparison and then dropped (see DECISIONS.md).
@@ -15,6 +17,7 @@ The TypeScript code is an npm workspace. `apps/` holds things you run (`apps/gam
 - Feel over realism. Movement, weapon response, and enemy readability matter more than physical accuracy.
 - Authored levels. Tools exist to support hand design, not replace it.
 - Data-driven gameplay. Weapons, enemies, and movement constants live in `/data`, not in code.
+- Behavior lives in the engine; content combines it. Content never contains code. A new behavior is a generic engine action, named for what it does and never for one monster, plus example content and tests that use it.
 - Era-authentic presentation, with options rather than a single locked look.
 
 ## Pipeline
@@ -62,6 +65,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 ## Licensing
 
 - Code is GPLv3 or later, with an additional permission for platform SDKs (`LICENSE`, `LICENSE-EXCEPTION.md`).
+- Example content (maps, textures, gameplay data values, and future example audio and models) is CC BY 4.0. `LICENSE-EXCEPTION.md` lists which files are covered by which license; keep that list current when adding a new kind of content.
 - Adapting code from Quake, ericw-tools, or other GPLv2-or-later / GPLv3 projects is allowed. Credit the source in a comment next to the adapted code.
 - Do not copy code from GPLv2-only projects; it cannot be combined with GPLv3.
 - New dependencies must have GPLv3-compatible licenses (MIT, BSD, Apache-2.0, LGPL, GPLv3, and similar). Ask before adding anything else.

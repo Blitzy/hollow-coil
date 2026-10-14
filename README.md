@@ -70,4 +70,4 @@ Project guidelines live in [CLAUDE.md](CLAUDE.md). Design decisions and their re
 
 ## License
 
-Hollow Coil's code is licensed under the [GNU General Public License v3.0 or later](LICENSE), with an additional permission for linking with platform SDKs such as Steamworks. See [LICENSE-EXCEPTION.md](LICENSE-EXCEPTION.md) for details, including how game assets are handled.
+Hollow Coil's code is licensed under the [GNU General Public License v3.0 or later](LICENSE), with an additional permission for linking with platform SDKs such as Steamworks. The example content (maps, textures, and gameplay data) is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See [LICENSE-EXCEPTION.md](LICENSE-EXCEPTION.md) for exactly which files are covered by which license.
