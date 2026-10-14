@@ -16,7 +16,7 @@ import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { BSP_LUMP_NAMES, BspError, lightmapExtents, readBsp, type Bsp } from "@mandreljs/sim/map/bsp";
 import { parseEntities } from "@mandreljs/sim/map/parse";
-import { isMain } from "./repo.ts";
+import { isMain } from "./cli.ts";
 
 /** Bytes per record, for lumps that are arrays of fixed-size records. */
 const RECORD_SIZES: Partial<Record<(typeof BSP_LUMP_NAMES)[number], number>> = {

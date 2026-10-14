@@ -43,7 +43,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tools/downloads
-          key: tools-${{ runner.os }}-${{ hashFiles('tools/versions.json') }}
+          key: tools-${{ runner.os }}-${{ hashFiles('packages/toolchain/versions.json') }}
 
       # Before the tests, so the tests that need ericw-tools run instead of skipping.
       - name: Install pinned tools

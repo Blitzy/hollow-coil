@@ -5,9 +5,9 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync,
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { dump } from "../src/bspdump.ts";
-import { compileMap, compileOk, errorLine, findMaps } from "../src/compile.ts";
-import { toolsInstalled } from "../src/setup.ts";
+import { dump } from "@mandreljs/tools/bspdump";
+import { compileMap, compileOk, errorLine, findMaps } from "@mandreljs/toolchain/compile";
+import { toolsInstalled } from "@mandreljs/toolchain/setup";
 
 const FIXTURES = join(import.meta.dirname, "fixtures");
 

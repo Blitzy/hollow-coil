@@ -2,7 +2,7 @@ import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:f
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EXAMPLE_GAME } from "../src/repo.ts";
+import { EXAMPLE_GAME } from "@mandreljs/toolchain/layout";
 import { gameFgd, main, readGameMap } from "../src/validate.ts";
 
 describe("validate", () => {
@@ -22,7 +22,7 @@ describe("validate", () => {
     dirs.push(dir);
     const game = join(dir, "mygame");
     // Without textures (not checked), editor autosaves, or the engine link install-trenchbroom may have made.
-    const skip = new Set(["textures", "autosave", "engine"]);
+    const skip = new Set(["textures", "autosave", "mandrel", "engine"]);
     cpSync(EXAMPLE_GAME, game, { recursive: true, filter: (src) => !skip.has(basename(src)) });
     return game;
   };
@@ -30,7 +30,7 @@ describe("validate", () => {
   it("passes the engine's data, the example game, and the scenarios, printing a line per file", () => {
     const { code, lines } = run();
     expect(code).toBe(0);
-    expect(lines).toContain("ok    data/lightstyles.json");
+    expect(lines).toContain("ok    packages/defs/lightstyles.json");
     expect(lines).toContain("ok    example/data/game.json");
     expect(lines).toContain("ok    example/data/player.json");
     expect(lines).toContain("ok    spec/step_18_succeeds.json");

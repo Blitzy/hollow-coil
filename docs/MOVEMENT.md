@@ -54,7 +54,7 @@ A model's brushes are the ones listed by the leafs of its node tree: start at th
 
 A brush's bounds come from its axial sides: a side with normal `+axis` gives `maxs[axis] = dist`, and `-axis` gives `mins[axis] = -dist`. qbsp gives every brush all six, as bevels if needed.
 
-qbsp writes brushes in its own order, not the .map's, and stores planes as 32-bit floats. The same map loaded either way gives the same brushes, matched by shape, with planes equal to within float precision (tested on the fixtures in `packages/sim/tests/level.test.ts`, and on every map in `example/maps/` in `tools/tests/compiled-maps.test.ts`, which also checks sweeps and runs every `/spec` scenario on both).
+qbsp writes brushes in its own order, not the .map's, and stores planes as 32-bit floats. The same map loaded either way gives the same brushes, matched by shape, with planes equal to within float precision (tested on the fixtures in `packages/sim/tests/level.test.ts`, and on every map in `example/maps/` in `packages/toolchain/tests/compiled-maps.test.ts`, which also checks sweeps and runs every `/spec` scenario on both).
 
 ### Brushes from a .map
 

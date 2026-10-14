@@ -8,6 +8,7 @@
     "./*": "./src/*.ts"
   },
   "dependencies": {
-    "@mandreljs/sim": "*"
+    "@mandreljs/sim": "*",
+    "@mandreljs/toolchain": "*"
   }
 }

@@ -4,12 +4,13 @@
 // folder, so TrenchBroom always reads the game's current config and FGD. The link
 // is named after the game's FGD, as TrenchBroom's own configs are (games/Quake2
 // holds Quake2.fgd): the example's is games/MandrelJSExample. It also links the
-// engine's trenchbroom/ folder into the game's as engine/, which the game's FGD
-// includes the engine's entities from (TrenchBroom reads only files inside a
-// game's config folder). On Windows the links are directory junctions (no admin
-// rights needed); elsewhere symlinks. It also removes links earlier versions of
-// this tool made to maps/trenchbroom, where the example's config used to be, so
-// TrenchBroom doesn't load the config twice.
+// engine's FGD folder (packages/defs/trenchbroom/) into the game's as mandrel/,
+// which the game's FGD includes the engine's entities from (TrenchBroom reads
+// only files inside a game's config folder). On Windows the links are directory
+// junctions (no admin rights needed); elsewhere symlinks. It also removes links
+// earlier versions of this tool made: to maps/trenchbroom, where the example's
+// config used to be (so TrenchBroom doesn't load the config twice), and the
+// game's engine/ link to the old top-level trenchbroom/ folder.
 //
 // After installing, set the game path in TrenchBroom under
 // Preferences > Games > <game name> to the game directory (the folder holding maps/ and textures/).
@@ -22,16 +23,20 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, rmdirSync
 import { homedir } from "node:os";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { trenchbroomConfig } from "@mandreljs/data/checks";
-import { gameDir, isMain, repoPath } from "./repo.ts";
+import { trenchbroomConfig } from "@mandreljs/defs/checks";
+import { DEFS_DIR, gameDir, repoPath } from "@mandreljs/toolchain/layout";
+import { isMain } from "./cli.ts";
 
 /** The engine's TrenchBroom files: the FGD every game's FGD includes. */
-export const ENGINE_CONFIG_DIR = repoPath("trenchbroom");
+export const ENGINE_CONFIG_DIR = join(DEFS_DIR, "trenchbroom");
 /** The name of the engine link inside a game's trenchbroom/ folder, as the game's FGD includes it. */
-export const ENGINE_LINK_NAME = "engine";
+export const ENGINE_LINK_NAME = "mandrel";
 /** Where the example's config was before it moved to example/trenchbroom, and the names earlier versions of this tool linked it as. */
 const OLD_CONFIG_DIR = repoPath("maps", "trenchbroom");
 const OLD_LINK_NAMES = ["MandrelJS", "MandrelJSExample"];
+/** The engine link an earlier version made in a game's trenchbroom/ folder, and the folder it pointed at. */
+const OLD_ENGINE_LINK_NAME = "engine";
+const OLD_ENGINE_CONFIG_DIR = repoPath("trenchbroom");
 
 export class InstallError extends Error {
   override name = "InstallError";
@@ -108,8 +113,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
   const engineLink = join(configDir, ENGINE_LINK_NAME);
   try {
     const link = join(games, gameLinkName(configDir));
-    for (const name of OLD_LINK_NAMES) {
-      const message = removeOldLink(join(games, name));
+    const oldLinks: [string, string][] = [
+      ...OLD_LINK_NAMES.map((name): [string, string] => [join(games, name), OLD_CONFIG_DIR]),
+      [join(configDir, OLD_ENGINE_LINK_NAME), OLD_ENGINE_CONFIG_DIR],
+    ];
+    for (const [old, target] of oldLinks) {
+      const message = removeOldLink(old, target);
       if (message !== null) console.log(message);
     }
     if (values.uninstall) {

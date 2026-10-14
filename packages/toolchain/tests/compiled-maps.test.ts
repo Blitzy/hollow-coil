@@ -15,9 +15,9 @@ import { levelFromBsp, levelFromMap, type Level } from "@mandreljs/sim/level";
 import { lightmapExtents, readBsp, type Bsp } from "@mandreljs/sim/map/bsp";
 import { PLAYER_MASK } from "@mandreljs/sim/player/movement";
 import { runScenario, type Scenario } from "@mandreljs/sim/scenario";
-import { compileMap, compileOk, findMaps } from "../src/compile.ts";
-import { repoPath } from "../src/repo.ts";
-import { toolsInstalled } from "../src/setup.ts";
+import { compileMap, compileOk, findMaps } from "@mandreljs/toolchain/compile";
+import { repoPath } from "@mandreljs/toolchain/layout";
+import { toolsInstalled } from "@mandreljs/toolchain/setup";
 
 const MAPS = findMaps([]).map((path) => basename(path, ".map"));
 const SCENARIOS = readdirSync(repoPath("spec"))

@@ -2,12 +2,13 @@
   "name": "@mandreljs/tools",
   "private": true,
   "type": "module",
-  "description": "Command-line tools: map compiling, data validation, .bsp inspection, and setup. Run with plain node; see the root package.json scripts.",
+  "description": "Command-line tools: thin wrappers for map compiling, validation, .bsp inspection, setup, and the TrenchBroom install. Run with plain node; see the root package.json scripts.",
   "exports": {
     "./*": "./src/*.ts"
   },
   "dependencies": {
-    "@mandreljs/data": "*",
-    "@mandreljs/sim": "*"
+    "@mandreljs/defs": "*",
+    "@mandreljs/sim": "*",
+    "@mandreljs/toolchain": "*"
   }
 }

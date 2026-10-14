@@ -29,7 +29,7 @@ describe("levelFromMap", () => {
   });
 });
 
-// The real maps get the same comparisons in tools/tests/compiled-maps.test.ts, which compiles them.
+// The real maps get the same comparisons in packages/toolchain/tests/compiled-maps.test.ts, which compiles them.
 describe("levelFromBsp", () => {
   // qbsp reorders brushes, so each .map brush is matched by shape, not by position.
   it.each(["bevels/shapes", "bsp/lit_room"])("%s: has the same brushes as the .map, bevels included", (path) => {

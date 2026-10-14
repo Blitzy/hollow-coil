@@ -1,6 +1,6 @@
 import { readRepoFile } from "@mandreljs/testing";
 import { describe, expect, it } from "vitest";
-import { jsonType, SchemaError, SchemaValidator } from "@mandreljs/data/schema";
+import { jsonType, SchemaError, SchemaValidator } from "@mandreljs/defs/schema";
 
 /** Validates value against a schema given inline, with any other schema files it references. */
 function check(schema: object, value: unknown, otherFiles: Record<string, object> = {}): string[] {
@@ -9,8 +9,8 @@ function check(schema: object, value: unknown, otherFiles: Record<string, object
 }
 
 /** A data file: the engine's light styles, or the example game's other files. */
-const loadData = (name: string): Record<string, any> => JSON.parse(readRepoFile(name === "lightstyles" ? "data/lightstyles.json" : `example/data/${name}.json`));
-const dataValidator = (): SchemaValidator => new SchemaValidator((name) => JSON.parse(readRepoFile(`data/schemas/${name}`)));
+const loadData = (name: string): Record<string, any> => JSON.parse(readRepoFile(name === "lightstyles" ? "packages/defs/lightstyles.json" : `example/data/${name}.json`));
+const dataValidator = (): SchemaValidator => new SchemaValidator((name) => JSON.parse(readRepoFile(`packages/defs/schemas/${name}`)));
 
 describe("schema keywords", () => {
   it("checks types, counting whole numbers as integers and booleans as not numbers", () => {

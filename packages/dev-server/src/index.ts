@@ -1,22 +1,19 @@
-// A Vite plugin for development, shared by every app: serves the engine's data
-// and the repo's game directories, the same files the tools use.
+// A Vite plugin for development, shared by every app: serves the repo's game
+// directories, the same files the tools use.
 //
-//   /engine/data/...                        the engine's data/ (light styles)
 //   /games/<game>/{maps,textures,data}/...  a game directory: a folder in the repo root holding data/game.json
 //   /games/<game>/build/...                 build/<game>/, where its maps compile to
 //
 // A request for /games/<game>/build/<name>.bsp compiles the map first when it
 // has changed, so saving in TrenchBroom and reloading shows new lighting.
 
-import { createReadStream, existsSync, statSync } from "node:fs";
+import { createReadStream, statSync } from "node:fs";
 import type { ServerResponse } from "node:http";
 import { extname, join, normalize, sep } from "node:path";
-import { compileMap, compileOk } from "@mandreljs/tools/compile";
-import { toolsInstalled } from "@mandreljs/tools/setup";
+import { compileMap, compileOk } from "@mandreljs/toolchain/compile";
+import { isGameDir, REPO_ROOT } from "@mandreljs/toolchain/layout";
+import { toolsInstalled } from "@mandreljs/toolchain/setup";
 import type { Plugin } from "vite";
-
-/** The repo root: the engine, with game directories (example/ and any others) inside it. */
-export const REPO_ROOT = join(import.meta.dirname, "../../..");
 
 const GAME_FOLDERS = ["maps", "textures", "data", "build"]; // served at /games/<game>/<folder>/...
 const GAME_NAME = /^[\w-]+$/;
@@ -86,25 +83,19 @@ function ensureBsp(game: string, outDir: string, name: string, log: (message: st
   return pending;
 }
 
-/** Serves the engine's data and the repo's game directories, and compiles stale maps on request. */
+/** Serves the repo's game directories, and compiles stale maps on request. */
 export function gameFiles(root: string = REPO_ROOT): Plugin {
   return {
     name: "mandreljs-game-files",
     configureServer(server) {
       const log = (message: string): void => server.config.logger.info(`[mandreljs] ${message}`, { timestamp: true });
 
-      server.middlewares.use("/engine", (req, res, next) => {
-        const parts = pathParts(req.url);
-        if (parts === null || parts[0] !== "data") return next();
-        send(join(root, ...parts), res, next);
-      });
-
       server.middlewares.use("/games", (req, res, next) => {
         const parts = pathParts(req.url);
         if (parts === null || parts.length < 3) return next();
         const [name, folder, ...rest] = parts as [string, string, ...string[]];
         const game = join(root, name);
-        if (!GAME_NAME.test(name) || !GAME_FOLDERS.includes(folder) || !existsSync(join(game, "data", "game.json"))) return next();
+        if (!GAME_NAME.test(name) || !GAME_FOLDERS.includes(folder) || !isGameDir(game)) return next();
         if (folder !== "build") return send(join(game, folder, ...rest), res, next);
 
         const outDir = join(root, "build", name);

@@ -1,0 +1,13 @@
+{
+  "name": "@mandreljs/defs",
+  "private": true,
+  "type": "module",
+  "description": "The definitions every game is checked against (schemas, light styles, and the shared TrenchBroom FGD), and the validation: our JSON Schema subset and the cross-file checks. Browser-safe, so editors can check what they save.",
+  "exports": {
+    "./lightstyles.json": "./lightstyles.json",
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@mandreljs/sim": "*"
+  }
+}

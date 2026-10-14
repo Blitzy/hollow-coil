@@ -10,7 +10,9 @@ The current work plan lives in `docs/PLAN.md`. Decisions and their reasons go in
 
 The engine is built for the web (TypeScript + Three.js); desktop builds will wrap it in Electron. A Godot version was built through M1 for comparison and then dropped (see DECISIONS.md).
 
-The TypeScript code is an npm workspace. `apps/` holds things you run (`apps/game` is the game; editors and tools will join it). `packages/` holds shared libraries: `sim` (simulation and file formats), `render` (Three.js presentation), `dev-server` (the development Vite plugin), and `testing` (Node-only test helpers). Apps import packages by module path (`@mandreljs/sim/map/bsp`), straight from TypeScript source. Shared code goes in a package, never imported from another app. Only `apps/game` ships to players.
+The TypeScript code is an npm workspace. `apps/` holds things you run (`apps/game` is the game; editors and tools will join it). `packages/` holds shared libraries: `sim` (simulation and file formats), `render` (Three.js presentation), `defs` (the schemas, light styles, and shared FGD every game is checked against, and the validation), `toolchain` (Node-only: the repo layout, the pinned ericw-tools, and map compiling), `dev-server` (the development Vite plugin), and `testing` (Node-only test helpers). Apps import packages by module path (`@mandreljs/sim/map/bsp`), straight from TypeScript source. Shared code goes in a package, never imported from another app. Only `apps/game` ships to players.
+
+Packages depend in one direction: `sim` depends on nothing; `defs` and `render` only on `sim` and each other (`render` on `defs`, never the reverse); the Node-only packages (`toolchain`, `dev-server`, `testing`) on any of those; and apps and `tools/` on any package. Nothing imports from an app or from `tools/`.
 
 ## Design Principles
 
@@ -24,7 +26,7 @@ The TypeScript code is an npm workspace. `apps/` holds things you run (`apps/gam
 
 - Levels are authored in TrenchBroom. The `.map` file is the source of truth.
 - ericw-tools compiles `.map` to `.bsp` and bakes lighting. Both use the Quake 2 file formats (`qbsp -q2bsp`); gameplay is still Quake 1 style.
-- A game directory holds `maps/`, `textures/`, `data/` (with `game.json`, its name and start map), and `trenchbroom/` (its TrenchBroom config and FGD) side by side, the standard Quake layout that ericw-tools and TrenchBroom expect. The engine keeps what every game shares at the repo root: `data/lightstyles.json`, the schemas in `data/schemas/`, and the shared entities in `trenchbroom/mandrel.fgd`, which each game's FGD includes. Engine tests (`/spec` scenarios, golden demos, compile tests) use only the example game.
+- A game directory holds `maps/`, `textures/`, `data/` (with `game.json`, its name and start map), and `trenchbroom/` (its TrenchBroom config and FGD) side by side, the standard Quake layout that ericw-tools and TrenchBroom expect. What every game shares is in `packages/defs`: the schemas, `lightstyles.json`, and the shared entities in `trenchbroom/mandrel.fgd`, which each game's FGD includes as `mandrel/mandrel.fgd`. Only a game's data is ever in a folder called `data/`. Engine tests (`/spec` scenarios, golden demos, compile tests) use only the example game.
 - Textures are loose PNGs at `textures/<folder>/<name>.png` in a game directory, referenced by name. No WADs.
 - Engines load `.map` for fast iteration and tests, and `.bsp` for lit, optimized builds.
 - One entity parser serves both formats. Gameplay collision comes from brush planes, never from engine physics bodies.
@@ -76,14 +78,14 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 - `npm run setup [-- tool ...]`: install pinned third-party tools (ericw-tools) into `.tools/`. Name tools to install only those. `-- --check` verifies without changing anything; `-- --force` reinstalls.
 - `npm run compile [-- map ...] [-- --mode check|release] [-- --game dir]`: compile a game's maps (the example's by default) to `build/<game>/<name>.bsp`. Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
 - `npm run bspdump -- build/example/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON, read with the game's own `.bsp` reader.
-- `npm run validate [-- --game dir]`: validate the engine's `data/*.json`, a game's `data/*.json` (the example's by default), and the `spec/*.json` scenarios against their schemas, plus cross-file checks, such as the game's enemies against its FGD and its name in its TrenchBroom config and map headers (runs in CI). The checks themselves live in `packages/data`, so editors can use them too.
+- `npm run validate [-- --game dir]`: validate the engine's light styles, a game's `data/*.json` (the example's by default), and the `spec/*.json` scenarios against their schemas, plus cross-file checks, such as the game's enemies against its FGD and its name in its TrenchBroom config and map headers (runs in CI). The checks themselves live in `packages/defs`, so editors can use them too.
 - `npm run check-files`: fail if any tracked file is over 2 MB (runs in CI).
-- `npm run install-trenchbroom [-- --game dir]`: link a game's `trenchbroom/` folder (the example's by default) into TrenchBroom's games folder, named after its FGD (`games/MandrelJSExample`), and link the engine's `trenchbroom/` into it as `engine/` for its FGD's `@include` (and remove links left by earlier versions). `-- --uninstall` removes the links.
+- `npm run install-trenchbroom [-- --game dir]`: link a game's `trenchbroom/` folder (the example's by default) into TrenchBroom's games folder, named after its FGD (`games/MandrelJSExample`), and link the engine's FGD folder (`packages/defs/trenchbroom`) into it as `mandrel/` for its FGD's `@include` (and remove links left by earlier versions). `-- --uninstall` removes the links.
 - `npm run make-placeholder-textures`: regenerate the placeholder PNGs in `example/textures/dev/`.
 
 Everything runs from the repo root: `npm install` once, then `npm run dev` (play at http://localhost:5173/?map=test_movement; `&game=<dir>` plays another game directory; pass Vite options after `--`), `npm test` (Vitest: every app, package, and tool; the compile tests need ericw-tools and skip without it), `npm run typecheck` (includes the sim-only check), and `npm run build`.
 
 ## Tools
 
-- Tools are TypeScript in `tools/src/` (tests in `tools/tests/`), run with plain `node`, which strips TypeScript types itself. That's why the tsconfig sets `erasableSyntaxOnly` (no enums, namespaces, or constructor parameter properties) and relative imports end in `.ts`. Use Node's standard library and our packages; ask before adding a dependency. Logic other apps may need (such as validation) goes in a package, with the tool as a thin command-line wrapper.
-- Third-party tool versions are pinned in `tools/versions.json`. Bump versions there, never by hand-installing a different build.
+- Tools are TypeScript in `tools/src/` (tests in `tools/tests/`), run with plain `node`, which strips TypeScript types itself. That's why the tsconfig sets `erasableSyntaxOnly` (no enums, namespaces, or constructor parameter properties) and relative imports end in `.ts`. Use Node's standard library and our packages; ask before adding a dependency. Logic other code may need (such as validation or map compiling) goes in a package (`defs`, `toolchain`), with the tool as a thin command-line wrapper.
+- Third-party tool versions are pinned in `packages/toolchain/versions.json`. Bump versions there, never by hand-installing a different build.

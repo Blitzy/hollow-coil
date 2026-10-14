@@ -17,7 +17,7 @@ import { buildBspMeshes, bspTextureNames, DEFAULT_BRIGHTNESS, type LitWorld } fr
 import { cameraRotation, toThree, verticalFov } from "@mandreljs/render/coords";
 import { EnemyFigures } from "@mandreljs/render/enemies";
 import { ImpactMarks } from "@mandreljs/render/impacts";
-import type { LightStyleData } from "@mandreljs/render/light-styles";
+import { LIGHT_STYLES, type LightStyleData } from "@mandreljs/render/light-styles";
 import { buildLevelMeshes, loadTextures, textureNames } from "@mandreljs/render/level-mesh";
 import { TICK_RATE } from "@mandreljs/sim/constants";
 import type { EnemiesData, PlayerData, WeaponsData } from "@mandreljs/sim/data";
@@ -28,8 +28,7 @@ import { readBsp } from "@mandreljs/sim/map/bsp";
 import { vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
 import { createSim, simContext, step, type SimConfig, type SimState } from "@mandreljs/sim/sim";
 
-// Served by the dev server (vite.config.ts): the engine's data, and each game directory.
-const ENGINE = "/engine";
+// Game directories, served by the dev server (vite.config.ts).
 const GAMES = "/games";
 const DEFAULT_GAME = "example";
 const HORIZONTAL_FOV = 90;
@@ -94,12 +93,11 @@ async function main(): Promise<void> {
   const overlay = document.getElementById("overlay")!;
   overlay.textContent = "loading...";
 
-  const [gameText, playerText, weaponsText, enemiesText, lightStylesText] = await Promise.all([
+  const [gameText, playerText, weaponsText, enemiesText] = await Promise.all([
     fetchText(`${game}/data/game.json`),
     fetchText(`${game}/data/player.json`),
     fetchText(`${game}/data/weapons.json`),
     fetchText(`${game}/data/enemies.json`),
-    fetchText(`${ENGINE}/data/lightstyles.json`),
   ]);
   const info = JSON.parse(gameText) as GameInfo;
   document.title = info.name;
@@ -110,9 +108,8 @@ async function main(): Promise<void> {
     weapons: JSON.parse(weaponsText) as WeaponsData,
     enemies: JSON.parse(enemiesText) as EnemiesData,
   };
-  const lightStyles = JSON.parse(lightStylesText) as LightStyleData;
   const brightness = Number(params.get("brightness") ?? DEFAULT_BRIGHTNESS);
-  const world = await loadLevel(game, mapName, lightStyles, params.get("lighting") !== "off", Number.isFinite(brightness) ? brightness : DEFAULT_BRIGHTNESS);
+  const world = await loadLevel(game, mapName, LIGHT_STYLES, params.get("lighting") !== "off", Number.isFinite(brightness) ? brightness : DEFAULT_BRIGHTNESS);
   const level = world.level;
   const ctx = simContext(level, config);
 

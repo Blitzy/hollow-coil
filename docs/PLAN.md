@@ -55,14 +55,13 @@ Out of scope for the spike:
   textures/    Textures (PNG), next to maps/ as Quake tools expect
   data/        game.json (name, start map), player.json (health, hull, movement), weapons.json, enemies.json
   trenchbroom/ The game's TrenchBroom config and FGD
-/data        Engine data: lightstyles.json, plus the JSON Schemas for engine and game data
-/trenchbroom The engine's FGD (mandrel.fgd), which every game's FGD includes
 /spec        Engine-neutral test scenarios (JSON)
-/tools       compile script, bsp dump tool, schema validation
+/tools       Command-line wrappers: compile, bspdump, validate, setup, install-trenchbroom
 /build       Compiled .bsp output, per game (build/example/; gitignored)
 /demos       Golden demo recordings for regression tests
 /apps        Things you run: game/ (the game), and future editors and tools
-/packages    Shared TypeScript libraries: sim/, render/, dev-server/, testing/
+/packages    Shared TypeScript libraries: sim/, render/, defs/ (schemas, light styles, the shared FGD,
+             and validation), toolchain/ (map compiling), dev-server/, testing/
 /docs        PLAN.md, DECISIONS.md, MOVEMENT.md
 ```
 
@@ -143,7 +142,7 @@ Done (2026-10-13). The game loads a level from one file, the compiled .bsp, for 
 - .bsp loader: faces, entities, lightmap data
 - Pack face lightmaps into an atlas and render with a lightmap shader. Read each face's lightmap from its stored offset: ericw-tools pads each face's data to a multiple of 4 samples, so faces are not packed back to back. Lightmap size per face is computed from texture-space extents at 16 texels per luxel (see `lightmapExtents` in `packages/sim/src/map/bsp.ts`).
 - Colored light from the Quake 2 .bsp's RGB lightmaps. Quake 2 lightmaps came out about 3x brighter than Quake 1 for the same light values in the format spike, so calibrate brightness here.
-- Animated lightstyles from `data/lightstyles.json` (Quake's patterns), stepped on sim ticks. When a style's value changes, re-compose the lightmaps of the faces it lights, as Quake's GL renderers did, rather than mixing styles in a shader.
+- Animated lightstyles from `lightstyles.json` (Quake's patterns, now in `packages/defs`), stepped on sim ticks. When a style's value changes, re-compose the lightmaps of the faces it lights, as Quake's GL renderers did, rather than mixing styles in a shader.
 
 Tests:
 

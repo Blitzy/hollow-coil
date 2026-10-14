@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { readRepoBytes, readRepoFile } from "@mandreljs/testing";
+import { readRepoBytes } from "@mandreljs/testing";
 import { lightmapExtents, readBsp } from "@mandreljs/sim/map/bsp";
-import { LightStyleAnimator, letterValue, styleValuesAt, type LightStyleData } from "@mandreljs/render/light-styles";
+import { LIGHT_STYLES, LightStyleAnimator, letterValue, styleValuesAt, type LightStyleData } from "@mandreljs/render/light-styles";
 import { composeLightmaps, packLightmaps } from "@mandreljs/render/lightmap-atlas";
 
-const data = JSON.parse(readRepoFile("data/lightstyles.json")) as LightStyleData;
+const data = LIGHT_STYLES;
 const bsp = readBsp(readRepoBytes("packages/sim/tests/fixtures/bsp/lit_room.bsp"));
 const FLICKER = 10; // the fixture's flickering light, "Fluorescent flicker"
 const TEST: LightStyleData = { step_time: 0.1, styles: { "0": { name: "Normal", pattern: "m" }, "3": { name: "Test", pattern: "amz" } } };

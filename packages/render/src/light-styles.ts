@@ -1,22 +1,26 @@
 // Animated light styles: each style's brightness steps through a pattern of
-// letters from data/lightstyles.json. Lightmaps are re-composed on the CPU
+// letters from the engine's light styles (packages/defs/lightstyles.json). Lightmaps are re-composed on the CPU
 // when a style's value changes, the way Quake's GL renderers updated them, and
 // only for faces lit by an animated style.
 //
 // Animation runs on sim ticks, not the wall clock, so it pauses and replays
 // with the sim. It is presentation only: the sim never reads light styles.
 
+import lightStylesJson from "@mandreljs/defs/lightstyles.json";
 import { TICK_RATE } from "@mandreljs/sim/constants";
 import type { Bsp } from "@mandreljs/sim/map/bsp";
 import { secondsToTicks } from "@mandreljs/sim/constants";
 import { composeLightmaps, type LightmapAtlas } from "./lightmap-atlas.ts";
 
-/** data/lightstyles.json */
+/** The shape of packages/defs/lightstyles.json. */
 export interface LightStyleData {
   /** Seconds per pattern letter. */
   readonly step_time: number;
   readonly styles: Readonly<Record<string, { readonly name: string; readonly pattern: string }>>;
 }
+
+/** The engine's light styles, shared by every game: Quake's patterns, picked by a light's style key. Built into the engine, not loaded with a game. */
+export const LIGHT_STYLES: LightStyleData = lightStylesJson;
 
 /** Style numbers fit in a byte; undefined styles stay at normal brightness. */
 const STYLE_COUNT = 256;

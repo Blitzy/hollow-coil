@@ -24,8 +24,8 @@ autosave/
 # TrenchBroom per-user settings, written through the install link
 /example/trenchbroom/GameEngineProfiles.cfg
 /example/trenchbroom/CompilationProfiles.cfg
-# The engine's trenchbroom/ folder, linked in by npm run install-trenchbroom for the FGD's @include
-/example/trenchbroom/engine
+# The engine's FGD folder (packages/defs/trenchbroom), linked in by npm run install-trenchbroom for the FGD's @include
+/example/trenchbroom/mandrel
 
 # Playwright
 test-results/

@@ -16,7 +16,7 @@
 import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { compileMap } from "@mandreljs/tools/compile";
+import { compileMap } from "@mandreljs/toolchain/compile";
 
 const HERE = import.meta.dirname;
 type Vec = [number, number, number];

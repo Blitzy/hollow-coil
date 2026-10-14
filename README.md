@@ -59,13 +59,11 @@ The engine plays game directories, like Quake's `id1/`. The example game is `exa
 | Folder | Contents |
 |---|---|
 | `example/` | The example game: maps, textures, weapon, enemy, and movement data, and its TrenchBroom config |
-| `data/` | Engine data (light styles) and the JSON Schemas for engine and game data |
-| `trenchbroom/` | The engine's TrenchBroom entity definitions, which every game's FGD includes |
 | `spec/` | Engine-neutral test scenarios |
 | `demos/` | Golden demo recordings |
-| `tools/` | Command-line tools: setup, map compiling, validation, and `.bsp` inspection (TypeScript, run with `node`) |
+| `tools/` | Command-line tools: setup, map compiling, validation, `.bsp` inspection, and the TrenchBroom install (TypeScript, run with `node`) |
 | `apps/` | Things you run: `game/` (the game), and future editors and tools |
-| `packages/` | Shared TypeScript libraries: `sim/` (simulation and file formats), `render/` (Three.js presentation), `dev-server/` (serves game files in development), `testing/` (test helpers) |
+| `packages/` | Shared TypeScript libraries: `sim/` (simulation and file formats), `render/` (Three.js presentation), `defs/` (the schemas, light styles, and shared entities every game is checked against, and the validation), `toolchain/` (map compiling with the pinned ericw-tools), `dev-server/` (serves game files in development), `testing/` (test helpers) |
 | `docs/` | Plan, decision log, and the movement reference |
 
 The TypeScript side is one [npm workspace](https://docs.npmjs.com/cli/using-npm/workspaces): install once at the root, and apps import packages as `@mandreljs/<name>/<module>`, straight from source with no build step.

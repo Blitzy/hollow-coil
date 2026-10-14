@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { MAX_BYTES, oversizedFiles, trackedFiles } from "../src/check-files.ts";
-import { REPO_ROOT } from "../src/repo.ts";
+import { REPO_ROOT } from "@mandreljs/toolchain/layout";
 
 describe("check-files", () => {
   const dirs: string[] = [];

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { crc32, deflateRawSync } from "node:zlib";
 import { afterEach, describe, expect, it } from "vitest";
-import { extractZip, readZip, ZipError } from "../src/zip.ts";
+import { extractZip, readZip, ZipError } from "@mandreljs/toolchain/zip";
 
 interface TestEntry {
   name: string;

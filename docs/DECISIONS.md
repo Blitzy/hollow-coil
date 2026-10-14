@@ -2,6 +2,28 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-14: Shared definitions and map compiling move into packages
+
+**Decision:** Two moves, so that the engine is its packages and only a game's data is in a folder called `data/`:
+
+- **`packages/defs`** (was `packages/data`, the validation) also holds what every game is checked against: the schemas (was `data/schemas/`), `lightstyles.json` (was `data/lightstyles.json`), and the shared FGD, `trenchbroom/mandrel.fgd` (was `trenchbroom/mandrel.fgd` at the root). The root `data/` and `trenchbroom/` folders are gone. `spec/schemas/` stays with `/spec`, since it describes the engine's test scenarios, not a game.
+- **`packages/toolchain`** (new) holds the Node-only code the tools, the dev server, and tests share: the repo layout (game directories, `build/<game>/`), the pinned ericw-tools and their install (with `versions.json`, was `tools/versions.json`), and map compiling. `tools/` keeps only command-line wrappers.
+- **`@mandreljs/render` imports the light styles** instead of the game fetching them, so they're built into the engine, and the dev server's `/engine/` route is gone.
+- **The FGD link in a game's `trenchbroom/` folder is `mandrel/`** (was `engine/`), so a game's FGD starts with `@include "mandrel/mandrel.fgd"`. `npm run install-trenchbroom` removes the old `engine/` link.
+- **Packages depend in one direction** (written in CLAUDE.md): `sim` on nothing, `defs` and `render` on `sim` (and `render` on `defs`), the Node-only packages on those, and apps and `tools/` on anything.
+
+This supersedes the root `data/` and `trenchbroom/` folders, the `engine/` link, and the `/engine/` route in "The example game lives in example/" below.
+
+**Why:**
+
+- Three folders were called `data`: a game's data, the engine's shared files, and the validation package. Each meant something different.
+- "The engine" means the packages, so the engine's shared definitions belong in one. They're the contract between the engine and a game, and `packages/data` already checked it, so the contract and its checks now live together.
+- The dev server, a package, imported map compiling from `tools/`, against the rule that logic other code needs goes in a package with the tool as a thin wrapper. The repo root and the example game's path were also defined in three places.
+- Light styles are engine vocabulary, not a game's content, so they ship with the engine. That also lets a production build use them without serving the file.
+- A game's `@include "mandrel/mandrel.fgd"` reads as "Mandrel's entities", which is clearer in another game's repo than "engine".
+
+**Alternatives considered:** a root `engine/` folder for the shared files (but "the engine" is the packages, and a code-free folder by that name confuses that); a package named `game-format` (accurate, but `defs` is shorter); moving `spec/schemas/` into `defs` too (they define tests, not games).
+
 ## 2026-10-14: The example game lives in example/, and the engine keeps what games share
 
 **Decision:** The move planned in "The engine repo ships a free example game" below is done. The example game's maps, textures, and player, weapon, and enemy data are in `example/`, laid out as a Quake game directory: `maps/`, `textures/`, `data/`, and `trenchbroom/`. What every game shares stays at the repo root: `data/lightstyles.json`, the schemas in `data/schemas/`, and the engine's entities in `trenchbroom/mandrel.fgd`. The details:

@@ -5,13 +5,13 @@ import { describe, expect, it } from "vitest";
 import {
   crossCheck, fgdClassnames, fgdStyleChoices, gameCheck, lightStyleCheck, mapGameName, mapMarkers, resolveFgdIncludes, scenarioCheck,
   trenchbroomConfig, type DataFiles, type GameFile, type LightStylesFile, type ScenarioFile,
-} from "@mandreljs/data/checks";
-import { SchemaValidator } from "@mandreljs/data/schema";
+} from "@mandreljs/defs/checks";
+import { SchemaValidator } from "@mandreljs/defs/schema";
 
 const loadJson = (path: string): any => JSON.parse(readRepoFile(path));
-/** The example game's FGD with the engine's included, as TrenchBroom reads it once install-trenchbroom links engine/. */
+/** The example game's FGD with the engine's included, as TrenchBroom reads it once install-trenchbroom links mandrel/. */
 const fgd = resolveFgdIncludes(readRepoFile("example/trenchbroom/MandrelJSExample.fgd"), (path) =>
-  readRepoFile(path.startsWith("engine/") ? `trenchbroom/${path.slice("engine/".length)}` : `example/trenchbroom/${path}`),
+  readRepoFile(path.startsWith("mandrel/") ? `packages/defs/trenchbroom/${path.slice("mandrel/".length)}` : `example/trenchbroom/${path}`),
 ).text;
 const realData = (): DataFiles => loadSimConfig() as unknown as DataFiles;
 
@@ -58,7 +58,7 @@ describe("crossCheck", () => {
 
 describe("lightStyleCheck", () => {
   const choices = fgdStyleChoices(fgd);
-  const lightstyles = (): LightStylesFile => loadJson("data/lightstyles.json");
+  const lightstyles = (): LightStylesFile => loadJson("packages/defs/lightstyles.json");
 
   it("reads the FGD's style choices", () => {
     expect(choices.get(0)).toBe("Normal");

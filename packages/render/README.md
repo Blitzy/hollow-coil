@@ -4,7 +4,7 @@ Three.js presentation shared by the game and future editors, so tools show exact
 
 - `bsp-mesh.ts`: the lit world from a compiled `.bsp`, with a gamma-space lightmap shader
 - `lightmap-atlas.ts`: packs face lightmaps into one atlas and composes light styles into it (no Three.js)
-- `light-styles.ts`: animated light styles from `data/lightstyles.json`
+- `light-styles.ts`: animated light styles, from `@mandreljs/defs`'s `lightstyles.json`, built in
 - `level-mesh.ts`: unlit meshes from a `.map`'s brushes, and texture loading
 - `uv.ts`: texture projection for `.map` faces
 - `impacts.ts`: fading marks where shots hit walls (placeholders until real effects)

@@ -16,8 +16,8 @@ import { execFileSync } from "node:child_process";
 import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { EXAMPLE_GAME } from "@mandreljs/tools/repo";
-import { ericwTool } from "@mandreljs/tools/setup";
+import { EXAMPLE_GAME } from "@mandreljs/toolchain/layout";
+import { ericwTool } from "@mandreljs/toolchain/setup";
 
 const HERE = import.meta.dirname;
 type Vec = [number, number, number];

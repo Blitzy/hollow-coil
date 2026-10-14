@@ -1,8 +1,9 @@
 // Mandrel.js engine entity definitions for TrenchBroom: the entities every game
 // shares. Each game has its own FGD that pulls this file in with
-// @include "engine/mandrel.fgd" and adds its own entities, such as its monsters.
+// @include "mandrel/mandrel.fgd" and adds its own entities, such as its monsters.
 // npm run install-trenchbroom links this folder into the game's trenchbroom/
-// folder as engine/, since TrenchBroom only reads files inside a game's config folder.
+// folder as mandrel/, since TrenchBroom only reads files inside a game's config folder.
+// The light entity's style choices must match ../lightstyles.json (npm run validate checks).
 //
 // Sizes are in Quake units. The player hull matches docs/PLAN.md.
 
