@@ -1,6 +1,6 @@
 # data
 
-Gameplay and presentation data shared by both engines. Units are Quake units, seconds, and degrees. Engines convert durations to ticks using the sim's tick-rate constant; never store tick counts here.
+Gameplay and presentation data, read by the game and checked by the tools. Units are Quake units, seconds, and degrees. Engines convert durations to ticks using the sim's tick-rate constant; never store tick counts here.
 
 - `player.json`: health, hull, eye height, loadout, and Quake-style movement constants
 - `weapons.json`: weapon switch timing and weapon definitions, keyed by weapon id

@@ -25,14 +25,6 @@ autosave/
 maps/trenchbroom/GameEngineProfiles.cfg
 maps/trenchbroom/CompilationProfiles.cfg
 
-# Godot
-.godot/
-/godot/export/
-# gdUnit4, installed by tools/setup.py, and its test reports
-/godot/addons/gdUnit4/
-/godot/addons/gdUnit4.partial/
-/godot/reports/
-
 # Playwright
 test-results/
 playwright-report/
@@ -70,7 +62,7 @@ $RECYCLE.BIN/
 *~
 
 ### VS Code
-# settings.json stays local: it tends to hold machine-specific paths (such as the Godot executable)
+# settings.json stays local: it tends to hold machine-specific paths
 .vscode/*
 !.vscode/tasks.json
 !.vscode/launch.json

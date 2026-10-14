@@ -4,7 +4,9 @@
 
 Hollow Coil is an open-source first-person shooter in the spirit of mid-90s shooters like Doom and Quake. Levels are hand-authored and abstract rather than realistic, built for fun, variety, and fast combat. The game is not currently intended to be a commercial product.
 
-The current work plan lives in `docs/PLAN.md`. Decisions and their reasons go in `docs/DECISIONS.md`. Player movement and world collision must follow `docs/MOVEMENT.md` in both engines.
+The current work plan lives in `docs/PLAN.md`. Decisions and their reasons go in `docs/DECISIONS.md`. Player movement and world collision must follow `docs/MOVEMENT.md`.
+
+The game is built for the web (TypeScript + Three.js, in `web/`); desktop builds will wrap it in Electron. A Godot version was built through M1 for comparison and then dropped (see DECISIONS.md).
 
 ## Design Principles
 
@@ -28,7 +30,7 @@ The simulation is strictly separated from presentation. These rules are not opti
 - Fixed 60 Hz tick, independent of frame rate, defined in one constant. Never hardcode the rate elsewhere. Express durations in seconds in data and convert to ticks from that constant. Rendering interpolates between ticks.
 - Enemy AI decisions run on a 10 Hz think cadence, offset per enemy. Movement, collision, and weapons update every tick.
 - The sim reads only per-tick input commands. No wall clock, input devices, or renderer access.
-- All randomness comes from a seeded RNG stored in sim state. Never use `Math.random` or Godot's global random functions in sim code.
+- All randomness comes from a seeded RNG stored in sim state. Never use `Math.random` in sim code.
 - All sim state is plain, serializable data with stable entity IDs.
 - The sim emits events (fired, hit, damaged, died). Rendering and audio consume events. The sim never calls presentation code.
 - On the web, sim code must not import Three.js or any DOM API.
@@ -42,8 +44,7 @@ The simulation is strictly separated from presentation. These rules are not opti
 
 ## Code Conventions
 
-- Web: TypeScript in strict mode.
-- Godot: GDScript with static typing. Keep game logic in plain classes so most tests run without scenes.
+- TypeScript in strict mode.
 - Prefer small, readable modules over clever abstractions.
 
 ## Commit Messages
@@ -51,9 +52,9 @@ The simulation is strictly separated from presentation. These rules are not opti
 Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`, with the summary in the imperative and lowercase, no trailing period.
 
 - Types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`, `ci`, `build`, `style`, `revert`.
-- Scope is optional. Use the area touched: `web`, `godot`, `sim`, `maps`, `data`, `spec`, `demos`, `tools`, `ci`.
+- Scope is optional. Use the area touched: `web`, `sim`, `maps`, `data`, `spec`, `demos`, `tools`, `ci`.
 - Breaking changes to data formats, scenario formats, or demo compatibility get a `!` after the type (`feat(data)!: ...`) and a `BREAKING CHANGE:` footer.
-- Examples: `feat(sim): add air acceleration`, `fix(godot): stop step-up through ceilings`, `test(spec): add 20-unit step scenario`, `chore: update gitignore`.
+- Examples: `feat(sim): add air acceleration`, `fix(sim): stop step-up through ceilings`, `test(spec): add 20-unit step scenario`, `chore: update gitignore`.
 
 ## Licensing
 
@@ -64,7 +65,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 
 ## Commands
 
-- `python tools/setup.py [tool ...]`: install pinned third-party tools: ericw-tools into `.tools/`, and gdUnit4 into `godot/addons/` (gitignored). Name tools (`ericw-tools`, `gdunit4`) to install only those. `--check` verifies without changing anything; `--force` reinstalls.
+- `python tools/setup.py [tool ...]`: install pinned third-party tools (ericw-tools) into `.tools/`. Name tools to install only those. `--check` verifies without changing anything; `--force` reinstalls.
 - `python tools/compile.py [map ...] [--mode check|release]`: compile maps to `build/<name>.bsp`. Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
 - `python tools/bspdump.py build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON.
 - `python -m unittest discover -s tools/tests`: test the tools (needs ericw-tools installed).
@@ -74,9 +75,6 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 - `python tools/make_placeholder_textures.py`: regenerate the placeholder PNGs in `textures/dev/`.
 
 Web (run in `web/`): `npm install`, then `npm run dev` (play at http://localhost:5173/?map=test_movement), `npm test` (Vitest), and `npm run typecheck` (includes the sim-only check).
-
-Godot (run from the repo root): `python tools/test_godot.py [res://tests/...]` runs the gdUnit4 suites headless. It needs the `GODOT` environment variable pointing at the Godot 4.7 executable (on Windows, the `_console.exe`), or `godot` on PATH. To play, open `godot/project.godot` in the editor and press F5, or run `"$GODOT" --path godot -- --map=<name>`. See `godot/README.md`.
-
 ## Tools
 
 - Scripts in `/tools` are Python 3.11+, standard library only unless a dependency is clearly worth it.

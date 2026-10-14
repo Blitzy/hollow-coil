@@ -49,7 +49,7 @@ function ensureBsp(name: string, log: (message: string) => void): Promise<string
 
 /**
  * Serves the shared repo folders in dev, so the game loads the same files the
- * tools and Godot use. A request for build/<name>.bsp compiles the map first
+ * tools use. A request for build/<name>.bsp compiles the map first
  * when it has changed, so saving in TrenchBroom and reloading shows new lighting.
  */
 function sharedGameFiles(): Plugin {

@@ -1,16 +1,14 @@
-# Hollow Coil Spike Plan: Two-Engine Vertical Slice
+# Hollow Coil Plan: Vertical Slice
 
 ## Goal
 
-Build the same small vertical slice twice, once on the web (TypeScript + Three.js) and once in Godot 4.7 (GDScript), then pick one to continue. Most work lives in shared, engine-neutral files so the comparison is fair and the losing implementation costs as little as possible.
+Build a small vertical slice on the web (TypeScript + Three.js). Desktop releases will wrap the web build in Electron.
 
-Judge the engines on:
+The slice started as a two-engine comparison: the same slice built on the web and in Godot 4.7. After M1, with both engines passing the same scenarios and playing identically, the web build was chosen and Godot dropped (see DECISIONS.md, 2026-10-13). Most work still lives in shared, engine-neutral files (`/maps`, `/data`, `/spec`), which keeps a future port possible and checkable.
 
-- Iteration speed: time from saving a map in TrenchBroom to playing it
-- Test ergonomics: how fast and reliable the test suites are
-- Agent reliability: how often changes break something, and how quickly tests catch it
-- Game feel and rendering control
-- Distribution: web build size and load time, desktop and Steam Deck builds
+Design goals beyond the slice:
+
+- User-made levels: the TrenchBroom config, FGD, and compile tools double as a modding kit, with data-only level packages (see DECISIONS.md, 2026-10-13).
 
 ## Slice Scope
 
@@ -37,14 +35,14 @@ Out of scope for the spike:
 - ericw-tools compiles maps: qbsp and light. vis is skipped until profiling shows a need.
 - Maps use the Quake 2 file formats: Quake 2 (Valve) .map files compiled to Quake 2 .bsp (IBSP v38) with `qbsp -q2bsp`. Gameplay stays Quake 1 style; only the file formats are Quake 2's. This gives native brush data for collision (including the compiler's bevel planes) and native colored lightmaps.
 - Textures are loose PNG files in folders, `textures/<folder>/<name>.png`, referenced by name from maps and .bsp files. Engines load the PNGs directly. No WADs and no palette conversion in the pipeline.
-- Both engines load .map (fast iteration and tests, no baked lighting) and .bsp (lightmaps, hidden faces removed).
+- The game loads .map (fast iteration and tests, no baked lighting) and .bsp (lightmaps, hidden faces removed).
 - One entity parser serves both loaders. The .bsp entity lump uses the same key/value text as the .map.
 - Gameplay collision is built from brush planes in both loaders, never from engine physics bodies.
-- Godot uses GDScript, not C#, so web export stays possible.
+- The game runs on the web (TypeScript + Three.js); desktop builds wrap it in Electron.
 - Simulation runs at a fixed 60 Hz tick, defined as a single constant. Rendering interpolates between ticks.
 - Enemy AI thinks every 0.1 seconds (10 Hz, 6 ticks at the 60 Hz rate), following Quake's monster think interval. Data stores the interval in seconds, like every other duration. Player movement, collision, and weapons still update every tick. This keeps controls crisp while enemies react in readable, era-style beats.
 - Enemy animation is stepped at about 10 fps rather than smoothly blended.
-- Lighting is baked by ericw-tools, not by Blender or Godot LightmapGI.
+- Lighting is baked by ericw-tools, not computed at runtime or baked in Blender.
 - Sim and presentation are strictly separated (rules in CLAUDE.md).
 - License: GPLv3 or later, with an additional permission for platform SDKs (see DECISIONS.md).
 
@@ -57,10 +55,9 @@ Out of scope for the spike:
 /spec        Engine-neutral test scenarios (JSON)
 /tools       compile script, bsp dump tool, schema validation
 /build       Compiled .bsp output (gitignored)
-/demos       Golden demo recordings for regression tests, per engine (/demos/web, /demos/godot)
+/demos       Golden demo recordings for regression tests
 /web         TypeScript + Three.js implementation
-/godot       Godot 4.7 implementation
-/docs        PLAN.md, DECISIONS.md
+/docs        PLAN.md, DECISIONS.md, MOVEMENT.md
 ```
 
 ## Starting Values
@@ -99,7 +96,7 @@ All spread uses the simulation's seeded RNG.
 
 ## Phase 0: Shared Foundation
 
-Done once, before either engine.
+Shared files and tools, done before the engine work.
 
 - [x] 0.1 Scaffold the repo layout and a CI workflow that runs validation and compiles.
 - [x] 0.2 TrenchBroom game config and FGD with worldspawn, info_player_start, monster_shotgunner, and light (including a lightstyle key).
@@ -115,20 +112,16 @@ Done once, before either engine.
 
 Done when every map compiles cleanly in CI and all data validates.
 
-## Engine Milestones
-
-Do each milestone in both engines before moving on, alternating which engine goes first. Record observations in DECISIONS.md after each pair.
+## Milestones
 
 ### M1: Walk Around
 
-Both engines follow `docs/MOVEMENT.md` for movement and collision.
+Done (2026-10-13), in both engines; the engine decision followed. Movement and collision follow `docs/MOVEMENT.md`.
 
 - Parse .map, build render geometry, and build collision from brush planes
 - Fixed-tick sim loop, per-tick input commands, snapshot and state hash functions
 - Quake-style movement with step-up, air control, and jumping
 - Interpolated rendering and mouse look
-
-Godot note: Godot builds its level meshes from our own `.map` parser too, not func_godot, so visuals and collision come from the same brushes in both engines (see docs/DECISIONS.md).
 
 Tests:
 
@@ -138,6 +131,8 @@ Tests:
 - Snapshot, restore, and re-simulate produces an identical state hash
 
 ### M2: Compiled Maps and Lighting
+
+In progress. Done: the .bsp reader, lightmap atlas, lit rendering, brightness calibration (1.5), and animated light styles. Remaining: entities and collision from the .bsp, with the parity tests below.
 
 - .bsp loader: faces, entities, lightmap data
 - Pack face lightmaps into an atlas and render with a lightmap shader. Read each face's lightmap from its stored offset: ericw-tools pads each face's data to a multiple of 4 samples, so faces are not packed back to back. Lightmap size per face is computed from texture-space extents at 16 texels per luxel (see `tools/bspdump.py`).
@@ -195,28 +190,23 @@ Mostly hands-on tuning by Ryan, with few tests.
 
 ## Testing
 
-- **Unit tests** per engine: Vitest for web (sim runs in Node with no Three.js imports), gdUnit4 for Godot via `godot --headless`.
-- **Shared scenarios** in /spec: each names a map, a start marker, a timeline of inputs, and expectations at given times (in seconds, converted to ticks by exact rules) with tolerances. Both engines run every scenario. Format and conversion rules are in spec/README.md.
+- **Unit tests** in Vitest (the sim runs in Node with no Three.js imports).
+- **Scenarios** in /spec: each names a map, a start marker, a timeline of inputs, and expectations at given times (in seconds, converted to ticks by exact rules) with tolerances. They are engine-neutral, so a future port must pass them too. Format and conversion rules are in spec/README.md.
 - **Golden demos** in /demos: recorded inputs plus keyframe snapshots and a per-tick state hash. CI replays them and fails at the first divergent tick. Demos are only valid at the tick rate they were recorded with, so any tick rate experiments (such as 35 Hz) happen before recording goldens.
-- **Demos are per engine.** The web build uses 64-bit floats and Godot's vectors use 32-bit floats, so state hashes can't match across engines. Each engine records and replays its own goldens in /demos/web and /demos/godot. Cross-engine agreement is checked by the shared /spec scenarios, which use tolerances. The input command format is shared, so the same recorded inputs can drive both engines.
 - **Compile check**: CI compiles every map in fast check mode and fails on leaks, missing textures, or errors. It runs only when map-related files change (see DECISIONS.md).
-- **Visual smoke tests**: Playwright screenshots per map on web, `--write-movie` frame captures in Godot.
+- **Visual smoke tests**: Playwright screenshots per map.
 
 ## Input Commands
 
-The sim's only input is one command per tick, in a format shared by both engines and used by scenarios and demos. Values are quantized so replays are exact. The schema is `spec/schemas/input_command.schema.json`:
+The sim's only input is one command per tick, in an engine-neutral format used by the game, scenarios, and demos. Values are quantized so replays are exact. The schema is `spec/schemas/input_command.schema.json`:
 
 - View angles are absolute, not deltas: yaw and pitch as 16-bit integers, 65536 units per full turn (Quake's scheme). Yaw 0 faces +x (east) and increases counterclockwise; pitch is positive looking up. Presentation accumulates mouse input at full precision and quantizes when building the command.
 - Movement: forward and side as integers from -127 to 127 (positive is forward and right), scaled to max speed by the sim.
 - Buttons: a bitfield (1 = attack, 2 = jump).
 - Weapon select: 0 for no change, otherwise a weapon slot number.
 
-## Evaluation and Decision
-
-After M4 in both engines, or earlier if the answer is obvious, compare against the goals above and record the decision and reasons in DECISIONS.md.
-
 ## Open Decisions
 
 - Enemy navigation: Quake-style `movetogoal` (step toward the goal, try other directions when blocked) versus something smarter. Start with the Quake approach.
-- Cross-browser determinism (custom trig or lookup tables), deferred until demos need to play across browsers
-- Single entry point for project scripts (an `npm install` / `npm run` equivalent), deferred until after the engine decision
+- Cross-browser determinism (custom trig or lookup tables), deferred until demos need to play across browsers. Desktop builds sidestep it, since Electron bundles one browser engine.
+- Single entry point for project scripts (an `npm install` / `npm run` equivalent). It was deferred until the engine decision, which is now made.

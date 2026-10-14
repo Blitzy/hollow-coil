@@ -34,5 +34,4 @@ jobs:
       - name: Test data validator
         run: python -m unittest discover -s tools/tests -p "test_validate.py" -v
 
-  # Map compiles run in maps.yml, only when map-related files change.
-  # Engine jobs (web: Vitest, godot: gdUnit4 headless) are added in milestone M1.
+  # Map compiles run in maps.yml, and the web build's tests in web.yml, each only when relevant files change.

@@ -1,6 +1,6 @@
 # Movement and Collision Reference
 
-Both engines implement player movement and world collision exactly as described here, so that engine differences never become behavior differences. When the code and this document disagree, fix one of them; don't let them drift.
+The game implements player movement and world collision exactly as described here, and so must any future port, so that engine differences never become behavior differences. (The Godot build followed this document through M1 and matched the web build bit for bit.) When the code and this document disagree, fix one of them; don't let them drift.
 
 ## Sources
 
@@ -20,7 +20,7 @@ Quake 1 and QuakeWorld are the reference for how movement *feels*. Quake 2 is th
 - **Time step:** `dt = 1 / TICK_RATE`, where `TICK_RATE` is the sim's single tick-rate constant (60). Never hardcode 1/60 elsewhere.
 - **Angles:** the input command carries yaw and pitch as 16-bit angle units (65536 per turn). `radians = units * 2π / 65536`. Yaw 0 faces +x, increasing counterclockwise seen from above; pitch is positive looking up.
 - **Constants:** tunable values come from `data/player.json` (named `player.movement.*` below). The fixed constants in [Constants](#constants) are part of the algorithm and live in sim code.
-- **Precision:** use 64-bit floats for all sim math. On the web that is every JavaScript number. In Godot, `float` is 64-bit but `Vector3` is 32-bit, so the Godot sim should use its own 64-bit vector type instead of `Vector3`. This doesn't make the engines bit-identical (per-engine demos handle that), but keeps them close enough for scenario tolerances.
+- **Precision:** use 64-bit floats for all sim math. On the web that is every JavaScript number. In an engine whose vectors are 32-bit (such as Godot's `Vector3`), the sim needs its own 64-bit vector type.
 
 ## Collision world
 
@@ -398,7 +398,7 @@ Fixed, in sim code (part of the algorithm, not tuning):
 
 ## Required unit tests
 
-Each engine tests these in isolation, in addition to the shared `/spec` scenarios:
+Test these in isolation, in addition to the `/spec` scenarios:
 
 - `clipVelocity`: sliding along a wall and a floor; tiny components snap to zero.
 - `accelerate`: reaches but never exceeds the wish speed; no change when already faster.

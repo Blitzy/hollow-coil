@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "input_command.schema.json",
   "title": "Input command",
-  "description": "The sim's only input: one command per tick. All values are integers so commands replay exactly. Shared by both engines, scenarios, and demos.",
+  "description": "The sim's only input: one command per tick. All values are integers so commands replay exactly. Used by the game, scenarios, and demos.",
   "type": "object",
   "properties": {
     "yaw": {

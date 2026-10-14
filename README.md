@@ -4,7 +4,7 @@ An open-source first-person shooter in the spirit of mid-90s shooters like Doom 
 
 ## Status
 
-Early prototyping. We're building the same small vertical slice in two engines, a web build (TypeScript + Three.js) and Godot 4.7 (GDScript), and will continue with whichever works better. Nothing is playable yet.
+Early prototyping: building a small vertical slice in the browser with TypeScript and Three.js. You can walk around the test maps with Quake-style movement and baked, colored lighting. (We built the same slice in Godot too, to compare, and chose the web build.) There are no weapons or enemies yet.
 
 See [docs/PLAN.md](docs/PLAN.md) for the current plan.
 
@@ -37,7 +37,14 @@ To edit maps, link the Hollow Coil game config into TrenchBroom, then in TrenchB
 python tools/install_trenchbroom.py
 ```
 
-Build, run, and test instructions for each engine are coming as the prototype takes shape.
+To play, you'll also need Node.js 24 or newer. Then, in `web/`:
+
+```
+npm install
+npm run dev
+```
+
+and open http://localhost:5173/?map=greybox_01. See [web/README.md](web/README.md) for tests, URL options, and how the dev server compiles maps as you edit them.
 
 ## Repository Layout
 
@@ -47,11 +54,10 @@ Build, run, and test instructions for each engine are coming as the prototype ta
 | `textures/` | Textures (PNG), referenced by name from maps |
 | `data/` | Weapons, enemies, and movement values, with JSON Schemas |
 | `spec/` | Engine-neutral test scenarios |
-| `demos/` | Golden demo recordings, per engine |
+| `demos/` | Golden demo recordings |
 | `tools/` | Setup, map compiling, and validation scripts (Python) |
-| `web/` | TypeScript + Three.js implementation |
-| `godot/` | Godot 4.7 implementation |
-| `docs/` | Plan and decision log |
+| `web/` | The game: TypeScript + Three.js |
+| `docs/` | Plan, decision log, and the movement reference |
 
 ## Contributing
 

@@ -2,7 +2,47 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-13: User-made levels are a design goal
+
+**Decision:** Players should be able to make and play their own levels, as with 90s shooters. The pieces we build for ourselves double as the modding kit: the TrenchBroom game config and FGD, the base textures, and `tools/compile.py` with pinned ericw-tools. Later milestones should keep this working:
+
+- **Packages are data only:** a zip (like Quake 3's `.pk3`) holding `maps/`, any custom `textures/`, and possibly `data/` overrides. Never code: running user code in a browser or Electron app is a real security risk. This matches "content is data only" in the content separation entry below.
+- **Every file from a user is untrusted.** Parsers (`.map`, `.bsp`, PNG, JSON) must reject bad input with an error rather than crash or read out of bounds.
+- **On the web:** load a package by drag and drop or a file picker, keep installed packages in browser storage (IndexedDB or the Origin Private File System), and later perhaps load from a URL or a community hub.
+- **On desktop (Electron):** a `mods/` folder scanned at startup, layered over the base content through the content search path. Steam Workshop is possible through steamworks.js.
+- Mappers can test layout and movement on an uncompiled `.map` (unlit, full collision), and compile only for lighting. TrenchBroom's launch button can start the game on the map being edited.
+
+**Why:** Making and sharing levels is a big part of what made the era's shooters last, and our Quake-style pipeline already supports it. The web makes sharing easier than it ever was: a level can be a link.
+
+**Alternatives considered:** No modding support (simpler, but gives up something central to the genre); scripted mods (far more powerful, but untrusted code in a browser or Electron app is a security problem we don't want).
+
+## 2026-10-13: The web build is the engine; Godot is dropped after M1
+
+**Decision:** Continue on the web build (TypeScript + Three.js) only. Desktop releases, such as for Steam, will wrap the web build in Electron. The Godot implementation is removed from the repo; its last complete version is commit `f56ed69` ("feat(godot): render levels and make the slice playable") if it's ever needed.
+
+**How they compared at M1.** Both engines built the same slice from the same maps, data, and scenarios.
+
+- **Correctness:** both passed the three verified `/spec` scenarios unchanged. The sims turned out bit-for-bit identical: the same inputs produced the same state hashes in both engines, on Windows and in Linux CI, including 10 seconds of running, turning, strafing, and jumping. The port needed no algorithm changes.
+- **Feel:** in Ryan's playtest, movement, mouse look (raw input on the web, captured mouse in Godot), smoothness, and latency were indistinguishable.
+- **Iteration speed:** on the web, saving a map in TrenchBroom and reloading the page shows it lit, because the dev server compiles stale maps in about 0.1 seconds. Godot needed a scene restart and had no lit pipeline yet, though one could be built.
+- **Test ergonomics:** the web runs 166 tests in about 1 second; Godot ran 106 in about 30 seconds, mostly gdUnit4's roughly 93 ms per test. CI jobs took similar time (13 to 17 seconds against 17 to 24).
+- **Agent reliability:** the web needed fewer corrections. Godot work hit collisions with built-in type names (`Plane`, `Projection`), a precision bug in Godot's JSON parser (it reads some 17-digit floats back one bit off), the editor rewriting `.uid` and `.tscn` files during edits, and more GDScript ceremony (typed-array conversions, no tuples).
+- **Editor value:** our authoring is TrenchBroom and JSON, and sim state lives in plain data, not scene nodes, so the Godot editor added little. Its UI, animation, particle, and audio tools went unexplored, but the game's needs there are small and era-style, and simple tools can be built into the web build.
+- **Distribution:** a web visit downloads about 0.7 MB (142 KB of code gzipped plus 530 KB of content), against about 10 MB for Godot's web export. For desktop, Godot is smaller: about 38 MB zipped on Windows against about 158 MB for Electron 44. Consoles realistically need a native engine.
+
+**Why web:** the engines tied on correctness and feel. The web build is ahead on browser reach, test speed, iteration, and agent reliability. Godot's real advantages, consoles and smaller desktop builds, aren't needs today.
+
+**Desktop route:** Electron. It bundles one Chromium, so every player runs the same engine: the same behavior, the same float math (which settles cross-browser determinism for desktop), real fullscreen, no browser-reserved shortcuts, and Steam integration through steamworks.js. Precedents include the Three.js shooter Krunker's Steam client, Vampire Survivors (built in Phaser before a later Unity port for consoles), and CrossCode (NW.js). Tauri was ruled out because it uses each OS's own web view, which means WebKit on macOS and Linux.
+
+**Revisit if:** a concrete console plan appears, or UI, animation, or particle tooling proves too costly to build. The sim's portability is proven: it moved to GDScript in three chunks and matched bit for bit, checked by the `/spec` scenarios, the RNG reference values, and state hashes. A future native port (Rust compiled to both WebAssembly and native, or a native host running the sim in an embedded JavaScript interpreter) would be checkable the same way.
+
+**Supersedes:** "Golden demos are recorded per engine" (one engine now) and "Godot setup" below.
+
+**Alternatives considered:** Godot (above); both engines, Godot for desktop and the web build for browsers (two codebases to keep in step); native JavaScript runtimes with their own windows, such as Deno with WebGPU or Node with SDL bindings (promising but unproven for shipped games); Rust; a custom engine on SDL (a renderer, audio, input, and platform layer to write and maintain).
+
 ## 2026-10-12: Godot setup: our own parser and meshes, a 64-bit vector, gdUnit4 installed by setup.py
+
+*Superseded on 2026-10-13: Godot was dropped after M1 (see above). Kept for the record.*
 
 **Decision:** The Godot build of M1 follows the web build's structure:
 
@@ -152,6 +192,8 @@ AI-generated art and other assets aren't ruled out, but they're decided case by 
 **Alternatives considered:** Floating-point angles and movement: simpler at first, but text round-tripping and float differences between engines make exact replay fragile.
 
 ## 2026-10-11: Golden demos are recorded per engine
+
+*Superseded on 2026-10-13: the web build is the only engine. As it turned out, the two sims were bit-for-bit identical anyway.*
 
 **Decision:** Each engine records and replays its own golden demos (/demos/web, /demos/godot). Cross-engine agreement is checked by the shared /spec scenarios with tolerances.
 

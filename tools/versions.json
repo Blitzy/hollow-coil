@@ -16,13 +16,5 @@
         "sha256": "bc5b66fb00234e3697373f38d65130fd0d14fc9eaa549277f6c93eabd4504531"
       }
     }
-  },
-  "gdunit4": {
-    "version": "6.2.1",
-    "url": "https://github.com/godot-gdunit-labs/gdUnit4/archive/refs/tags/v{version}.zip",
-    "file": "gdUnit4-v6.2.1.zip",
-    "sha256": "ffb48847c46f386bf0c7a716fd68c6dace7d67730775cf7f748adce8ef3ed794",
-    "archive_dir": "gdUnit4-6.2.1/addons/gdUnit4",
-    "install_dir": "godot/addons/gdUnit4"
   }
 }

@@ -1,9 +1,9 @@
 # spec
 
-Engine-neutral test scenarios. Both engines run every scenario here and must pass the same expectations: `web/tests/scenarios.test.ts` and `godot/tests/test_spec_scenarios.gd`. Run `python tools/validate.py` to check them; CI does on every push.
+Engine-neutral test scenarios. The web build runs every scenario here (`web/tests/scenarios.test.ts`); a port to another engine must pass the same expectations, as the Godot build did through M1. Run `python tools/validate.py` to check them; CI does on every push.
 
 - `*.json`: scenarios, validated against `schemas/scenario.schema.json`
-- `schemas/input_command.schema.json`: the per-tick input command, shared by both engines, scenarios, and demos
+- `schemas/input_command.schema.json`: the per-tick input command, used by the game, scenarios, and demos
 
 ## Scenario format
 
@@ -15,14 +15,14 @@ Expectations check the player's origin (`position`), `velocity`, `on_ground`, an
 
 ## Conversion rules
 
-Both engines must convert scenarios to ticks and input commands exactly the same way:
+Any engine must convert scenarios to ticks and input commands exactly this way:
 
 - **Time to ticks:** `ticks(t) = floor(t * tick_rate + 0.5)`, using the sim's tick-rate constant.
 - **Segments:** segment *i* supplies the commands for ticks `ticks(previous until)` up to but not including `ticks(until)`, where the first segment starts at tick 0.
 - **Expectations:** a check `at` time *t* runs after `ticks(t)` ticks have been simulated.
 - **Angles:** `units(degrees) = floor(degrees * 65536 / 360 + 0.5)`. Yaw is then taken modulo 65536. Yaw 0 faces +x (east) and 90 faces +y (north). Pitch is positive looking up.
 - **Buttons:** `jump` sets bit 2 and `attack` sets bit 1 of the command's `buttons`.
-- **Start state:** the player spawns at the start marker's origin raised by 1 unit (see `docs/MOVEMENT.md`, Spawning), at rest, at full health, holding the starting weapon ready to fire. The first tick settles it onto the floor, 1/32 above it, so standing heights in expectations are 24 + 1/32 above the floor; the tolerances cover that. The RNG is seeded with `seed` (default 0). Every engine implements the same RNG, mulberry32, so seeded results match: see `web/src/sim/rng.ts` and `godot/src/sim/sim_random.gd`, and the reference outputs in `web/src/sim/rng.test.ts` (checked by `godot/tests/sim/test_sim_random.gd` too).
+- **Start state:** the player spawns at the start marker's origin raised by 1 unit (see `docs/MOVEMENT.md`, Spawning), at rest, at full health, holding the starting weapon ready to fire. The first tick settles it onto the floor, 1/32 above it, so standing heights in expectations are 24 + 1/32 above the floor; the tolerances cover that. The RNG is seeded with `seed` (default 0). The RNG is mulberry32, so any engine can reproduce seeded results exactly: see `web/src/sim/rng.ts`, and the reference outputs in `web/src/sim/rng.test.ts`.
 
 Scenario times are in seconds, not ticks, so scenarios survive tick-rate experiments. Write times that land on whole ticks at 60 Hz (multiples of 1/60 s, such as 0.05 or 0.1) so the rounding never matters at the current rate.
 
