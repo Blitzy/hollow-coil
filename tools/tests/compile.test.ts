@@ -32,7 +32,7 @@ describe("errorLine", () => {
 describe.skipIf(!toolsInstalled())("compileMap (needs ericw-tools)", () => {
   const dirs: string[] = [];
   const outDir = (): string => {
-    const dir = mkdtempSync(join(tmpdir(), "hc-compile-"));
+    const dir = mkdtempSync(join(tmpdir(), "mandrel-compile-"));
     dirs.push(dir);
     return dir;
   };

@@ -12,7 +12,7 @@ describe("check-files", () => {
   });
 
   it("finds files over the limit and skips the rest", () => {
-    const dir = mkdtempSync(join(tmpdir(), "hc-files-"));
+    const dir = mkdtempSync(join(tmpdir(), "mandrel-files-"));
     dirs.push(dir);
     writeFileSync(join(dir, "small.bin"), Buffer.alloc(10));
     writeFileSync(join(dir, "big.bin"), Buffer.alloc(101));

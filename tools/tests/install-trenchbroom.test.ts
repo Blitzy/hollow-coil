@@ -10,7 +10,7 @@ describe("install-trenchbroom", () => {
   const dirs: string[] = [];
   /** A temp folder with a target folder holding one file, and a link path under games/. */
   const setup = (): { target: string; other: string; link: string } => {
-    const dir = mkdtempSync(join(tmpdir(), "hc-tb-"));
+    const dir = mkdtempSync(join(tmpdir(), "mandrel-tb-"));
     dirs.push(dir);
     const target = join(dir, "config");
     const other = join(dir, "other");
@@ -51,7 +51,7 @@ describe("install-trenchbroom", () => {
 
   it("removes an old-name link to the config, and nothing else", () => {
     const { target, other, link } = setup();
-    const old = join(link, "..", "HollowCoil");
+    const old = join(link, "..", "MandrelJS");
     install(old, target);
     expect(removeOldLink(old, target)).toMatch(/^removed: /);
     expect(existsSync(old)).toBe(false);

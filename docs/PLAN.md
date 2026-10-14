@@ -1,4 +1,4 @@
-# Hollow Coil Plan: Vertical Slice
+# Mandrel.js Plan: Vertical Slice
 
 ## Goal
 

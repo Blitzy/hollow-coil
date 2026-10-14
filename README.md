@@ -2,7 +2,7 @@
 
 An open-source web engine for first-person shooters in the spirit of mid-90s shooters like Doom and Quake, with a free example game to play and test it with.
 
-Mandrel.js is built for Hollow Coil, a game whose levels are hand-authored and abstract rather than realistic, made for fun, variety, and fast combat. Hollow Coil is not currently intended to be a commercial product, and its own content lives outside this repo. (A mandrel is the rod a coil is wound around; slide it out and you have a hollow coil.)
+Levels are hand-authored and abstract rather than realistic, made for fun, variety, and fast combat. (A mandrel is the core a coil is wound around and takes its shape from.)
 
 ## Status
 

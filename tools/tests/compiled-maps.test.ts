@@ -33,7 +33,7 @@ describe.skipIf(!toolsInstalled())("compiled maps match their .map (needs ericw-
   let outDir = "";
 
   beforeAll(async () => {
-    outDir = mkdtempSync(join(tmpdir(), "hc-parity-"));
+    outDir = mkdtempSync(join(tmpdir(), "mandrel-parity-"));
     for (const name of MAPS) {
       const result = await compileMap(repoPath(`maps/${name}.map`), outDir);
       if (!compileOk(result)) throw new Error(`${name} failed to compile: ${result.problems.join("; ")}`);

@@ -29,7 +29,3 @@ The example content in this repository is licensed under the [Creative Commons A
 Files compiled from them, such as `.bsp` files, are covered by the same license. Credit them as "example content by Ryan Cook and Mandrel.js contributors, licensed under CC BY 4.0", with a link to this repository where possible.
 
 Everything else in this repository, including the TrenchBroom game config and FGD, `data/lightstyles.json`, schemas, test scenarios, demos, and documentation, is covered by the GNU GPL as stated above.
-
-## Hollow Coil's content
-
-The levels, art, audio, models, and final tuning of the game Hollow Coil are not in this repository and have their own license.

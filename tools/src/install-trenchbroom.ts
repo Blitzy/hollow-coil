@@ -3,9 +3,8 @@
 // Creates <TrenchBroom user dir>/games/MandrelJSExample pointing at maps/trenchbroom,
 // so TrenchBroom always reads the repo's current config and FGD. On Windows
 // this is a directory junction (no admin rights needed); elsewhere a symlink.
-// It also removes links this tool made under earlier names (games/HollowCoil,
-// games/MandrelJS) if they point at the same folder, so TrenchBroom doesn't
-// load the config twice.
+// It also removes the link this tool made under an earlier name (games/MandrelJS)
+// if it points at the same folder, so TrenchBroom doesn't load the config twice.
 //
 // After installing, set the game path in TrenchBroom under
 // Preferences > Games > Mandrel.js Example to the repo root (the folder holding maps/ and textures/).
@@ -22,7 +21,7 @@ import { isMain, REPO_ROOT, repoPath } from "./repo.ts";
 export const CONFIG_DIR = repoPath("maps", "trenchbroom");
 const LINK_NAME = "MandrelJSExample";
 /** Link names used by earlier versions of this tool. */
-const OLD_LINK_NAMES = ["HollowCoil", "MandrelJS"];
+const OLD_LINK_NAMES = ["MandrelJS"];
 
 export class InstallError extends Error {
   override name = "InstallError";

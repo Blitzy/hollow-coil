@@ -2,9 +2,9 @@
 
 ## What This Is
 
-Mandrel.js is an open-source web engine for first-person shooters in the spirit of mid-90s shooters like Doom and Quake. This repo holds the engine plus a free example game to play and test it with.
+Mandrel.js is an open-source web engine for first-person shooters in the spirit of mid-90s shooters like Doom and Quake. This repo holds the engine plus a free example game to play and test it with. Levels are hand-authored and abstract rather than realistic, built for fun, variety, and fast combat.
 
-The engine is built for Hollow Coil, a game whose levels are hand-authored and abstract rather than realistic, built for fun, variety, and fast combat. The game is not currently intended to be a commercial product. Hollow Coil's own content lives in a separate repo under its own license; never commit it here (see DECISIONS.md, 2026-10-14).
+A game made with Mandrel.js keeps its own content in its own repo under its own license; this repo holds only the engine and its example content (see DECISIONS.md, 2026-10-14).
 
 The current work plan lives in `docs/PLAN.md`. Decisions and their reasons go in `docs/DECISIONS.md`. Player movement and world collision must follow `docs/MOVEMENT.md`, weapons `docs/WEAPONS.md`, and enemies `docs/ENEMIES.md`.
 

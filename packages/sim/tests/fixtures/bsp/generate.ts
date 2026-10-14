@@ -171,7 +171,7 @@ function expectedValues(data: Uint8Array): Record<string, unknown> {
 
 const mapPath = join(HERE, "lit_room.map");
 writeMap(mapPath);
-const tmp = mkdtempSync(join(tmpdir(), "hc-fixture-"));
+const tmp = mkdtempSync(join(tmpdir(), "mandrel-fixture-"));
 try {
   const result = await compileMap(mapPath, tmp);
   if (result.problems.length > 0) throw new Error(`compile failed:\n  ${result.problems.join("\n  ")}`);
