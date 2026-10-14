@@ -7,7 +7,7 @@
 // offset and size, and first luxel. The game's .bsp reader must read the same values.
 //
 // expected.json is the oracle the reader is tested against, so this script
-// deliberately does NOT use @hollow-coil/sim's reader: it parses the file with
+// deliberately does NOT use @mandreljs/sim's reader: it parses the file with
 // its own few lines of DataView code, following Quake 2's qfiles.h directly.
 //
 // Run after changing the room or bumping ericw-tools:
@@ -16,7 +16,7 @@
 import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { compileMap } from "@hollow-coil/tools/compile";
+import { compileMap } from "@mandreljs/tools/compile";
 
 const HERE = import.meta.dirname;
 type Vec = [number, number, number];

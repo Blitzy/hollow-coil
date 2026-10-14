@@ -1,5 +1,5 @@
 {
-  "name": "@hollow-coil/testing",
+  "name": "@mandreljs/testing",
   "private": true,
   "type": "module",
   "description": "Node-only helpers for tests: repo paths, loading the shared /data files, and comparing .map and .bsp levels.",
@@ -8,6 +8,6 @@
     "./*": "./src/*.ts"
   },
   "dependencies": {
-    "@hollow-coil/sim": "*"
+    "@mandreljs/sim": "*"
   }
 }

@@ -6,9 +6,9 @@
 // Animation runs on sim ticks, not the wall clock, so it pauses and replays
 // with the sim. It is presentation only: the sim never reads light styles.
 
-import { TICK_RATE } from "@hollow-coil/sim/constants";
-import type { Bsp } from "@hollow-coil/sim/map/bsp";
-import { secondsToTicks } from "@hollow-coil/sim/constants";
+import { TICK_RATE } from "@mandreljs/sim/constants";
+import type { Bsp } from "@mandreljs/sim/map/bsp";
+import { secondsToTicks } from "@mandreljs/sim/constants";
 import { composeLightmaps, type LightmapAtlas } from "./lightmap-atlas.ts";
 
 /** data/lightstyles.json */

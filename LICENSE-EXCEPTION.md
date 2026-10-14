@@ -1,10 +1,10 @@
 # Licensing
 
-Copyright (C) 2026 Ryan Cook and Hollow Coil contributors.
+Copyright (C) 2026 Ryan Cook and Mandrel.js contributors.
 
-Hollow Coil is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. The full license text is in [LICENSE](LICENSE).
+Mandrel.js is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. The full license text is in [LICENSE](LICENSE).
 
-Hollow Coil is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+Mandrel.js is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 ## Additional permission under GNU GPL version 3 section 7
 
@@ -16,7 +16,7 @@ This permission does not extend to any other non-free software, such as third-pa
 
 ## Contributions
 
-By contributing to Hollow Coil, you agree that your contributions are licensed under the terms above, including the additional permission.
+By contributing to Mandrel.js, you agree that your contributions are licensed under the terms above, including the additional permission.
 
 ## Example content
 
@@ -26,7 +26,7 @@ The example content in this repository is licensed under the [Creative Commons A
 - textures: everything in `textures/`
 - gameplay data: `data/player.json`, `data/weapons.json`, and `data/enemies.json`
 
-Files compiled from them, such as `.bsp` files, are covered by the same license. Credit them as "example content by Ryan Cook and Hollow Coil contributors, licensed under CC BY 4.0", with a link to this repository where possible.
+Files compiled from them, such as `.bsp` files, are covered by the same license. Credit them as "example content by Ryan Cook and Mandrel.js contributors, licensed under CC BY 4.0", with a link to this repository where possible.
 
 Everything else in this repository, including the TrenchBroom game config and FGD, `data/lightstyles.json`, schemas, test scenarios, demos, and documentation, is covered by the GNU GPL as stated above.
 

@@ -1,5 +1,5 @@
 {
-  "name": "hollow-coil",
+  "name": "mandreljs",
   "private": true,
   "type": "module",
   "engines": {
@@ -11,8 +11,8 @@
     "tools"
   ],
   "scripts": {
-    "dev": "npm run dev -w @hollow-coil/game --",
-    "build": "npm run typecheck && npm run build -w @hollow-coil/game",
+    "dev": "npm run dev -w @mandreljs/game --",
+    "build": "npm run typecheck && npm run build -w @mandreljs/game",
     "typecheck": "tsc -p tsconfig.json && tsc -p packages/sim/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",

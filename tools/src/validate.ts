@@ -7,9 +7,9 @@
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { crossCheck, fgdClassnames, fgdStyleChoices, lightStyleCheck, scenarioCheck } from "@hollow-coil/data/checks";
-import type { DataFiles, LightStylesFile, ScenarioFile } from "@hollow-coil/data/checks";
-import { SchemaError, SchemaValidator } from "@hollow-coil/data/schema";
+import { crossCheck, fgdClassnames, fgdStyleChoices, lightStyleCheck, scenarioCheck } from "@mandreljs/data/checks";
+import type { DataFiles, LightStylesFile, ScenarioFile } from "@mandreljs/data/checks";
+import { SchemaError, SchemaValidator } from "@mandreljs/data/schema";
 import { isMain, repoPath } from "./repo.ts";
 
 const REQUIRED_DATA = ["player", "weapons", "enemies", "lightstyles"];

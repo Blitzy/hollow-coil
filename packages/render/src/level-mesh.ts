@@ -3,8 +3,8 @@
 // faces get a flat shade by direction so shapes read clearly.
 
 import * as THREE from "three";
-import type { MapLevel } from "@hollow-coil/sim/level";
-import { cross, dot, sub, type Vec3 } from "@hollow-coil/sim/math/vec3";
+import type { MapLevel } from "@mandreljs/sim/level";
+import { cross, dot, sub, type Vec3 } from "@mandreljs/sim/math/vec3";
 import { toThree } from "./coords.ts";
 import { texelCoords, textureAxes } from "./uv.ts";
 

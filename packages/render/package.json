@@ -1,5 +1,5 @@
 {
-  "name": "@hollow-coil/render",
+  "name": "@mandreljs/render",
   "private": true,
   "type": "module",
   "description": "Three.js presentation shared by the game and editors: level meshes, lightmaps, light styles, and coordinates.",
@@ -7,7 +7,7 @@
     "./*": "./src/*.ts"
   },
   "dependencies": {
-    "@hollow-coil/sim": "*",
+    "@mandreljs/sim": "*",
     "three": "0.186.1"
   }
 }

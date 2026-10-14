@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { readRepoBytes } from "@hollow-coil/testing";
-import { lightmapExtents, readBsp, type Bsp } from "@hollow-coil/sim/map/bsp";
-import { AtlasError, composeLightmaps, lightmapUv, packLightmaps, type LightmapAtlas } from "@hollow-coil/render/lightmap-atlas";
+import { readRepoBytes } from "@mandreljs/testing";
+import { lightmapExtents, readBsp, type Bsp } from "@mandreljs/sim/map/bsp";
+import { AtlasError, composeLightmaps, lightmapUv, packLightmaps, type LightmapAtlas } from "@mandreljs/render/lightmap-atlas";
 
 const bsp = readBsp(readRepoBytes("packages/sim/tests/fixtures/bsp/lit_room.bsp"));
 const FLICKER = 10; // the fixture's flickering light style

@@ -1,5 +1,5 @@
 {
-  "name": "@hollow-coil/sim",
+  "name": "@mandreljs/sim",
   "private": true,
   "type": "module",
   "description": "The deterministic simulation and the .map and .bsp file formats. No Three.js, DOM, or Node.",

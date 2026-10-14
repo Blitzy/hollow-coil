@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MapParseError, parseEntities, parseMap } from "@hollow-coil/sim/map/parse";
+import { MapParseError, parseEntities, parseMap } from "@mandreljs/sim/map/parse";
 
 const SAMPLE = `// Game: Hollow Coil
 // Format: Quake2 (Valve)

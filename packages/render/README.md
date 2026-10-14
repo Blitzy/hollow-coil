@@ -1,6 +1,6 @@
-# @hollow-coil/render
+# @mandreljs/render
 
-Three.js presentation shared by the game and future editors, so tools show exactly what the game shows. Import modules by path, such as `import { buildBspMeshes } from "@hollow-coil/render/bsp-mesh"`.
+Three.js presentation shared by the game and future editors, so tools show exactly what the game shows. Import modules by path, such as `import { buildBspMeshes } from "@mandreljs/render/bsp-mesh"`.
 
 - `bsp-mesh.ts`: the lit world from a compiled `.bsp`, with a gamma-space lightmap shader
 - `lightmap-atlas.ts`: packs face lightmaps into one atlas and composes light styles into it (no Three.js)

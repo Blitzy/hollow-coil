@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { loadWeaponsData } from "@hollow-coil/testing";
-import { BUTTON_ATTACK, NEUTRAL_COMMAND, type InputCommand } from "@hollow-coil/sim/input";
-import { startingWeapon, weaponContext, weaponFrame, type WeaponContext, type WeaponState } from "@hollow-coil/sim/player/weapons";
+import { loadWeaponsData } from "@mandreljs/testing";
+import { BUTTON_ATTACK, NEUTRAL_COMMAND, type InputCommand } from "@mandreljs/sim/input";
+import { startingWeapon, weaponContext, weaponFrame, type WeaponContext, type WeaponState } from "@mandreljs/sim/player/weapons";
 
 // The repo's data: pistol (slot 1) every 21 ticks, shotgun (slot 2) every 54, lower 12, raise 15.
 const weapons = loadWeaponsData();

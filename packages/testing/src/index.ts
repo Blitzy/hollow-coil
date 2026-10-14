@@ -2,8 +2,8 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { EnemiesData, PlayerData, WeaponsData } from "@hollow-coil/sim/data";
-import type { SimConfig } from "@hollow-coil/sim/sim";
+import type { EnemiesData, PlayerData, WeaponsData } from "@mandreljs/sim/data";
+import type { SimConfig } from "@mandreljs/sim/sim";
 
 export const REPO_ROOT = join(import.meta.dirname, "../../..");
 

@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { loadSimConfig } from "@hollow-coil/testing";
-import { DIST_EPSILON } from "@hollow-coil/sim/collision/trace";
-import { updateEnemy } from "@hollow-coil/sim/enemy/ai";
-import { damageEnemy } from "@hollow-coil/sim/enemy/damage";
-import { createEnemy, enemyContext, type EnemyState, type EnemyType } from "@hollow-coil/sim/enemy/enemy";
-import { BUTTON_ATTACK, degreesToUnits, NEUTRAL_COMMAND, type InputCommand } from "@hollow-coil/sim/input";
-import type { Level } from "@hollow-coil/sim/level";
-import { vec3 } from "@hollow-coil/sim/math/vec3";
-import { nextRandom } from "@hollow-coil/sim/rng";
-import { createSim, simContext, step, type SimConfig, type SimEvent, type SimState } from "@hollow-coil/sim/sim";
-import { box, surroundingsFor, world } from "@hollow-coil/sim/testing/worlds";
+import { loadSimConfig } from "@mandreljs/testing";
+import { DIST_EPSILON } from "@mandreljs/sim/collision/trace";
+import { updateEnemy } from "@mandreljs/sim/enemy/ai";
+import { damageEnemy } from "@mandreljs/sim/enemy/damage";
+import { createEnemy, enemyContext, type EnemyState, type EnemyType } from "@mandreljs/sim/enemy/enemy";
+import { BUTTON_ATTACK, degreesToUnits, NEUTRAL_COMMAND, type InputCommand } from "@mandreljs/sim/input";
+import type { Level } from "@mandreljs/sim/level";
+import { vec3 } from "@mandreljs/sim/math/vec3";
+import { nextRandom } from "@mandreljs/sim/rng";
+import { createSim, simContext, step, type SimConfig, type SimEvent, type SimState } from "@mandreljs/sim/sim";
+import { box, surroundingsFor, world } from "@mandreljs/sim/testing/worlds";
 
 const config = loadSimConfig();
 const shotgunner = enemyContext(config.enemies).types.get("shotgunner")!;

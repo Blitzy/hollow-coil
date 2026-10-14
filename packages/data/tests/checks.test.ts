@@ -1,12 +1,12 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { readRepoFile, REPO_ROOT } from "@hollow-coil/testing";
+import { readRepoFile, REPO_ROOT } from "@mandreljs/testing";
 import { describe, expect, it } from "vitest";
 import {
   crossCheck, fgdClassnames, fgdStyleChoices, lightStyleCheck, mapMarkers, scenarioCheck,
   type DataFiles, type LightStylesFile, type ScenarioFile,
-} from "@hollow-coil/data/checks";
-import { SchemaValidator } from "@hollow-coil/data/schema";
+} from "@mandreljs/data/checks";
+import { SchemaValidator } from "@mandreljs/data/schema";
 
 const loadJson = (path: string): any => JSON.parse(readRepoFile(path));
 const fgd = readRepoFile("maps/trenchbroom/hollowcoil.fgd");

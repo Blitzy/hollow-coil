@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { loadSimConfig, readRepoFile } from "@hollow-coil/testing";
-import { canSee, updateEnemy } from "@hollow-coil/sim/enemy/ai";
-import { createEnemy, enemyContext, enemySpawns, type EnemyState } from "@hollow-coil/sim/enemy/enemy";
-import { CONTENTS } from "@hollow-coil/sim/constants";
-import { degreesToUnits, NEUTRAL_COMMAND } from "@hollow-coil/sim/input";
-import { levelFromMap, type Level } from "@hollow-coil/sim/level";
-import { vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
-import { createSim, simContext, step, type SimState } from "@hollow-coil/sim/sim";
-import { box, surroundingsFor, world } from "@hollow-coil/sim/testing/worlds";
+import { loadSimConfig, readRepoFile } from "@mandreljs/testing";
+import { canSee, updateEnemy } from "@mandreljs/sim/enemy/ai";
+import { createEnemy, enemyContext, enemySpawns, type EnemyState } from "@mandreljs/sim/enemy/enemy";
+import { CONTENTS } from "@mandreljs/sim/constants";
+import { degreesToUnits, NEUTRAL_COMMAND } from "@mandreljs/sim/input";
+import { levelFromMap, type Level } from "@mandreljs/sim/level";
+import { vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
+import { createSim, simContext, step, type SimState } from "@mandreljs/sim/sim";
+import { box, surroundingsFor, world } from "@mandreljs/sim/testing/worlds";
 
 const config = loadSimConfig();
 const shotgunner = enemyContext(config.enemies).types.get("shotgunner")!;

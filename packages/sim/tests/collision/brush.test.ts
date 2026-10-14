@@ -1,12 +1,12 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { REPO_ROOT } from "@hollow-coil/testing";
+import { REPO_ROOT } from "@mandreljs/testing";
 import { describe, expect, it } from "vitest";
-import { CONTENTS } from "@hollow-coil/sim/constants";
-import { vec3 } from "@hollow-coil/sim/math/vec3";
-import { parseMap, type MapFace } from "@hollow-coil/sim/map/parse";
-import { buildBrush, type Brush } from "@hollow-coil/sim/collision/brush";
-import { planeFromPoints, type Plane } from "@hollow-coil/sim/collision/plane";
+import { CONTENTS } from "@mandreljs/sim/constants";
+import { vec3 } from "@mandreljs/sim/math/vec3";
+import { parseMap, type MapFace } from "@mandreljs/sim/map/parse";
+import { buildBrush, type Brush } from "@mandreljs/sim/collision/brush";
+import { planeFromPoints, type Plane } from "@mandreljs/sim/collision/plane";
 
 const REPO = REPO_ROOT;
 const FIXTURES = join(REPO, "packages/sim/tests/fixtures/bevels");

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { readRepoBytes, readRepoFile } from "@hollow-coil/testing";
-import { lightmapExtents, readBsp } from "@hollow-coil/sim/map/bsp";
-import { LightStyleAnimator, letterValue, styleValuesAt, type LightStyleData } from "@hollow-coil/render/light-styles";
-import { composeLightmaps, packLightmaps } from "@hollow-coil/render/lightmap-atlas";
+import { readRepoBytes, readRepoFile } from "@mandreljs/testing";
+import { lightmapExtents, readBsp } from "@mandreljs/sim/map/bsp";
+import { LightStyleAnimator, letterValue, styleValuesAt, type LightStyleData } from "@mandreljs/render/light-styles";
+import { composeLightmaps, packLightmaps } from "@mandreljs/render/lightmap-atlas";
 
 const data = JSON.parse(readRepoFile("data/lightstyles.json")) as LightStyleData;
 const bsp = readBsp(readRepoBytes("packages/sim/tests/fixtures/bsp/lit_room.bsp"));

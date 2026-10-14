@@ -1,5 +1,5 @@
 {
-  "name": "@hollow-coil/game",
+  "name": "@mandreljs/game",
   "private": true,
   "type": "module",
   "description": "The game.",
@@ -8,11 +8,11 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@hollow-coil/render": "*",
-    "@hollow-coil/sim": "*",
+    "@mandreljs/render": "*",
+    "@mandreljs/sim": "*",
     "three": "0.186.1"
   },
   "devDependencies": {
-    "@hollow-coil/dev-server": "*"
+    "@mandreljs/dev-server": "*"
   }
 }

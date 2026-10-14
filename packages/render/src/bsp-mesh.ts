@@ -8,8 +8,8 @@
 // result out compared with the era.
 
 import * as THREE from "three";
-import { SURF, texelCoords, type Bsp } from "@hollow-coil/sim/map/bsp";
-import { cross, length, sub } from "@hollow-coil/sim/math/vec3";
+import { SURF, texelCoords, type Bsp } from "@mandreljs/sim/map/bsp";
+import { cross, length, sub } from "@mandreljs/sim/math/vec3";
 import { toThree } from "./coords.ts";
 import { LightStyleAnimator, type LightStyleData } from "./light-styles.ts";
 import { lightmapUv, packLightmaps, type LightmapAtlas } from "./lightmap-atlas.ts";

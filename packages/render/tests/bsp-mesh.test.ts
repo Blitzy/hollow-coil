@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { readRepoBytes } from "@hollow-coil/testing";
-import { faceNormal, readBsp, SURF, texelCoords, type Bsp } from "@hollow-coil/sim/map/bsp";
-import { cross, dot, sub, vec3 } from "@hollow-coil/sim/math/vec3";
-import { bspSurfaces, bspTextureNames } from "@hollow-coil/render/bsp-mesh";
-import { toThree } from "@hollow-coil/render/coords";
-import { lightmapUv, packLightmaps } from "@hollow-coil/render/lightmap-atlas";
+import { readRepoBytes } from "@mandreljs/testing";
+import { faceNormal, readBsp, SURF, texelCoords, type Bsp } from "@mandreljs/sim/map/bsp";
+import { cross, dot, sub, vec3 } from "@mandreljs/sim/math/vec3";
+import { bspSurfaces, bspTextureNames } from "@mandreljs/render/bsp-mesh";
+import { toThree } from "@mandreljs/render/coords";
+import { lightmapUv, packLightmaps } from "@mandreljs/render/lightmap-atlas";
 
 const bsp = readBsp(readRepoBytes("packages/sim/tests/fixtures/bsp/lit_room.bsp"));
 const SIZE = 64;

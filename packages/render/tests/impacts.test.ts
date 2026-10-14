@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { toThree } from "@hollow-coil/render/coords";
-import { ImpactMarks } from "@hollow-coil/render/impacts";
-import { vec3 } from "@hollow-coil/sim/math/vec3";
+import { toThree } from "@mandreljs/render/coords";
+import { ImpactMarks } from "@mandreljs/render/impacts";
+import { vec3 } from "@mandreljs/sim/math/vec3";
 
 const visible = (marks: ImpactMarks): THREE.Mesh[] => marks.group.children.filter((c): c is THREE.Mesh => c.visible && c instanceof THREE.Mesh);
 const opacity = (mesh: THREE.Mesh): number => (mesh.material as THREE.MeshBasicMaterial).opacity;

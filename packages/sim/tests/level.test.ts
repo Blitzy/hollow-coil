@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { loadPlayerData, readRepoBytes, readRepoFile } from "@hollow-coil/testing";
-import { brushMismatches, compareSweeps } from "@hollow-coil/testing/level-parity";
-import type { Plane } from "@hollow-coil/sim/collision/plane";
-import { hullFromData } from "@hollow-coil/sim/data";
-import { levelFromBsp, levelFromMap, LevelError, type Level } from "@hollow-coil/sim/level";
-import { readBsp, type Bsp } from "@hollow-coil/sim/map/bsp";
-import { vec3 } from "@hollow-coil/sim/math/vec3";
-import { PLAYER_MASK } from "@hollow-coil/sim/player/movement";
+import { loadPlayerData, readRepoBytes, readRepoFile } from "@mandreljs/testing";
+import { brushMismatches, compareSweeps } from "@mandreljs/testing/level-parity";
+import type { Plane } from "@mandreljs/sim/collision/plane";
+import { hullFromData } from "@mandreljs/sim/data";
+import { levelFromBsp, levelFromMap, LevelError, type Level } from "@mandreljs/sim/level";
+import { readBsp, type Bsp } from "@mandreljs/sim/map/bsp";
+import { vec3 } from "@mandreljs/sim/math/vec3";
+import { PLAYER_MASK } from "@mandreljs/sim/player/movement";
 
 const FIXTURES = "packages/sim/tests/fixtures";
 const fixture = (path: string): { map: Level; bsp: Level } => ({

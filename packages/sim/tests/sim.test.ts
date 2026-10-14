@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { loadSimConfig, readRepoFile } from "@hollow-coil/testing";
-import { DIST_EPSILON } from "@hollow-coil/sim/collision/trace";
-import { BUTTON_ATTACK, BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "@hollow-coil/sim/input";
-import { levelFromMap } from "@hollow-coil/sim/level";
-import { vec3 } from "@hollow-coil/sim/math/vec3";
-import { SPAWN_RAISE } from "@hollow-coil/sim/constants";
-import { createSim, PLAYER_ID, simContext, step, type SimState } from "@hollow-coil/sim/sim";
-import { hashState, restore, snapshot } from "@hollow-coil/sim/snapshot";
+import { loadSimConfig, readRepoFile } from "@mandreljs/testing";
+import { DIST_EPSILON } from "@mandreljs/sim/collision/trace";
+import { BUTTON_ATTACK, BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "@mandreljs/sim/input";
+import { levelFromMap } from "@mandreljs/sim/level";
+import { vec3 } from "@mandreljs/sim/math/vec3";
+import { SPAWN_RAISE } from "@mandreljs/sim/constants";
+import { createSim, PLAYER_ID, simContext, step, type SimState } from "@mandreljs/sim/sim";
+import { hashState, restore, snapshot } from "@mandreljs/sim/snapshot";
 
 const config = loadSimConfig();
 const level = levelFromMap(readRepoFile("maps/test_movement.map"));

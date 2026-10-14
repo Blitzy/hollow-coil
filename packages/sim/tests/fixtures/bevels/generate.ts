@@ -16,8 +16,8 @@ import { execFileSync } from "node:child_process";
 import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { REPO_ROOT } from "@hollow-coil/tools/repo";
-import { ericwTool } from "@hollow-coil/tools/setup";
+import { REPO_ROOT } from "@mandreljs/tools/repo";
+import { ericwTool } from "@mandreljs/tools/setup";
 
 const HERE = import.meta.dirname;
 type Vec = [number, number, number];

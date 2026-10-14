@@ -3,7 +3,7 @@
 // pool of marks is reused, oldest first, so constant firing allocates nothing.
 
 import * as THREE from "three";
-import { add, type Vec3 } from "@hollow-coil/sim/math/vec3";
+import { add, type Vec3 } from "@mandreljs/sim/math/vec3";
 import { toThree } from "./coords.ts";
 
 export interface ImpactOptions {

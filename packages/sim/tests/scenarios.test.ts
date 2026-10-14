@@ -3,13 +3,13 @@
 
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { loadSimConfig, readRepoFile, REPO_ROOT } from "@hollow-coil/testing";
+import { loadSimConfig, readRepoFile, REPO_ROOT } from "@mandreljs/testing";
 import { describe, expect, it } from "vitest";
-import { trace } from "@hollow-coil/sim/collision/trace";
-import { CONTENTS } from "@hollow-coil/sim/constants";
-import { alive, enemyContext } from "@hollow-coil/sim/enemy/enemy";
-import { levelFromMap, type Level } from "@hollow-coil/sim/level";
-import { runScenario, type Scenario } from "@hollow-coil/sim/scenario";
+import { trace } from "@mandreljs/sim/collision/trace";
+import { CONTENTS } from "@mandreljs/sim/constants";
+import { alive, enemyContext } from "@mandreljs/sim/enemy/enemy";
+import { levelFromMap, type Level } from "@mandreljs/sim/level";
+import { runScenario, type Scenario } from "@mandreljs/sim/scenario";
 
 const config = loadSimConfig();
 const levels = new Map<string, Level>();

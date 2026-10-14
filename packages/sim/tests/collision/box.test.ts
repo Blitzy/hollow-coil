@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { boxBrush, entityBox, withBrushes } from "@hollow-coil/sim/collision/box";
-import { DIST_EPSILON, trace } from "@hollow-coil/sim/collision/trace";
-import { CONTENTS } from "@hollow-coil/sim/constants";
-import { vec3 } from "@hollow-coil/sim/math/vec3";
-import { box, world } from "@hollow-coil/sim/testing/worlds";
+import { boxBrush, entityBox, withBrushes } from "@mandreljs/sim/collision/box";
+import { DIST_EPSILON, trace } from "@mandreljs/sim/collision/trace";
+import { CONTENTS } from "@mandreljs/sim/constants";
+import { vec3 } from "@mandreljs/sim/math/vec3";
+import { box, world } from "@mandreljs/sim/testing/worlds";
 
 const HULL = { mins: vec3(-16, -16, -24), maxs: vec3(16, 16, 32) };
 

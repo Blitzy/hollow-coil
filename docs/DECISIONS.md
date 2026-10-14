@@ -2,9 +2,23 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-14: The engine is named Mandrel.js
+
+**Decision:** The engine is called Mandrel.js. Where a dot isn't allowed, it's `mandreljs`: the npm scope (`@mandreljs/sim`, `@mandreljs/render`, and so on) and a future GitHub organization. In conversation it's just "Mandrel". The game Hollow Coil keeps its name.
+
+The rename covers the workspace packages and the docs that describe the engine. The game identity the tools still carry (the "Hollow Coil" TrenchBroom game, the `// Game: Hollow Coil` header in every map, the page title) moves with the `base/` restructure, when each game directory gets its own name; renaming it now would mean relinking TrenchBroom and resetting its game path for no gain.
+
+**Why:**
+
+- A mandrel is the rod a coil is wound around. Slide it out and what's left is a hollow coil, so the name ties the engine to the game it was made for without repeating the game's name.
+- The ".js" follows Three.js and Babylon.js (which is written in TypeScript, as we are): it says "web engine" at a glance, and it sets the name apart from Red Hat's Mandrel (a GraalVM distribution) and the unrelated `mandrel` package on npm.
+- `mandreljs` and `mandrel.js` were free on npm, and no packages existed under `@mandreljs` when checked. No game engine by the name turned up.
+
+**Alternatives considered:** CoilEngine (plain and workable, but ties the engine to the game's name); CoilKit (reads as a parts kit, and like Apple's frameworks); Lathe, Capstan, Winch, Shockframe, Slipstrike, and BoomShoot (fine, but with no story); names playing on "quake" (Tremor, Richter, Faultline, Aftershock, and Tecton are taken, several by other Quake-style projects); "Quake" itself or id's own terms (trademarks); FPS.js (descriptive, so unprotectable, and "fps" on npm means frame-rate meters). None of these were checked as trademarks; do that before announcing the name.
+
 ## 2026-10-14: The engine and the game are separate, and the engine gets its own name
 
-**Decision:** This repo is an engine: its code, tools, and a free example game to play and test it with. Hollow Coil is the name of a game made with the engine. Hollow Coil's own content (levels, art, audio, models, and final tuning) lives in a separate repo under a license that doesn't allow reuse, as planned in "Keep a commercial option open" below. The engine gets its own name, not yet chosen. Until it has one, packages stay `@hollow-coil/*` and the docs keep their current wording; the rename is one change once the name is picked.
+**Decision:** This repo is an engine: its code, tools, and a free example game to play and test it with. Hollow Coil is the name of a game made with the engine. Hollow Coil's own content (levels, art, audio, models, and final tuning) lives in a separate repo under a license that doesn't allow reuse, as planned in "Keep a commercial option open" below. The engine gets its own name, chosen in "The engine is named Mandrel.js" above.
 
 **Why:**
 
