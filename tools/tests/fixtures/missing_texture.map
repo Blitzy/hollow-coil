@@ -1,4 +1,4 @@
-// Game: Mandrel.js
+// Game: Mandrel.js Example
 // Format: Quake2 (Valve)
 // Compile test fixture: the west wall uses a texture that doesn't exist. Must fail.
 {

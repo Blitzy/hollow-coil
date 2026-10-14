@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MapParseError, parseEntities, parseMap } from "@mandreljs/sim/map/parse";
 
-const SAMPLE = `// Game: Mandrel.js
+const SAMPLE = `// Game: Mandrel.js Example
 // Format: Quake2 (Valve)
 // entity 0
 {

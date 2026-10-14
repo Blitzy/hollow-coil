@@ -1,13 +1,14 @@
-// Links the Mandrel.js game config into TrenchBroom.
+// Links the Mandrel.js Example game config into TrenchBroom.
 //
-// Creates <TrenchBroom user dir>/games/MandrelJS pointing at maps/trenchbroom,
+// Creates <TrenchBroom user dir>/games/MandrelJSExample pointing at maps/trenchbroom,
 // so TrenchBroom always reads the repo's current config and FGD. On Windows
 // this is a directory junction (no admin rights needed); elsewhere a symlink.
-// It also removes the link from before the engine was renamed (games/HollowCoil)
-// if it points at the same folder, so TrenchBroom doesn't load the config twice.
+// It also removes links this tool made under earlier names (games/HollowCoil,
+// games/MandrelJS) if they point at the same folder, so TrenchBroom doesn't
+// load the config twice.
 //
 // After installing, set the game path in TrenchBroom under
-// Preferences > Games > Mandrel.js to the repo root (the folder holding maps/ and textures/).
+// Preferences > Games > Mandrel.js Example to the repo root (the folder holding maps/ and textures/).
 //
 // Usage: node tools/src/install-trenchbroom.ts [--uninstall]   (or npm run install-trenchbroom)
 //   --uninstall   remove the link (the repo files are untouched)
@@ -19,9 +20,9 @@ import { parseArgs } from "node:util";
 import { isMain, REPO_ROOT, repoPath } from "./repo.ts";
 
 export const CONFIG_DIR = repoPath("maps", "trenchbroom");
-const LINK_NAME = "MandrelJS";
+const LINK_NAME = "MandrelJSExample";
 /** Link names used by earlier versions of this tool. */
-const OLD_LINK_NAMES = ["HollowCoil"];
+const OLD_LINK_NAMES = ["HollowCoil", "MandrelJS"];
 
 export class InstallError extends Error {
   override name = "InstallError";
@@ -97,7 +98,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     } else {
       const message = install(link);
       console.log(message);
-      if (message.startsWith("installed")) console.log(`Next, in TrenchBroom: Preferences > Games > Mandrel.js, set the game path to ${REPO_ROOT}`);
+      if (message.startsWith("installed")) console.log(`Next, in TrenchBroom: Preferences > Games > Mandrel.js Example, set the game path to ${REPO_ROOT}`);
     }
   } catch (error) {
     if (!(error instanceof Error)) throw error;

@@ -42,7 +42,7 @@ npm run dev
 
 and open http://localhost:5173/?map=greybox_01. See [apps/game/README.md](apps/game/README.md) for URL options and how the dev server compiles maps as you edit them.
 
-To edit maps, link the Mandrel.js game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Mandrel.js and set the game path to the repo root (the folder containing `maps` and `textures`):
+To edit maps, link the Mandrel.js Example game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Mandrel.js Example and set the game path to the repo root (the folder containing `maps` and `textures`):
 
 ```
 npm run install-trenchbroom

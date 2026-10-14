@@ -6,7 +6,7 @@ Decisions and their reasons, newest first. Each entry records what was decided, 
 
 **Decision:** The engine is called Mandrel.js. Where a dot isn't allowed, it's `mandreljs`: the npm scope (`@mandreljs/sim`, `@mandreljs/render`, and so on) and a future GitHub organization. In conversation it's just "Mandrel". The game Hollow Coil keeps its name.
 
-The rename covers the workspace packages, the docs that describe the engine, and the TrenchBroom setup: the game config is named "Mandrel.js" for now, the FGD is `mandrel.fgd`, every map starts with `// Game: Mandrel.js`, and `npm run install-trenchbroom` links it as `games/MandrelJS`. The installer also removes the old `games/HollowCoil` link if it points at this repo, so TrenchBroom doesn't load the config twice. TrenchBroom keeps game paths by game name, so the path has to be set once more under the new name. The TrenchBroom name is a placeholder: TrenchBroom's "game" is a game's content, not an engine, so with the `base/` restructure it takes the example game's name (see "The engine repo ships a free example game" below). The page title stays "Hollow Coil" until then too.
+The rename covers the workspace packages, the docs that describe the engine, and the TrenchBroom setup: the FGD is `mandrel.fgd`. TrenchBroom's "game" is a game's content, not an engine, so the TrenchBroom game is the example game, "Mandrel.js Example" (see "The engine repo ships a free example game" below): every map starts with `// Game: Mandrel.js Example`, and `npm run install-trenchbroom` links it as `games/MandrelJSExample`. The installer also removes links it made under earlier names (`games/HollowCoil`, `games/MandrelJS`) if they point at this repo, so TrenchBroom doesn't load the config twice. TrenchBroom keeps game paths by game name, so the path has to be set once more under the new name. The page title stays "Hollow Coil" until the `example/` restructure.
 
 **Why:**
 
@@ -47,13 +47,13 @@ The rename covers the workspace packages, the docs that describe the engine, and
 
 ## 2026-10-14: The engine repo ships a free example game, built separately
 
-**Decision:** The example content (test maps, `greybox_01`, placeholder textures, and example weapons, enemies, and movement data) stays in this repo as a game directory, like Quake's `id1/`. In a later change it moves from the repo root into `base/` (like Quake 2's `baseq2/`), and Hollow Coil's content becomes a sibling game directory checked out from its own repo. From then on:
+**Decision:** The example content (test maps, `greybox_01`, placeholder textures, and example weapons, enemies, and movement data) stays in this repo as a game directory, like Quake's `id1/`. In a later change it moves from the repo root into `example/`, and Hollow Coil's content becomes a sibling game directory checked out from its own repo. From then on:
 
 - The engine build contains no content. Content is packed per game directory, and a release is the engine plus one game.
 - `npm run dev` plays the example game by default, and an option points it at another game directory.
 - Every engine behavior is used by at least one piece of example content, with tests. Nothing Hollow Coil relies on goes untested, and modders always have a working example to copy. Tests never need Hollow Coil's content.
 - Each game directory has its own TrenchBroom game config and FGD, named after the game, like TrenchBroom's own Quake and Quake 2 configs. The engine's entities (`worldspawn`, `info_player_start`, `light`, `info_marker`, and so on) live in a shared `mandrel.fgd` that each game's FGD pulls in with `@include`; a game's FGD adds only its own entities, such as its monsters. The validator checks each game's enemy classnames against that game's FGD. A map's `// Game:` header names its game, and the page title follows the game being played. Hollow Coil's content repo ships its own "Hollow Coil" config and FGD the same way.
-- The example game gets a name of its own (not yet chosen) when it moves into `base/`. Until then the TrenchBroom game is called "Mandrel.js".
+- The example game is plainly called "Mandrel.js Example", with no title of its own; it's a sample, not a product. That's its name in TrenchBroom, its maps' `// Game:` headers, and the page title.
 
 **Why:**
 
@@ -61,9 +61,9 @@ The rename covers the workspace packages, the docs that describe the engine, and
 - It keeps this repo "buildable and playable on its own" ("Keep a commercial option open" below) without any private content.
 - Building the engine and the content separately means a Hollow Coil release carries no example content it doesn't use, and an engine release carries no Hollow Coil content.
 
-**Trade-offs:** The move into `base/` touches the compile tool, the dev server, the TrenchBroom config and FGD (split into the shared engine FGD and the example game's), the validator, and the docs that assume the repo root is the game directory. It's mechanical, and cheapest while there's little content.
+**Trade-offs:** The move into `example/` touches the compile tool, the dev server, the TrenchBroom config and FGD (split into the shared engine FGD and the example game's), the validator, and the docs that assume the repo root is the game directory. It's mechanical, and cheapest while there's little content.
 
-**Alternatives considered:** A separate repo for the example game (Freedoom and LibreQuake are separate projects from the engines that run them; worth it once the example grows into a game with its own contributors and releases, and easy to split out then); no example content (the engine couldn't be tested or played without the private repo).
+**Alternatives considered:** A separate repo for the example game (Freedoom and LibreQuake are separate projects from the engines that run them; worth it once the example grows into a game with its own contributors and releases, and easy to split out then); no example content (the engine couldn't be tested or played without the private repo); a `base/` folder, like Quake 2's `baseq2/` (it suggests other games layer on top of it, as Quake mods do on `id1/`, but Hollow Coil is a separate game beside it, not a mod of it); a title of its own for the example game, as Freedoom has (unneeded for a sample).
 
 ## 2026-10-14: Mods add behavior through engine actions, not code
 

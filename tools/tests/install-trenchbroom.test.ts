@@ -17,7 +17,7 @@ describe("install-trenchbroom", () => {
     mkdirSync(target);
     mkdirSync(other);
     writeFileSync(join(target, "GameConfig.cfg"), "config");
-    return { target, other, link: join(dir, "TrenchBroom", "games", "MandrelJS") };
+    return { target, other, link: join(dir, "TrenchBroom", "games", "MandrelJSExample") };
   };
   afterEach(() => {
     for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
