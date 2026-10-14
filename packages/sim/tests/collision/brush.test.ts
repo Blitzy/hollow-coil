@@ -2,11 +2,11 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { REPO_ROOT } from "@hollow-coil/testing";
 import { describe, expect, it } from "vitest";
-import { CONTENTS } from "../constants";
-import { vec3 } from "../math/vec3";
-import { parseMap, type MapFace } from "../map/parse";
-import { buildBrush, type Brush } from "./brush";
-import { planeFromPoints, type Plane } from "./plane";
+import { CONTENTS } from "@hollow-coil/sim/constants";
+import { vec3 } from "@hollow-coil/sim/math/vec3";
+import { parseMap, type MapFace } from "@hollow-coil/sim/map/parse";
+import { buildBrush, type Brush } from "@hollow-coil/sim/collision/brush";
+import { planeFromPoints, type Plane } from "@hollow-coil/sim/collision/plane";
 
 const REPO = REPO_ROOT;
 const FIXTURES = join(REPO, "packages/sim/tests/fixtures/bevels");

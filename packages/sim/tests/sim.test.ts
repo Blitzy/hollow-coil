@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { loadPlayerData, readRepoFile } from "@hollow-coil/testing";
-import { DIST_EPSILON } from "./collision/trace";
-import { BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "./input";
-import { levelFromMap, LevelError } from "./level";
-import { vec3 } from "./math/vec3";
-import { createSim, movementContext, PLAYER_ID, SPAWN_RAISE, step, type SimState } from "./sim";
-import { hashState, restore, snapshot } from "./snapshot";
+import { DIST_EPSILON } from "@hollow-coil/sim/collision/trace";
+import { BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "@hollow-coil/sim/input";
+import { levelFromMap, LevelError } from "@hollow-coil/sim/level";
+import { vec3 } from "@hollow-coil/sim/math/vec3";
+import { createSim, movementContext, PLAYER_ID, SPAWN_RAISE, step, type SimState } from "@hollow-coil/sim/sim";
+import { hashState, restore, snapshot } from "@hollow-coil/sim/snapshot";
 
 const config = { player: loadPlayerData() };
 const level = levelFromMap(readRepoFile("maps/test_movement.map"));

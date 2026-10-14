@@ -31,4 +31,5 @@ Combine them as a query string, such as `http://localhost:5173/?map=greybox_01&r
 
 - `src/main.ts`: the entry point that ties the sim and rendering together
 - `src/game/`: browser input (with raw mouse input), input commands, and the fixed-step loop
+- `tests/`: tests, mirroring `src/`
 - `vite.config.ts`: the Vite setup, with the shared dev-server plugin

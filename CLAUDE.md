@@ -48,6 +48,7 @@ The simulation is strictly separated from presentation. These rules are not opti
 
 - TypeScript in strict mode.
 - Prefer small, readable modules over clever abstractions.
+- Tests live in each app's or package's `tests/` folder, mirroring `src/` (`packages/sim/src/map/bsp.ts` is tested by `packages/sim/tests/map/bsp.test.ts`). Package tests import the package by module path (`@hollow-coil/sim/map/bsp`), as other code does.
 
 ## Commit Messages
 

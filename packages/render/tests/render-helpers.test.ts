@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { MapFace } from "@hollow-coil/sim/map/parse";
 import { vec3 } from "@hollow-coil/sim/math/vec3";
-import { cameraRotation, toThree, verticalFov } from "./coords";
-import { faceShade } from "./level-mesh";
-import { texelCoords, textureAxes } from "./uv";
+import { cameraRotation, toThree, verticalFov } from "@hollow-coil/render/coords";
+import { faceShade } from "@hollow-coil/render/level-mesh";
+import { texelCoords, textureAxes } from "@hollow-coil/render/uv";
 
 const face = (overrides: Partial<MapFace>): MapFace => ({
   points: [vec3(0, 0, 0), vec3(1, 0, 0), vec3(0, 1, 0)],

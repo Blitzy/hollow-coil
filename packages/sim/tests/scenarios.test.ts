@@ -4,8 +4,8 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadPlayerData, readRepoFile, REPO_ROOT } from "@hollow-coil/testing";
 import { describe, expect, it } from "vitest";
-import { levelFromMap, type Level } from "../src/level";
-import { runScenario, type Scenario } from "../src/scenario";
+import { levelFromMap, type Level } from "@hollow-coil/sim/level";
+import { runScenario, type Scenario } from "@hollow-coil/sim/scenario";
 
 const config = { player: loadPlayerData() };
 const levels = new Map<string, Level>();

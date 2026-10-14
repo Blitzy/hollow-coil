@@ -1,10 +1,10 @@
 import { defineConfig } from "vitest/config";
 
-// One test run across every app and package. Tests live next to their code
-// (src/**/*.test.ts) or in a package's tests/ folder.
+// One test run across every app and package. Tests live in each one's tests/
+// folder, mirroring src/.
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["apps/*/src/**/*.test.ts", "packages/*/src/**/*.test.ts", "packages/*/tests/**/*.test.ts"],
+    include: ["apps/*/tests/**/*.test.ts", "packages/*/tests/**/*.test.ts"],
   },
 });

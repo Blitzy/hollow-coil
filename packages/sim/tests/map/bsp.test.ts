@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readRepoBytes, readRepoFile } from "@hollow-coil/testing";
-import { cross, dot, sub } from "../math/vec3";
-import { BspError, faceNormal, lightmapExtents, readBsp } from "./bsp";
-import { parseEntities, parseMap } from "./parse";
+import { cross, dot, sub } from "@hollow-coil/sim/math/vec3";
+import { BspError, faceNormal, lightmapExtents, readBsp } from "@hollow-coil/sim/map/bsp";
+import { parseEntities, parseMap } from "@hollow-coil/sim/map/parse";
 
 // Compiled by tests/fixtures/bsp/generate.py; expected.json holds what tools/bspdump.py reads from it.
 const FIXTURE = "packages/sim/tests/fixtures/bsp";

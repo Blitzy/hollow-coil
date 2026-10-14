@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextRandom, seedRandom } from "./rng";
+import { nextRandom, seedRandom } from "@hollow-coil/sim/rng";
 
 function sequence(seed: number, count: number): number[] {
   let state = seedRandom(seed);

@@ -14,5 +14,6 @@ Import modules by path, such as `import { readBsp } from "@hollow-coil/sim/map/b
 - `src/rng.ts`: the seeded RNG (mulberry32), with reference values in its test
 - `src/scenario.ts`: runs `/spec` scenarios; `tests/scenarios.test.ts` runs every one
 - `src/testing/`: small box-and-ramp worlds for tests
+- `tests/`: the tests, mirroring `src/`, plus `scenarios.test.ts` and `sim-purity.test.ts`
 - `tests/fixtures/bevels/`: brushes compiled by qbsp, to check our bevels. Regenerate with `python packages/sim/tests/fixtures/bevels/generate.py`.
 - `tests/fixtures/bsp/`: a small compiled, lit room for the `.bsp` reader and the lightmap tests in `@hollow-coil/render`. Regenerate with `python packages/sim/tests/fixtures/bsp/generate.py`.

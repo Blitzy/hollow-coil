@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { BUTTON_ATTACK, BUTTON_JUMP, degreesToUnits } from "./input";
-import { scenarioCommands, secondsToTicks, type Scenario } from "./scenario";
+import { BUTTON_ATTACK, BUTTON_JUMP, degreesToUnits } from "@hollow-coil/sim/input";
+import { scenarioCommands, secondsToTicks, type Scenario } from "@hollow-coil/sim/scenario";
 
 const base: Scenario = {
   description: "test",
