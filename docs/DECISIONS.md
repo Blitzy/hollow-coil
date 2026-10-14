@@ -6,7 +6,7 @@ Decisions and their reasons, newest first. Each entry records what was decided, 
 
 **Decision:** The engine is called Mandrel.js. Where a dot isn't allowed, it's `mandreljs`: the npm scope (`@mandreljs/sim`, `@mandreljs/render`, and so on) and a future GitHub organization. In conversation it's just "Mandrel". The game Hollow Coil keeps its name.
 
-The rename covers the workspace packages, the docs that describe the engine, and the TrenchBroom setup: the game config is named "Mandrel.js" (it's the engine's config, with the engine's entities, shared by every game made with it), the FGD is `mandrel.fgd`, every map starts with `// Game: Mandrel.js`, and `npm run install-trenchbroom` links it as `games/MandrelJS`. The installer also removes the old `games/HollowCoil` link if it points at this repo, so TrenchBroom doesn't load the config twice. TrenchBroom keeps game paths by game name, so the path has to be set once more under the new name. The page title stays "Hollow Coil" until the `base/` restructure, when each game directory gets its own name.
+The rename covers the workspace packages, the docs that describe the engine, and the TrenchBroom setup: the game config is named "Mandrel.js" for now, the FGD is `mandrel.fgd`, every map starts with `// Game: Mandrel.js`, and `npm run install-trenchbroom` links it as `games/MandrelJS`. The installer also removes the old `games/HollowCoil` link if it points at this repo, so TrenchBroom doesn't load the config twice. TrenchBroom keeps game paths by game name, so the path has to be set once more under the new name. The TrenchBroom name is a placeholder: TrenchBroom's "game" is a game's content, not an engine, so with the `base/` restructure it takes the example game's name (see "The engine repo ships a free example game" below). The page title stays "Hollow Coil" until then too.
 
 **Why:**
 
@@ -52,6 +52,8 @@ The rename covers the workspace packages, the docs that describe the engine, and
 - The engine build contains no content. Content is packed per game directory, and a release is the engine plus one game.
 - `npm run dev` plays the example game by default, and an option points it at another game directory.
 - Every engine behavior is used by at least one piece of example content, with tests. Nothing Hollow Coil relies on goes untested, and modders always have a working example to copy. Tests never need Hollow Coil's content.
+- Each game directory has its own TrenchBroom game config and FGD, named after the game, like TrenchBroom's own Quake and Quake 2 configs. The engine's entities (`worldspawn`, `info_player_start`, `light`, `info_marker`, and so on) live in a shared `mandrel.fgd` that each game's FGD pulls in with `@include`; a game's FGD adds only its own entities, such as its monsters. The validator checks each game's enemy classnames against that game's FGD. A map's `// Game:` header names its game, and the page title follows the game being played. Hollow Coil's content repo ships its own "Hollow Coil" config and FGD the same way.
+- The example game gets a name of its own (not yet chosen) when it moves into `base/`. Until then the TrenchBroom game is called "Mandrel.js".
 
 **Why:**
 
@@ -59,7 +61,7 @@ The rename covers the workspace packages, the docs that describe the engine, and
 - It keeps this repo "buildable and playable on its own" ("Keep a commercial option open" below) without any private content.
 - Building the engine and the content separately means a Hollow Coil release carries no example content it doesn't use, and an engine release carries no Hollow Coil content.
 
-**Trade-offs:** The move into `base/` touches the compile tool, the dev server, the TrenchBroom config, the validator, and the docs that assume the repo root is the game directory. It's mechanical, and cheapest while there's little content.
+**Trade-offs:** The move into `base/` touches the compile tool, the dev server, the TrenchBroom config and FGD (split into the shared engine FGD and the example game's), the validator, and the docs that assume the repo root is the game directory. It's mechanical, and cheapest while there's little content.
 
 **Alternatives considered:** A separate repo for the example game (Freedoom and LibreQuake are separate projects from the engines that run them; worth it once the example grows into a game with its own contributors and releases, and easy to split out then); no example content (the engine couldn't be tested or played without the private repo).
 
