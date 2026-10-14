@@ -4,7 +4,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { install, InstallError, removeOldLink, trenchbroomUserDir, uninstall } from "../src/install-trenchbroom.ts";
+import { gameLinkName, install, InstallError, removeOldLink, trenchbroomUserDir, uninstall } from "../src/install-trenchbroom.ts";
+import { EXAMPLE_GAME } from "../src/repo.ts";
 
 describe("install-trenchbroom", () => {
   const dirs: string[] = [];
@@ -65,6 +66,13 @@ describe("install-trenchbroom", () => {
     mkdirSync(old);
     expect(removeOldLink(old, target)).toBeNull();
     expect(existsSync(old)).toBe(true);
+  });
+
+  it("names a game's link after its FGD, as TrenchBroom's own configs are", () => {
+    expect(gameLinkName(join(EXAMPLE_GAME, "trenchbroom"))).toBe("MandrelJSExample");
+    const { target } = setup();
+    writeFileSync(join(target, "GameConfig.cfg"), '{\n  // My game\n  "name": "My Game",\n  "entities": { "definitions": [ "MyGame.fgd", "Extras.fgd" ] }\n}');
+    expect(gameLinkName(target)).toBe("MyGame");
   });
 
   it("knows where TrenchBroom keeps its games", () => {

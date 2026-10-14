@@ -1,16 +1,19 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { readRepoFile, REPO_ROOT } from "@mandreljs/testing";
+import { loadSimConfig, readRepoFile, REPO_ROOT } from "@mandreljs/testing";
 import { describe, expect, it } from "vitest";
 import {
-  crossCheck, fgdClassnames, fgdStyleChoices, lightStyleCheck, mapMarkers, scenarioCheck,
-  type DataFiles, type LightStylesFile, type ScenarioFile,
+  crossCheck, fgdClassnames, fgdStyleChoices, gameCheck, lightStyleCheck, mapGameName, mapMarkers, resolveFgdIncludes, scenarioCheck,
+  trenchbroomConfig, type DataFiles, type GameFile, type LightStylesFile, type ScenarioFile,
 } from "@mandreljs/data/checks";
 import { SchemaValidator } from "@mandreljs/data/schema";
 
 const loadJson = (path: string): any => JSON.parse(readRepoFile(path));
-const fgd = readRepoFile("maps/trenchbroom/mandrel.fgd");
-const realData = (): DataFiles => ({ player: loadJson("data/player.json"), weapons: loadJson("data/weapons.json"), enemies: loadJson("data/enemies.json") });
+/** The example game's FGD with the engine's included, as TrenchBroom reads it once install-trenchbroom links engine/. */
+const fgd = resolveFgdIncludes(readRepoFile("example/trenchbroom/MandrelJSExample.fgd"), (path) =>
+  readRepoFile(path.startsWith("engine/") ? `trenchbroom/${path.slice("engine/".length)}` : `example/trenchbroom/${path}`),
+).text;
+const realData = (): DataFiles => loadSimConfig() as unknown as DataFiles;
 
 describe("crossCheck", () => {
   const classnames = fgdClassnames(fgd);
@@ -90,7 +93,7 @@ describe("scenarios", () => {
   const DATA = realData();
   const readMap = (name: string): string | null => {
     try {
-      return readRepoFile(`maps/${name}.map`);
+      return readRepoFile(`example/maps/${name}.map`);
     } catch {
       return null;
     }
@@ -190,7 +193,7 @@ describe("scenarios", () => {
 
 describe("mapMarkers", () => {
   it("reads marker names and origins", () => {
-    const { markers, problems } = mapMarkers(readRepoFile("maps/test_movement.map"), "test_movement.map");
+    const { markers, problems } = mapMarkers(readRepoFile("example/maps/test_movement.map"), "test_movement.map");
     expect(problems).toEqual([]);
     expect(markers.get("step18_start")).toEqual([64, 144, 24]);
     expect(markers.has("finish")).toBe(true);
@@ -204,5 +207,70 @@ describe("mapMarkers", () => {
 
   it("reports a map that doesn't parse", () => {
     expect(mapMarkers("{ oops", "bad.map").problems[0]).toMatch(/^bad\.map: line 1:/);
+  });
+});
+
+describe("resolveFgdIncludes", () => {
+  it("puts the engine's entities in the example game's FGD", () => {
+    const classnames = fgdClassnames(fgd);
+    for (const name of ["worldspawn", "info_player_start", "info_marker", "light", "monster_shotgunner"]) expect(classnames).toContain(name);
+    expect(fgd).not.toMatch(/^@include/m);
+  });
+
+  it("reads nested includes relative to the including file", () => {
+    const files: Record<string, string> = { "a/one.fgd": '@include "two.fgd"\n@PointClass = one : ""', "a/two.fgd": "@PointClass = two : \"\"" };
+    const { text, problems } = resolveFgdIncludes('@include "a/one.fgd"\r\n@PointClass = top : ""', (path) => files[path] ?? null);
+    expect(problems).toEqual([]);
+    expect([...fgdClassnames(text)]).toEqual(["two", "one", "top"]);
+  });
+
+  it("reports a missing file and an include loop", () => {
+    expect(resolveFgdIncludes('@include "nope.fgd"', () => null).problems).toEqual(["FGD: included file 'nope.fgd' not found"]);
+    expect(resolveFgdIncludes('@include "self.fgd"', () => '@include "self.fgd"').problems).toEqual(["FGD: self.fgd includes itself"]);
+  });
+});
+
+describe("trenchbroomConfig", () => {
+  it("reads the example game's config, comments and all", () => {
+    expect(trenchbroomConfig(readRepoFile("example/trenchbroom/GameConfig.cfg"))).toEqual({ name: "Mandrel.js Example", definitions: ["MandrelJSExample.fgd"] });
+  });
+
+  it("keeps // inside strings", () => {
+    const config = '{\n  // a comment\n  "name": "A // B", // another\n  "entities": { "definitions": ["a.fgd"] }\n}';
+    expect(trenchbroomConfig(config).name).toBe("A // B");
+  });
+
+  it("throws on a config without a name or definitions", () => {
+    expect(() => trenchbroomConfig('{ "entities": { "definitions": [] } }')).toThrow(/no name/);
+    expect(() => trenchbroomConfig('{ "name": "X" }')).toThrow(/no entity definitions/);
+  });
+});
+
+describe("gameCheck", () => {
+  const game = (): GameFile => loadJson("example/data/game.json");
+  const maps = (): Map<string, string> =>
+    new Map(readdirSync(join(REPO_ROOT, "example", "maps")).filter((f) => f.endsWith(".map")).map((f) => [f.replace(/\.map$/, ""), readRepoFile(`example/maps/${f}`)]));
+  const configName = trenchbroomConfig(readRepoFile("example/trenchbroom/GameConfig.cfg")).name;
+
+  it("passes the example game", () => {
+    expect(gameCheck(game(), configName, maps())).toEqual([]);
+  });
+
+  it("reads a map's game from its header", () => {
+    expect(mapGameName("// Game: Some Game\n// Format: Quake2 (Valve)\n{")).toBe("Some Game");
+    expect(mapGameName("// Format: Quake2 (Valve)\r\n// Game: Some Game\r\n{")).toBe("Some Game");
+    expect(mapGameName('{\n"classname" "worldspawn"\n// Game: Too Late\n}')).toBeNull();
+  });
+
+  it("reports a config, map, or start map that doesn't match the game", () => {
+    const all = maps();
+    all.set("stray", "// Game: Quake 2\n{\n}");
+    all.set("bare", "{\n}");
+    expect(gameCheck({ ...game(), start_map: "e1m1" }, "Mandrel.js", all)).toEqual([
+      "trenchbroom/GameConfig.cfg: name 'Mandrel.js' is not the game's name, 'Mandrel.js Example' (data/game.json)",
+      "maps/stray.map: says // Game: Quake 2, but the game is 'Mandrel.js Example'",
+      "maps/bare.map: has no // Game: line, but the game is 'Mandrel.js Example'",
+      "data/game.json: start_map 'e1m1' not found (maps/e1m1.map)",
+    ]);
   });
 });

@@ -1,0 +1,5 @@
+{
+  "$schema": "../../data/schemas/game.schema.json",
+  "name": "Mandrel.js Example",
+  "start_map": "test_movement"
+}

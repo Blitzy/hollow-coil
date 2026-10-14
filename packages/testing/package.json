@@ -2,7 +2,7 @@
   "name": "@mandreljs/testing",
   "private": true,
   "type": "module",
-  "description": "Node-only helpers for tests: repo paths, loading the shared /data files, and comparing .map and .bsp levels.",
+  "description": "Node-only helpers for tests: repo paths, loading the example game's data files, and comparing .map and .bsp levels.",
   "exports": {
     ".": "./src/index.ts",
     "./*": "./src/*.ts"

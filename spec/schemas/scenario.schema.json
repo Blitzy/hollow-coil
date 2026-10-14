@@ -11,7 +11,7 @@
       "description": "unverified: written without an engine run; expectations may be tuned once on first run. verified: an engine has passed it; expectations change only for intentional behavior changes.",
       "enum": ["unverified", "verified"]
     },
-    "map": { "description": "Map name, as in maps/<name>.map.", "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "map": { "description": "Map name, as in example/maps/<name>.map.", "type": "string", "pattern": "^[a-z0-9_]+$" },
     "seed": { "description": "Seed for the sim's RNG. Defaults to 0.", "type": "integer", "minimum": 0 },
     "duration": { "description": "Total time to simulate, in seconds.", "type": "number", "exclusiveMinimum": 0, "maximum": 600 },
     "start": {
@@ -54,7 +54,7 @@
       "description": "One enemy, placed at a marker or a position (exactly one of the two).",
       "type": "object",
       "properties": {
-        "type": { "description": "Enemy id in data/enemies.json.", "type": "string" },
+        "type": { "description": "Enemy id in example/data/enemies.json.", "type": "string" },
         "marker": { "description": "Name of an info_marker in the map.", "type": "string" },
         "position": { "description": "Where to place it, in map coordinates.", "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
         "yaw": { "description": "Facing in degrees; 0 is east (+x), 90 is north (+y).", "type": "number", "minimum": 0, "exclusiveMaximum": 360 }
@@ -98,7 +98,7 @@
           "additionalProperties": false
         },
         "weapon": {
-          "description": "The weapon in hand, by its id in data/weapons.json. During a switch, the old weapon until it is fully lowered, then the new one while it raises.",
+          "description": "The weapon in hand, by its id in example/data/weapons.json. During a switch, the old weapon until it is fully lowered, then the new one while it raises.",
           "type": "string"
         },
         "shots": {

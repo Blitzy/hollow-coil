@@ -9,7 +9,7 @@ import { createSim, PLAYER_ID, simContext, step, type SimState } from "@mandrelj
 import { hashState, restore, snapshot } from "@mandreljs/sim/snapshot";
 
 const config = loadSimConfig();
-const level = levelFromMap(readRepoFile("maps/test_movement.map"));
+const level = levelFromMap(readRepoFile("example/maps/test_movement.map"));
 const ctx = simContext(level, config);
 
 // Inputs that exercise running, turning, strafing, jumping, firing, and switching weapons.

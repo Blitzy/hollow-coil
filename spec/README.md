@@ -1,6 +1,6 @@
 # spec
 
-Engine-neutral test scenarios. The web build runs every scenario here (`packages/sim/tests/scenarios.test.ts`); a port to another engine must pass the same expectations, as the Godot build did through M1. Run `npm run validate` to check them; CI does on every push.
+Engine-neutral test scenarios, run on the example game's maps and data (`example/`). The web build runs every scenario here (`packages/sim/tests/scenarios.test.ts`); a port to another engine must pass the same expectations, as the Godot build did through M1. Run `npm run validate` to check them; CI does on every push.
 
 - `*.json`: scenarios, validated against `schemas/scenario.schema.json`
 - `schemas/input_command.schema.json`: the per-tick input command, used by the game, scenarios, and demos
@@ -11,7 +11,7 @@ A scenario names a map, a start (an `info_marker` plus facing), a timeline of in
 
 Each input segment holds one set of inputs until its `until` time. View angles (`yaw`, `pitch`) carry over to later segments when omitted; everything else (`forward`, `side`, `jump`, `attack`, `weapon`) is neutral unless the segment sets it. After the last segment, inputs are neutral with the view held.
 
-Expectations check the player's origin (`position`), `velocity`, `on_ground`, `health`, distance to a marker (`near_marker`), the weapon in hand (`weapon`, by its id in `data/weapons.json`), how many shots the player has fired so far (`shots`; a shotgun blast is one shot), where the player's latest pellet hit a wall or an entity (`last_hit`), and one enemy's mode, health, position, or distance from the player (`enemy`). Enemies follow `docs/ENEMIES.md`. A `null` axis in `position`, `velocity`, `last_hit`, or an enemy's `position` is not checked. Besides its expectations, every scenario must keep every enemy out of the world on every tick; the test harness checks that. Weapon timing follows `docs/WEAPONS.md`.
+Expectations check the player's origin (`position`), `velocity`, `on_ground`, `health`, distance to a marker (`near_marker`), the weapon in hand (`weapon`, by its id in `example/data/weapons.json`), how many shots the player has fired so far (`shots`; a shotgun blast is one shot), where the player's latest pellet hit a wall or an entity (`last_hit`), and one enemy's mode, health, position, or distance from the player (`enemy`). Enemies follow `docs/ENEMIES.md`. A `null` axis in `position`, `velocity`, `last_hit`, or an enemy's `position` is not checked. Besides its expectations, every scenario must keep every enemy out of the world on every tick; the test harness checks that. Weapon timing follows `docs/WEAPONS.md`.
 
 ## Conversion rules
 

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "game.schema.json",
+  "title": "Game",
+  "description": "A game directory's identity: what the game is called and where it starts.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": {
+      "description": "The game's name, shown as the page title. Its TrenchBroom game config has the same name, and its maps start with // Game: <name>.",
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "start_map": {
+      "description": "The map played when none is named, as in maps/<name>.map.",
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    }
+  },
+  "required": ["name", "start_map"],
+  "additionalProperties": false
+}

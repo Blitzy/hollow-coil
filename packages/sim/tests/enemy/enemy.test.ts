@@ -45,7 +45,7 @@ describe("enemySpawns", () => {
   });
 
   it("spawns test_combat's two shotgunners, facing west", () => {
-    const spawns = enemySpawns(levelFromMap(readRepoFile("maps/test_combat.map")), ctx);
+    const spawns = enemySpawns(levelFromMap(readRepoFile("example/maps/test_combat.map")), ctx);
     expect(spawns).toEqual([
       { type: "shotgunner", origin: vec3(512, 0, 24 + DIST_EPSILON), yaw: 32768 },
       { type: "shotgunner", origin: vec3(512, 640, 24 + DIST_EPSILON), yaw: 32768 },
@@ -53,7 +53,7 @@ describe("enemySpawns", () => {
   });
 
   it("stands greybox_01's ledge shotgunner on the ledge it was placed on", () => {
-    const spawns = enemySpawns(levelFromMap(readRepoFile("maps/greybox_01.map")), ctx);
+    const spawns = enemySpawns(levelFromMap(readRepoFile("example/maps/greybox_01.map")), ctx);
     expect(spawns[1]!.origin).toEqual(vec3(1200, 128, 120 + DIST_EPSILON));
   });
 });

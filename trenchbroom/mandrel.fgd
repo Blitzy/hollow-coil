@@ -1,6 +1,10 @@
-// Mandrel.js entity definitions for TrenchBroom.
+// Mandrel.js engine entity definitions for TrenchBroom: the entities every game
+// shares. Each game has its own FGD that pulls this file in with
+// @include "engine/mandrel.fgd" and adds its own entities, such as its monsters.
+// npm run install-trenchbroom links this folder into the game's trenchbroom/
+// folder as engine/, since TrenchBroom only reads files inside a game's config folder.
 //
-// Sizes are in Quake units. Player and enemy hulls match the values in docs/PLAN.md.
+// Sizes are in Quake units. The player hull matches docs/PLAN.md.
 
 @SolidClass = worldspawn : "World entity"
 [
@@ -8,11 +12,6 @@
 ]
 
 @PointClass size(-16 -16 -24, 16 16 32) color(0 255 0) = info_player_start : "Player start"
-[
-    angle(integer) : "Facing direction in degrees (0 = east, 90 = north)" : 0
-]
-
-@PointClass size(-16 -16 -24, 16 16 32) color(255 64 32) = monster_shotgunner : "Shotgunner: hitscan enemy that chases the player and shoots back"
 [
     angle(integer) : "Facing direction in degrees (0 = east, 90 = north)" : 0
 ]

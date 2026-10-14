@@ -10,7 +10,7 @@ Adapted from Quake's QuakeC (id Software, GPLv2 or later): `droptofloor` for spa
 
 ## Conventions
 
-- **Data:** `data/enemies.json`, one entry per enemy type. Every duration converts to ticks with `ticks(t) = floor(t * TICK_RATE + 0.5)`: at 60 Hz the shotgunner thinks every 6 ticks and has a reaction delay of 36. Its `run_speed` gives a step of `run_speed / TICK_RATE` each tick (1.83 units) and a think step of `run_speed * think_ticks / TICK_RATE` (11 units). Its `turn_speed` (degrees per second) gives a turn of `round(turn_speed * 65536 / 360 / TICK_RATE)` angle units per tick (607).
+- **Data:** the game's `data/enemies.json` (the example's is `example/data/enemies.json`), one entry per enemy type. Every duration converts to ticks with `ticks(t) = floor(t * TICK_RATE + 0.5)`: at 60 Hz the shotgunner thinks every 6 ticks and has a reaction delay of 36. Its `run_speed` gives a step of `run_speed / TICK_RATE` each tick (1.83 units) and a think step of `run_speed * think_ticks / TICK_RATE` (11 units). Its `turn_speed` (degrees per second) gives a turn of `round(turn_speed * 65536 / 360 / TICK_RATE)` angle units per tick (607).
 - **Masks:** an enemy's movement is blocked by `SOLID | WINDOW | MONSTERCLIP | MONSTER`; its sight only by `SOLID`.
 - **Eyes:** an enemy's eye is `origin + (0, 0, eye_height)`, and the player's is `origin + (0, 0, player.eye_height)`.
 

@@ -4,7 +4,7 @@
 
 Build a small vertical slice on the web (TypeScript + Three.js). Desktop releases will wrap the web build in Electron.
 
-The slice started as a two-engine comparison: the same slice built on the web and in Godot 4.7. After M1, with both engines passing the same scenarios and playing identically, the web build was chosen and Godot dropped (see DECISIONS.md, 2026-10-13). Most work still lives in shared, engine-neutral files (`/maps`, `/data`, `/spec`), which keeps a future port possible and checkable.
+The slice started as a two-engine comparison: the same slice built on the web and in Godot 4.7. After M1, with both engines passing the same scenarios and playing identically, the web build was chosen and Godot dropped (see DECISIONS.md, 2026-10-13). Most work still lives in shared, engine-neutral files (the example game in `/example`, plus `/data` and `/spec`), which keeps a future port possible and checkable.
 
 Design goals beyond the slice:
 
@@ -50,12 +50,16 @@ Out of scope for the spike:
 ## Repo Layout
 
 ```
-/maps        TrenchBroom .map files, game config, FGD
-/textures    Textures (PNG), next to /maps so the repo root is the game root
-/data        player.json (health, hull, movement), weapons.json, enemies.json, plus JSON Schemas
+/example     The example game's directory, like Quake's id1/:
+  maps/        TrenchBroom .map files
+  textures/    Textures (PNG), next to maps/ as Quake tools expect
+  data/        game.json (name, start map), player.json (health, hull, movement), weapons.json, enemies.json
+  trenchbroom/ The game's TrenchBroom config and FGD
+/data        Engine data: lightstyles.json, plus the JSON Schemas for engine and game data
+/trenchbroom The engine's FGD (mandrel.fgd), which every game's FGD includes
 /spec        Engine-neutral test scenarios (JSON)
 /tools       compile script, bsp dump tool, schema validation
-/build       Compiled .bsp output (gitignored)
+/build       Compiled .bsp output, per game (build/example/; gitignored)
 /demos       Golden demo recordings for regression tests
 /apps        Things you run: game/ (the game), and future editors and tools
 /packages    Shared TypeScript libraries: sim/, render/, dev-server/, testing/

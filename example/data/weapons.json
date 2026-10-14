@@ -1,5 +1,5 @@
 {
-  "$schema": "./schemas/weapons.schema.json",
+  "$schema": "../../data/schemas/weapons.schema.json",
   "switching": {
     "lower_time": 0.2,
     "raise_time": 0.25

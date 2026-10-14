@@ -22,7 +22,7 @@ describe("check-files", () => {
   it("lists the repo's tracked files with forward slashes", () => {
     const files = trackedFiles(REPO_ROOT);
     expect(files).toContain("package.json");
-    expect(files).toContain("maps/test_movement.map");
+    expect(files).toContain("example/maps/test_movement.map");
     expect(files.every((f) => !f.includes("\\"))).toBe(true);
   });
 

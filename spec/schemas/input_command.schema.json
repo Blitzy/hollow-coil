@@ -36,7 +36,7 @@
       "maximum": 3
     },
     "weapon": {
-      "description": "Weapon slot to switch to this tick, or 0 for no change. Slots are defined in data/weapons.json.",
+      "description": "Weapon slot to switch to this tick, or 0 for no change. Slots are defined in the game's data/weapons.json.",
       "type": "integer",
       "minimum": 0,
       "maximum": 9

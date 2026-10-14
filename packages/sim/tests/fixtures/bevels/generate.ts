@@ -16,7 +16,7 @@ import { execFileSync } from "node:child_process";
 import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { REPO_ROOT } from "@mandreljs/tools/repo";
+import { EXAMPLE_GAME } from "@mandreljs/tools/repo";
 import { ericwTool } from "@mandreljs/tools/setup";
 
 const HERE = import.meta.dirname;
@@ -115,7 +115,7 @@ let brushes: number[][][];
 try {
   // Compiled in a temporary folder, since qbsp writes side files next to its output.
   const bsp = join(tmp, "shapes.bsp");
-  execFileSync(ericwTool("qbsp"), ["-q2bsp", "-noverbose", "-basedir", REPO_ROOT, "-gamedir", REPO_ROOT, mapPath, bsp], { stdio: "pipe" });
+  execFileSync(ericwTool("qbsp"), ["-q2bsp", "-noverbose", "-basedir", EXAMPLE_GAME, "-gamedir", EXAMPLE_GAME, mapPath, bsp], { stdio: "pipe" });
   brushes = bspBrushes(new Uint8Array(readFileSync(bsp)));
   copyFileSync(bsp, join(HERE, "shapes.bsp"));
 } finally {

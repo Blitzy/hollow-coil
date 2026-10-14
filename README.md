@@ -42,21 +42,25 @@ npm run dev
 
 and open http://localhost:5173/?map=greybox_01. See [apps/game/README.md](apps/game/README.md) for URL options and how the dev server compiles maps as you edit them.
 
-To edit maps, link the Mandrel.js Example game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Mandrel.js Example and set the game path to the repo root (the folder containing `maps` and `textures`):
+To edit maps, link the Mandrel.js Example game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Mandrel.js Example and set the game path to the `example` folder (the one containing `maps` and `textures`):
 
 ```
 npm run install-trenchbroom
 ```
 
-Other root commands: `npm test` (every app, package, and tool), `npm run typecheck`, `npm run build`, `npm run compile` (all maps, or name some; `-- --mode release` for full-quality lighting), `npm run validate`, `npm run bspdump -- build/<name>.bsp`, and `npm run check-files`.
+Other root commands: `npm test` (every app, package, and tool), `npm run typecheck`, `npm run build`, `npm run compile` (all maps, or name some; `-- --mode release` for full-quality lighting), `npm run validate`, `npm run bspdump -- build/example/<name>.bsp`, and `npm run check-files`.
+
+## Making Your Own Game
+
+The engine plays game directories, like Quake's `id1/`. The example game is `example/` (see [example/README.md](example/README.md)); your game is a sibling directory, such as `mygame/`, checked out from its own repo (add it to `.git/info/exclude` so this repo ignores it). Play it at http://localhost:5173/?game=mygame, and pass `-- --game mygame` to `npm run compile`, `npm run validate`, and `npm run install-trenchbroom`.
 
 ## Repository Layout
 
 | Folder | Contents |
 |---|---|
-| `maps/` | TrenchBroom maps and editor config |
-| `textures/` | Textures (PNG), referenced by name from maps |
-| `data/` | Weapons, enemies, and movement values, with JSON Schemas |
+| `example/` | The example game: maps, textures, weapon, enemy, and movement data, and its TrenchBroom config |
+| `data/` | Engine data (light styles) and the JSON Schemas for engine and game data |
+| `trenchbroom/` | The engine's TrenchBroom entity definitions, which every game's FGD includes |
 | `spec/` | Engine-neutral test scenarios |
 | `demos/` | Golden demo recordings |
 | `tools/` | Command-line tools: setup, map compiling, validation, and `.bsp` inspection (TypeScript, run with `node`) |

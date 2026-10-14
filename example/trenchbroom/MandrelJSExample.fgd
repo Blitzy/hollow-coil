@@ -1,0 +1,12 @@
+// Mandrel.js Example entity definitions for TrenchBroom: the engine's shared
+// entities (engine/mandrel.fgd, linked in by npm run install-trenchbroom), plus
+// this game's own.
+//
+// Sizes are in Quake units. Enemy hulls match example/data/enemies.json.
+
+@include "engine/mandrel.fgd"
+
+@PointClass size(-16 -16 -24, 16 16 32) color(255 64 32) = monster_shotgunner : "Shotgunner: hitscan enemy that chases the player and shoots back"
+[
+    angle(integer) : "Facing direction in degrees (0 = east, 90 = north)" : 0
+]

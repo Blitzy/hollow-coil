@@ -1,7 +1,7 @@
 // Compiles small fixture maps with the pinned ericw-tools. Skipped when the
 // tools aren't installed (npm run setup); CI installs them before testing.
 
-import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -16,8 +16,21 @@ describe("findMaps", () => {
     expect(() => findMaps(["definitely_not_a_map"])).toThrow(/no such map/);
   });
 
-  it("lists every map in maps/ by default", () => {
+  it("lists every map in the example game's maps/ by default", () => {
     expect(findMaps([]).map((p) => p.split(/[\\/]/).pop())).toContain("test_movement.map");
+  });
+
+  it("finds maps in another game directory", () => {
+    const game = mkdtempSync(join(tmpdir(), "mandrel-game-"));
+    try {
+      mkdirSync(join(game, "maps"));
+      writeFileSync(join(game, "maps", "e1m1.map"), "");
+      expect(findMaps([], game)).toEqual([join(game, "maps", "e1m1.map")]);
+      expect(findMaps(["e1m1"], game)).toEqual([join(game, "maps", "e1m1.map")]);
+      expect(() => findMaps(["test_movement"], game)).toThrow(/no such map/);
+    } finally {
+      rmSync(game, { recursive: true, force: true });
+    }
   });
 });
 

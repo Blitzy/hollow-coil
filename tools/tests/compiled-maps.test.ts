@@ -1,4 +1,4 @@
-// Every map in maps/, compiled with the pinned ericw-tools, loads from its .bsp
+// Every map in example/maps/, compiled with the pinned ericw-tools, loads from its .bsp
 // as the same level it is as a .map: the same entities, the same brushes, the
 // same sweep results, and the same /spec scenario runs (player and enemies),
 // tick for tick. The game can then load either file. Skipped when the tools
@@ -35,10 +35,10 @@ describe.skipIf(!toolsInstalled())("compiled maps match their .map (needs ericw-
   beforeAll(async () => {
     outDir = mkdtempSync(join(tmpdir(), "mandrel-parity-"));
     for (const name of MAPS) {
-      const result = await compileMap(repoPath(`maps/${name}.map`), outDir);
+      const result = await compileMap(repoPath(`example/maps/${name}.map`), outDir);
       if (!compileOk(result)) throw new Error(`${name} failed to compile: ${result.problems.join("; ")}`);
       levels.set(name, {
-        map: levelFromMap(readRepoFile(`maps/${name}.map`)),
+        map: levelFromMap(readRepoFile(`example/maps/${name}.map`)),
         compiled: readBsp(readFileSync(join(outDir, `${name}.bsp`))),
         bsp: levelFromBsp(readBsp(readFileSync(join(outDir, `${name}.bsp`)))),
       });

@@ -4,7 +4,7 @@
 
 Mandrel.js is an open-source web engine for first-person shooters in the spirit of mid-90s shooters like Doom and Quake. This repo holds the engine plus a free example game to play and test it with. Levels are hand-authored and abstract rather than realistic, built for fun, variety, and fast combat.
 
-A game made with Mandrel.js keeps its own content in its own repo under its own license; this repo holds only the engine and its example content (see DECISIONS.md, 2026-10-14).
+A game made with Mandrel.js keeps its own content in its own repo under its own license; this repo holds only the engine and its example content (see DECISIONS.md, 2026-10-14). Content lives in game directories, like Quake's `id1/`: the example game is `example/`, and another game is a sibling directory checked out from its own repo.
 
 The current work plan lives in `docs/PLAN.md`. Decisions and their reasons go in `docs/DECISIONS.md`. Player movement and world collision must follow `docs/MOVEMENT.md`, weapons `docs/WEAPONS.md`, and enemies `docs/ENEMIES.md`.
 
@@ -16,7 +16,7 @@ The TypeScript code is an npm workspace. `apps/` holds things you run (`apps/gam
 
 - Feel over realism. Movement, weapon response, and enemy readability matter more than physical accuracy.
 - Authored levels. Tools exist to support hand design, not replace it.
-- Data-driven gameplay. Weapons, enemies, and movement constants live in `/data`, not in code.
+- Data-driven gameplay. Weapons, enemies, and movement constants live in a game's `data/` (the example's is `example/data/`), not in code.
 - Behavior lives in the engine; content combines it. Content never contains code. A new behavior is a generic engine action, named for what it does and never for one monster, plus example content and tests that use it.
 - Era-authentic presentation, with options rather than a single locked look.
 
@@ -24,7 +24,8 @@ The TypeScript code is an npm workspace. `apps/` holds things you run (`apps/gam
 
 - Levels are authored in TrenchBroom. The `.map` file is the source of truth.
 - ericw-tools compiles `.map` to `.bsp` and bakes lighting. Both use the Quake 2 file formats (`qbsp -q2bsp`); gameplay is still Quake 1 style.
-- Textures are loose PNGs at `textures/<folder>/<name>.png` (top level, next to `maps/`), referenced by name. No WADs. The repo root is the game root, the standard Quake layout that ericw-tools and TrenchBroom expect.
+- A game directory holds `maps/`, `textures/`, `data/` (with `game.json`, its name and start map), and `trenchbroom/` (its TrenchBroom config and FGD) side by side, the standard Quake layout that ericw-tools and TrenchBroom expect. The engine keeps what every game shares at the repo root: `data/lightstyles.json`, the schemas in `data/schemas/`, and the shared entities in `trenchbroom/mandrel.fgd`, which each game's FGD includes. Engine tests (`/spec` scenarios, golden demos, compile tests) use only the example game.
+- Textures are loose PNGs at `textures/<folder>/<name>.png` in a game directory, referenced by name. No WADs.
 - Engines load `.map` for fast iteration and tests, and `.bsp` for lit, optimized builds.
 - One entity parser serves both formats. Gameplay collision comes from brush planes, never from engine physics bodies.
 
@@ -73,14 +74,14 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 ## Commands
 
 - `npm run setup [-- tool ...]`: install pinned third-party tools (ericw-tools) into `.tools/`. Name tools to install only those. `-- --check` verifies without changing anything; `-- --force` reinstalls.
-- `npm run compile [-- map ...] [-- --mode check|release]`: compile maps to `build/<name>.bsp`. Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
-- `npm run bspdump -- build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON, read with the game's own `.bsp` reader.
-- `npm run validate`: validate `data/*.json` and the `spec/*.json` scenarios against their schemas, plus cross-file checks (runs in CI). The checks themselves live in `packages/data`, so editors can use them too.
+- `npm run compile [-- map ...] [-- --mode check|release] [-- --game dir]`: compile a game's maps (the example's by default) to `build/<game>/<name>.bsp`. Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
+- `npm run bspdump -- build/example/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON, read with the game's own `.bsp` reader.
+- `npm run validate [-- --game dir]`: validate the engine's `data/*.json`, a game's `data/*.json` (the example's by default), and the `spec/*.json` scenarios against their schemas, plus cross-file checks, such as the game's enemies against its FGD and its name in its TrenchBroom config and map headers (runs in CI). The checks themselves live in `packages/data`, so editors can use them too.
 - `npm run check-files`: fail if any tracked file is over 2 MB (runs in CI).
-- `npm run install-trenchbroom`: link `maps/trenchbroom` into TrenchBroom's games folder as "Mandrel.js Example" (and remove links left under earlier names). `-- --uninstall` removes the link.
-- `npm run make-placeholder-textures`: regenerate the placeholder PNGs in `textures/dev/`.
+- `npm run install-trenchbroom [-- --game dir]`: link a game's `trenchbroom/` folder (the example's by default) into TrenchBroom's games folder, named after its FGD (`games/MandrelJSExample`), and link the engine's `trenchbroom/` into it as `engine/` for its FGD's `@include` (and remove links left by earlier versions). `-- --uninstall` removes the links.
+- `npm run make-placeholder-textures`: regenerate the placeholder PNGs in `example/textures/dev/`.
 
-Everything runs from the repo root: `npm install` once, then `npm run dev` (play at http://localhost:5173/?map=test_movement; pass Vite options after `--`), `npm test` (Vitest: every app, package, and tool; the compile tests need ericw-tools and skip without it), `npm run typecheck` (includes the sim-only check), and `npm run build`.
+Everything runs from the repo root: `npm install` once, then `npm run dev` (play at http://localhost:5173/?map=test_movement; `&game=<dir>` plays another game directory; pass Vite options after `--`), `npm test` (Vitest: every app, package, and tool; the compile tests need ericw-tools and skip without it), `npm run typecheck` (includes the sim-only check), and `npm run build`.
 
 ## Tools
 

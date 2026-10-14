@@ -10,7 +10,7 @@ The game implements the player's weapons exactly as described here, and so must 
 
 ## Conventions
 
-- **Data:** `data/weapons.json` gives each weapon's `slot` and `fire_interval`, and the shared `switching.lower_time` and `switching.raise_time`. `data/player.json` lists the player's `weapons` and `starting_weapon`.
+- **Data:** the game's `data/weapons.json` (the example's is `example/data/weapons.json`) gives each weapon's `slot` and `fire_interval`, and the shared `switching.lower_time` and `switching.raise_time`. `data/player.json` lists the player's `weapons` and `starting_weapon`.
 - **Ticks:** every duration converts to ticks with `ticks(t) = floor(t * TICK_RATE + 0.5)`, the same rule scenarios use. A weapon's fire ticks are at least 1. At 60 Hz: pistol 21, shotgun 54, lower 12, raise 15.
 - **Slots:** the input command's `weapon` field is a slot number (0 for none). A slot selects the player's weapon with that slot; a slot with no weapon the player has is ignored.
 

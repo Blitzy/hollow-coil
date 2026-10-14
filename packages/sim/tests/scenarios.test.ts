@@ -14,7 +14,7 @@ import { runScenario, type Scenario } from "@mandreljs/sim/scenario";
 const config = loadSimConfig();
 const levels = new Map<string, Level>();
 const level = (name: string): Level => {
-  if (!levels.has(name)) levels.set(name, levelFromMap(readRepoFile(`maps/${name}.map`)));
+  if (!levels.has(name)) levels.set(name, levelFromMap(readRepoFile(`example/maps/${name}.map`)));
   return levels.get(name)!;
 };
 

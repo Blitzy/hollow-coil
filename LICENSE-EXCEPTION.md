@@ -22,10 +22,10 @@ By contributing to Mandrel.js, you agree that your contributions are licensed un
 
 The example content in this repository is licensed under the [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/) (CC BY 4.0) instead of the GNU GPL:
 
-- maps: `maps/*.map`
-- textures: everything in `textures/`
-- gameplay data: `data/player.json`, `data/weapons.json`, and `data/enemies.json`
+- maps: `example/maps/*.map`
+- textures: everything in `example/textures/`
+- gameplay data: the JSON files in `example/data/` (`game.json`, `player.json`, `weapons.json`, and `enemies.json`)
 
 Files compiled from them, such as `.bsp` files, are covered by the same license. Credit them as "example content by Ryan Cook and Mandrel.js contributors, licensed under CC BY 4.0", with a link to this repository where possible.
 
-Everything else in this repository, including the TrenchBroom game config and FGD, `data/lightstyles.json`, schemas, test scenarios, demos, and documentation, is covered by the GNU GPL as stated above.
+Everything else in this repository, including the TrenchBroom game configs and FGDs (`trenchbroom/` and `example/trenchbroom/`), `data/lightstyles.json`, schemas, test scenarios, demos, and documentation, is covered by the GNU GPL as stated above.

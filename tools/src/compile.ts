@@ -1,7 +1,7 @@
 // Compiles maps with the pinned ericw-tools (qbsp, then light).
 //
-// Compiles every .map in maps/ (or the ones named) to build/<name>.bsp in the
-// Quake 2 formats. A map fails if it leaks, references a texture that doesn't
+// Compiles every .map in a game's maps/ (or the ones named) to
+// build/<game>/<name>.bsp in the Quake 2 formats. A map fails if it leaks, references a texture that doesn't
 // exist, or if qbsp or light exits with an error. A failed map leaves no .bsp
 // behind, so a stale or broken build is never mistaken for a good one.
 //
@@ -9,20 +9,16 @@
 //   check    fast lighting; the default, used by CI and for quick iteration
 //   release  full-quality lighting (-extra4)
 //
-// Usage: node tools/src/compile.ts [map ...] [--mode check|release]   (or npm run compile)
+// Usage: node tools/src/compile.ts [map ...] [--mode check|release] [--game dir]   (or npm run compile)
 //   map names (as in maps/<name>.map) or paths; default: every map
+//   --game   the game directory, relative to the repo root; default: example
 
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { isMain, relativeToRepo, REPO_ROOT, repoPath } from "./repo.ts";
+import { buildDir, EXAMPLE_GAME, gameDir, isMain, relativeToRepo, REPO_ROOT } from "./repo.ts";
 import { ericwTool, toolsInstalled } from "./setup.ts";
-
-/** The game root holds maps/ and textures/ side by side, the standard Quake layout. */
-export const GAME_DIR = REPO_ROOT;
-export const MAPS_DIR = repoPath("maps");
-export const BUILD_DIR = repoPath("build");
 
 const QBSP_ARGS = ["-q2bsp", "-leaktest", "-noverbose"];
 // For Quake 2 maps, light bounces light once by default and keeps each light's
@@ -80,8 +76,11 @@ export function errorLine(output: string): string {
 const warningsIn = (output: string): string[] =>
   [...output.matchAll(WARNING)].map((m) => m[1]!.trimEnd()).filter((w) => !IGNORED_WARNINGS.some((p) => p.test(w)));
 
-/** Compiles one map to outDir/<name>.bsp. Side files (logs, .prt, .pts) land next to it. */
-export async function compileMap(mapPath: string, outDir: string = BUILD_DIR, mode: Mode = "check", gameDir: string = GAME_DIR): Promise<CompileResult> {
+/**
+ * Compiles one map to outDir/<name>.bsp. Side files (logs, .prt, .pts) land next to it.
+ * Textures come from game/textures/: the game directory holds maps/ and textures/ side by side, the standard Quake layout.
+ */
+export async function compileMap(mapPath: string, outDir: string = buildDir(EXAMPLE_GAME), mode: Mode = "check", game: string = EXAMPLE_GAME): Promise<CompileResult> {
   const name = basename(mapPath, ".map");
   const result: CompileResult = { name, problems: [], warnings: [], seconds: 0 };
   const start = performance.now();
@@ -89,7 +88,7 @@ export async function compileMap(mapPath: string, outDir: string = BUILD_DIR, mo
   for (const suffix of OUTPUT_SUFFIXES) rmSync(join(outDir, `${name}${suffix}`), { force: true });
   const bsp = join(outDir, `${name}.bsp`);
   // Passed explicitly because outDir is not the maps/ folder qbsp would infer them from.
-  const paths = ["-basedir", gameDir, "-gamedir", gameDir];
+  const paths = ["-basedir", game, "-gamedir", game];
 
   const qbsp = await run(ericwTool("qbsp"), [...QBSP_ARGS, ...paths, mapPath, bsp]);
   const leak = LEAK.exec(qbsp.output);
@@ -115,18 +114,19 @@ export async function compileMap(mapPath: string, outDir: string = BUILD_DIR, mo
   return result;
 }
 
-/** Map files for names (as in maps/<name>.map) or paths; every map in maps/ if none. Throws for a map that doesn't exist. */
-export function findMaps(names: readonly string[]): string[] {
-  if (names.length === 0) return readdirSync(MAPS_DIR).filter((f) => f.endsWith(".map")).sort().map((f) => join(MAPS_DIR, f));
+/** Map files for names (as in game/maps/<name>.map) or paths; every map in game/maps/ if none. Throws for a map that doesn't exist. */
+export function findMaps(names: readonly string[], game: string = EXAMPLE_GAME): string[] {
+  const mapsDir = join(game, "maps");
+  if (names.length === 0) return readdirSync(mapsDir).filter((f) => f.endsWith(".map")).sort().map((f) => join(mapsDir, f));
   return names.map((name) => {
-    const path = name.endsWith(".map") ? resolve(name) : join(MAPS_DIR, `${name}.map`);
+    const path = name.endsWith(".map") ? resolve(name) : join(mapsDir, `${name}.map`);
     if (!existsSync(path) || !statSync(path).isFile()) throw new Error(`no such map: ${path}`);
     return path;
   });
 }
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const { values, positionals } = parseArgs({ args: argv, options: { mode: { type: "string", default: "check" } }, allowPositionals: true });
+  const { values, positionals } = parseArgs({ args: argv, options: { mode: { type: "string", default: "check" }, game: { type: "string" } }, allowPositionals: true });
   const mode = values.mode as Mode;
   if (!Object.hasOwn(LIGHT_ARGS, mode)) {
     console.error(`compile: --mode must be one of ${Object.keys(LIGHT_ARGS).join(", ")}`);
@@ -136,23 +136,25 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     console.error("ericw-tools is not installed; run: npm run setup");
     return 1;
   }
+  const game = gameDir(values.game);
+  const outDir = buildDir(game);
   let maps: string[];
   try {
-    maps = findMaps(positionals);
+    maps = findMaps(positionals, game);
   } catch (error) {
     console.error(`error: ${error instanceof Error ? error.message : String(error)}`);
     return 1;
   }
   if (maps.length === 0) {
-    console.log(`no maps found in ${relativeToRepo(MAPS_DIR)}/`);
+    console.log(`no maps found in ${relativeToRepo(join(game, "maps"))}/`);
     return 0;
   }
 
-  console.log(`compiling ${maps.length} map(s) in ${mode} mode -> ${relativeToRepo(BUILD_DIR)}/`);
+  console.log(`compiling ${maps.length} map(s) in ${mode} mode -> ${relativeToRepo(outDir)}/`);
   const width = Math.max(...maps.map((m) => basename(m, ".map").length));
   let failed = 0;
   for (const map of maps) {
-    const result = await compileMap(map, BUILD_DIR, mode);
+    const result = await compileMap(map, outDir, mode, game);
     const n = result.warnings.length;
     const note = n > 0 ? `  (${n} warning${n === 1 ? "" : "s"})` : "";
     console.log(`  ${compileOk(result) ? "ok  " : "FAIL"}  ${result.name.padEnd(width)}  ${result.seconds.toFixed(1).padStart(5)}s${note}`);

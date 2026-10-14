@@ -1,5 +1,5 @@
 {
-  "$schema": "./schemas/player.schema.json",
+  "$schema": "../../data/schemas/player.schema.json",
   "health": 100,
   "hull": { "mins": [-16, -16, -24], "maxs": [16, 16, 32] },
   "eye_height": 22,

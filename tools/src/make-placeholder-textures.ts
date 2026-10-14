@@ -1,4 +1,4 @@
-// Generates the placeholder textures in textures/dev/.
+// Generates the example game's placeholder textures in example/textures/dev/.
 //
 // Grid textures are 64x64 with a line every 16 texels and a darker line on the
 // tile edge, so at the default scale of 1 they show 16- and 64-unit
@@ -10,9 +10,9 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { crc32, deflateSync } from "node:zlib";
-import { isMain, relativeToRepo, repoPath } from "./repo.ts";
+import { EXAMPLE_GAME, isMain, relativeToRepo } from "./repo.ts";
 
-export const OUT_DIR = repoPath("textures", "dev");
+export const OUT_DIR = join(EXAMPLE_GAME, "textures", "dev");
 const SIZE = 64;
 const MINOR_STEP = 16;
 

@@ -191,7 +191,7 @@ describe("enemies in the sim", () => {
   });
 
   describe("test_combat", () => {
-    const level = levelFromMap(readRepoFile("maps/test_combat.map"));
+    const level = levelFromMap(readRepoFile("example/maps/test_combat.map"));
     const spawns = enemySpawns(level, enemyContext(config.enemies));
     const at = (marker: string): SimState => createSim(config, { origin: level.markers.get(marker)!, yaw: 0 }, 0, spawns);
 

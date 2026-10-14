@@ -3,8 +3,10 @@
 //
 //   - the player's weapons and starting weapon exist in weapons.json
 //   - weapon slots are unique
-//   - enemy classnames are defined in the TrenchBroom FGD
+//   - enemy classnames are defined in the game's TrenchBroom FGD (with the engine's, which it includes)
 //   - the FGD's light style choices match lightstyles.json, number and name
+//   - a game's TrenchBroom config and its maps' // Game: headers have the game's name,
+//     and its start map exists
 //   - hull mins are below maxs on every axis
 //   - each scenario's map exists, and every marker it names is an info_marker in
 //     that map (marker names must be unique within a map)
@@ -27,6 +29,10 @@ export interface DataFiles {
   weapons: { weapons: Record<string, { slot: number }> };
   enemies: { enemies: Record<string, { classname: string; hull: Hull }> };
 }
+export interface GameFile {
+  name: string;
+  start_map: string;
+}
 export interface LightStylesFile {
   styles: Record<string, { name: string; pattern: string }>;
 }
@@ -47,6 +53,89 @@ export interface ScenarioFile {
     weapon?: string;
     enemy?: { index: number; position?: unknown };
   }[];
+}
+
+/**
+ * The FGD's text with each `@include "file"` replaced by that file's text, recursively, as
+ * TrenchBroom reads it. readFile gets an included file's path relative to the top FGD's folder,
+ * with forward slashes, and returns null if there's no such file.
+ */
+export function resolveFgdIncludes(fgd: string, readFile: (path: string) => string | null): { text: string; problems: string[] } {
+  const problems: string[] = [];
+  const expand = (text: string, dir: string, seen: readonly string[]): string =>
+    text.replace(/^[ \t]*@include[ \t]+"([^"]+)"[ \t]*\r?$/gm, (_, file: string) => {
+      const path = dir + file;
+      if (seen.includes(path)) {
+        problems.push(`FGD: ${path} includes itself`);
+        return "";
+      }
+      const included = readFile(path);
+      if (included === null) {
+        problems.push(`FGD: included file ${show(path)} not found`);
+        return "";
+      }
+      return expand(included, path.slice(0, path.lastIndexOf("/") + 1), [...seen, path]);
+    });
+  return { text: expand(fgd, "", []), problems };
+}
+
+/** JSON text with // comments removed, leaving strings alone. */
+function withoutLineComments(text: string): string {
+  let out = "";
+  let inString = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]!;
+    if (inString) {
+      out += c;
+      if (c === "\\") out += text[++i] ?? "";
+      else if (c === '"') inString = false;
+    } else if (c === "/" && text[i + 1] === "/") {
+      while (i + 1 < text.length && text[i + 1] !== "\n") i++;
+    } else {
+      inString = c === '"';
+      out += c;
+    }
+  }
+  return out;
+}
+
+/** A TrenchBroom game config's name and entity definition files. The config is JSON with // comments. Throws if it isn't. */
+export function trenchbroomConfig(text: string): { name: string; definitions: string[] } {
+  const config = JSON.parse(withoutLineComments(text)) as { name?: unknown; entities?: { definitions?: unknown } };
+  const definitions = config.entities?.definitions;
+  if (typeof config.name !== "string") throw new Error("the config has no name");
+  if (!Array.isArray(definitions) || !definitions.every((d) => typeof d === "string")) throw new Error("the config has no entity definitions list");
+  return { name: config.name, definitions };
+}
+
+/** The game a map belongs to, from the `// Game: <name>` line TrenchBroom writes at its top, or null if it has none. */
+export function mapGameName(text: string): string | null {
+  for (const line of text.split("\n")) {
+    if (!line.startsWith("//")) break;
+    const game = /^\/\/ Game: (.*?)\s*$/.exec(line);
+    if (game) return game[1]!;
+  }
+  return null;
+}
+
+/**
+ * A game directory agrees on the game's name: its TrenchBroom config has it (TrenchBroom
+ * shows the game by that name) and each map's `// Game:` header names it (TrenchBroom
+ * picks a map's config by that header). Its start map must exist too. maps holds each
+ * map's text by name, as in maps/<name>.map.
+ */
+export function gameCheck(game: GameFile, configName: string, maps: ReadonlyMap<string, string>): string[] {
+  const errors: string[] = [];
+  if (configName !== game.name) errors.push(`trenchbroom/GameConfig.cfg: name ${show(configName)} is not the game's name, ${show(game.name)} (data/game.json)`);
+  for (const [name, text] of maps) {
+    const header = mapGameName(text);
+    if (header !== game.name) {
+      const found = header === null ? "has no // Game: line" : `says // Game: ${header}`;
+      errors.push(`maps/${name}.map: ${found}, but the game is ${show(game.name)}`);
+    }
+  }
+  if (!maps.has(game.start_map)) errors.push(`data/game.json: start_map ${show(game.start_map)} not found (maps/${game.start_map}.map)`);
+  return errors;
 }
 
 /** Entity classnames the FGD defines. */

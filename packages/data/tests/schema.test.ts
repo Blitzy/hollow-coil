@@ -8,7 +8,8 @@ function check(schema: object, value: unknown, otherFiles: Record<string, object
   return new SchemaValidator((name) => files[name]).validate(value, "test.schema.json");
 }
 
-const loadData = (name: string): Record<string, any> => JSON.parse(readRepoFile(`data/${name}.json`));
+/** A data file: the engine's light styles, or the example game's other files. */
+const loadData = (name: string): Record<string, any> => JSON.parse(readRepoFile(name === "lightstyles" ? "data/lightstyles.json" : `example/data/${name}.json`));
 const dataValidator = (): SchemaValidator => new SchemaValidator((name) => JSON.parse(readRepoFile(`data/schemas/${name}`)));
 
 describe("schema keywords", () => {
@@ -75,7 +76,7 @@ describe("schema keywords", () => {
 describe("the real data schemas", () => {
   it("accept every data file", () => {
     const validator = dataValidator();
-    for (const name of ["player", "weapons", "enemies", "lightstyles"]) {
+    for (const name of ["game", "player", "weapons", "enemies", "lightstyles"]) {
       expect(validator.validate(loadData(name), `${name}.schema.json`), name).toEqual([]);
     }
   });
@@ -87,6 +88,8 @@ describe("the real data schemas", () => {
     ["enemies", (d: any) => delete d.enemies.shotgunner.think_interval, "$.enemies.shotgunner: missing required property 'think_interval'"],
     ["enemies", (d: any) => (d.enemies.shotgunner.pain.chance = 1.5), "$.enemies.shotgunner.pain.chance: 1.5 is above the maximum 1"],
     ["player", (d: any) => (d.hull.mins = [-16, -16]), "$.hull.mins: needs at least 3 items, has 2"],
+    ["game", (d: any) => (d.name = " "), "$.name: ' ' does not match \\S"],
+    ["game", (d: any) => (d.start_map = "Test Movement"), "$.start_map: 'Test Movement' does not match ^[a-z0-9_]+$"],
     ["lightstyles", (d: any) => (d.styles["1"].pattern = "mmNmm"), "$.styles.1.pattern: 'mmNmm' does not match ^[a-z]+$"],
     ["lightstyles", (d: any) => (d.styles["32"] = { name: "Switched", pattern: "m" }), "$.styles (property name '32'): '32' does not match ^([0-9]|[12][0-9]|3[01])$"],
   ])("%s: catches %#", (name, mutate, expected) => {

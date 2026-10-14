@@ -125,7 +125,7 @@ describe("fireHitscan", () => {
   });
 
   it("stops at the arena's east wall when fired down test_combat's range", () => {
-    const level = levelFromMap(readRepoFile("maps/test_combat.map"));
+    const level = levelFromMap(readRepoFile("example/maps/test_combat.map"));
     const eye = eyePosition(level.markers.get("range_origin")!, 22);
     const { pellets } = fireHitscan(level.world, [], eye, 0, 0, straight(4096), 0);
     expectWallHit(pellets[0], vec3(768 - DIST_EPSILON, -704, 46), vec3(-1, 0, 0));
@@ -138,7 +138,7 @@ describe("damage at known ranges", () => {
   // the player's box. A pellet's offset where it reaches the box's front face is uniform within
   // d tan(spread) on each axis, so that chance is the share of that square the box covers.
   const attack = loadEnemiesData().enemies.shotgunner!.attack.hitscan;
-  const level = levelFromMap(readRepoFile("maps/test_combat.map"));
+  const level = levelFromMap(readRepoFile("example/maps/test_combat.map"));
   const eye = eyePosition(level.markers.get("range_origin")!, 22); // the shotgunner's eye height
   const HULL = { mins: vec3(-16, -16, -24), maxs: vec3(16, 16, 32) };
 

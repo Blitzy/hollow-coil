@@ -19,7 +19,7 @@ Quake 1 and QuakeWorld are the reference for how movement *feels*. Quake 2 is th
 - **Units:** Quake units. Z is up.
 - **Time step:** `dt = 1 / TICK_RATE`, where `TICK_RATE` is the sim's single tick-rate constant (60). Never hardcode 1/60 elsewhere.
 - **Angles:** the input command carries yaw and pitch as 16-bit angle units (65536 per turn). `radians = units * 2π / 65536`. Yaw 0 faces +x, increasing counterclockwise seen from above; pitch is positive looking up.
-- **Constants:** tunable values come from `data/player.json` (named `player.movement.*` below). The fixed constants in [Constants](#constants) are part of the algorithm and live in sim code.
+- **Constants:** tunable values come from the game's `data/player.json` (named `player.movement.*` below; the example's is `example/data/player.json`). The fixed constants in [Constants](#constants) are part of the algorithm and live in sim code.
 - **Precision:** use 64-bit floats for all sim math. On the web that is every JavaScript number. In an engine whose vectors are 32-bit (such as Godot's `Vector3`), the sim needs its own 64-bit vector type.
 
 ## Collision world
@@ -54,7 +54,7 @@ A model's brushes are the ones listed by the leafs of its node tree: start at th
 
 A brush's bounds come from its axial sides: a side with normal `+axis` gives `maxs[axis] = dist`, and `-axis` gives `mins[axis] = -dist`. qbsp gives every brush all six, as bevels if needed.
 
-qbsp writes brushes in its own order, not the .map's, and stores planes as 32-bit floats. The same map loaded either way gives the same brushes, matched by shape, with planes equal to within float precision (tested on the fixtures in `packages/sim/tests/level.test.ts`, and on every map in `maps/` in `tools/tests/compiled-maps.test.ts`, which also checks sweeps and runs every `/spec` scenario on both).
+qbsp writes brushes in its own order, not the .map's, and stores planes as 32-bit floats. The same map loaded either way gives the same brushes, matched by shape, with planes equal to within float precision (tested on the fixtures in `packages/sim/tests/level.test.ts`, and on every map in `example/maps/` in `tools/tests/compiled-maps.test.ts`, which also checks sweeps and runs every `/spec` scenario on both).
 
 ### Brushes from a .map
 
@@ -378,7 +378,7 @@ Both use only the horizontal part of the surface's normal. Clipping a horizontal
 
 ## Constants
 
-Tunable, in `data/player.json`:
+Tunable, in the game's `data/player.json`:
 
 | Name | Starting value | Use |
 |---|---|---|

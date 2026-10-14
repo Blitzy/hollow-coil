@@ -1,7 +1,8 @@
-// Browser entry point: loads a map, runs the sim at its fixed tick rate, and
-// renders between ticks.
+// Browser entry point: loads a game's map, runs the sim at its fixed tick rate,
+// and renders between ticks.
 //
-// URL options: ?map=<name> (default test_movement), &lighting=off to load the
+// URL options: ?game=<dir> (a game directory in the repo, default example),
+// &map=<name> (default: the game's start map), &lighting=off to load the
 // unlit .map instead of the compiled .bsp, &brightness=<n> to try another lightmap scale,
 // &rawinput=off for the OS's accelerated mouse instead of raw input.
 // Everything comes from one file: the .bsp (drawing, collision, and entities),
@@ -27,7 +28,10 @@ import { readBsp } from "@mandreljs/sim/map/bsp";
 import { vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
 import { createSim, simContext, step, type SimConfig, type SimState } from "@mandreljs/sim/sim";
 
-const GAME = "/game"; // served from the repo root by vite.config.ts
+// Served by the dev server (vite.config.ts): the engine's data, and each game directory.
+const ENGINE = "/engine";
+const GAMES = "/games";
+const DEFAULT_GAME = "example";
 const HORIZONTAL_FOV = 90;
 const BRIGHTNESS_STEP = 0.1;
 
@@ -38,6 +42,12 @@ async function fetchText(url: string): Promise<string> {
 }
 
 const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => vec3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
+
+/** A game directory's data/game.json. */
+interface GameInfo {
+  readonly name: string;
+  readonly start_map: string;
+}
 
 interface LoadedLevel {
   readonly level: Level;
@@ -53,15 +63,15 @@ interface LoadedLevel {
  * The level and its meshes, from the compiled .bsp when it loads, otherwise
  * unlit from the .map, with the reason. The dev server compiles stale maps on request.
  */
-async function loadLevel(mapName: string, lightStyles: LightStyleData, lighting: boolean, brightness: number): Promise<LoadedLevel> {
+async function loadLevel(game: string, mapName: string, lightStyles: LightStyleData, lighting: boolean, brightness: number): Promise<LoadedLevel> {
   let reason = "lighting=off";
   if (lighting) {
     try {
-      const response = await fetch(`${GAME}/build/${mapName}.bsp`);
+      const response = await fetch(`${game}/build/${mapName}.bsp`);
       if (response.ok) {
         const bsp = readBsp(await response.arrayBuffer());
         const level = levelFromBsp(bsp);
-        const textures = await loadTextures(bspTextureNames(bsp), `${GAME}/textures`, THREE.NoColorSpace);
+        const textures = await loadTextures(bspTextureNames(bsp), `${game}/textures`, THREE.NoColorSpace);
         const lit = buildBspMeshes(bsp, textures, lightStyles, brightness);
         return { level, group: lit.group, lit, file: `${mapName}.bsp`, note: "" };
       }
@@ -73,23 +83,28 @@ async function loadLevel(mapName: string, lightStyles: LightStyleData, lighting:
       reason = error instanceof Error ? error.message : String(error);
     }
   }
-  const level = levelFromMap(await fetchText(`${GAME}/maps/${mapName}.map`));
-  const group = buildLevelMeshes(level, await loadTextures(textureNames(level), `${GAME}/textures`));
+  const level = levelFromMap(await fetchText(`${game}/maps/${mapName}.map`));
+  const group = buildLevelMeshes(level, await loadTextures(textureNames(level), `${game}/textures`));
   return { level, group, lit: null, file: `${mapName}.map`, note: `unlit (${reason})` };
 }
 
 async function main(): Promise<void> {
   const params = new URLSearchParams(location.search);
-  const mapName = params.get("map") ?? "test_movement";
+  const game = `${GAMES}/${encodeURIComponent(params.get("game") ?? DEFAULT_GAME)}`;
   const overlay = document.getElementById("overlay")!;
-  overlay.textContent = `loading ${mapName}...`;
+  overlay.textContent = "loading...";
 
-  const [playerText, weaponsText, enemiesText, lightStylesText] = await Promise.all([
-    fetchText(`${GAME}/data/player.json`),
-    fetchText(`${GAME}/data/weapons.json`),
-    fetchText(`${GAME}/data/enemies.json`),
-    fetchText(`${GAME}/data/lightstyles.json`),
+  const [gameText, playerText, weaponsText, enemiesText, lightStylesText] = await Promise.all([
+    fetchText(`${game}/data/game.json`),
+    fetchText(`${game}/data/player.json`),
+    fetchText(`${game}/data/weapons.json`),
+    fetchText(`${game}/data/enemies.json`),
+    fetchText(`${ENGINE}/data/lightstyles.json`),
   ]);
+  const info = JSON.parse(gameText) as GameInfo;
+  document.title = info.name;
+  const mapName = params.get("map") ?? info.start_map;
+  overlay.textContent = `loading ${mapName}...`;
   const config: SimConfig = {
     player: JSON.parse(playerText) as PlayerData,
     weapons: JSON.parse(weaponsText) as WeaponsData,
@@ -97,7 +112,7 @@ async function main(): Promise<void> {
   };
   const lightStyles = JSON.parse(lightStylesText) as LightStyleData;
   const brightness = Number(params.get("brightness") ?? DEFAULT_BRIGHTNESS);
-  const world = await loadLevel(mapName, lightStyles, params.get("lighting") !== "off", Number.isFinite(brightness) ? brightness : DEFAULT_BRIGHTNESS);
+  const world = await loadLevel(game, mapName, lightStyles, params.get("lighting") !== "off", Number.isFinite(brightness) ? brightness : DEFAULT_BRIGHTNESS);
   const level = world.level;
   const ctx = simContext(level, config);
 

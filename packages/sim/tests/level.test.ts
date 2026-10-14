@@ -15,7 +15,7 @@ const fixture = (path: string): { map: Level; bsp: Level } => ({
 });
 
 describe("levelFromMap", () => {
-  const level = levelFromMap(readRepoFile("maps/test_movement.map"));
+  const level = levelFromMap(readRepoFile("example/maps/test_movement.map"));
 
   it("reads markers and the player start from the map", () => {
     expect(level.markers.get("step18_start")).toEqual(vec3(64, 144, 24));

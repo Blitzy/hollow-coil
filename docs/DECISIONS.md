@@ -2,6 +2,27 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-14: The example game lives in example/, and the engine keeps what games share
+
+**Decision:** The move planned in "The engine repo ships a free example game" below is done. The example game's maps, textures, and player, weapon, and enemy data are in `example/`, laid out as a Quake game directory: `maps/`, `textures/`, `data/`, and `trenchbroom/`. What every game shares stays at the repo root: `data/lightstyles.json`, the schemas in `data/schemas/`, and the engine's entities in `trenchbroom/mandrel.fgd`. The details:
+
+- **A game names itself in `data/game.json`:** its `name` (the page title, and the name its TrenchBroom config and its maps' `// Game:` lines must use, which the validator checks) and its `start_map`, played when the URL names no map (`test_movement` for the example, as before).
+- **Choosing a game:** in the browser, `?game=<dir>` plays a game directory in the repo root, defaulting to `example`. The dev server serves any folder there that holds `data/game.json`, at `/games/<dir>/`, and the engine's data at `/engine/data/`. The tools take `--game <dir>`, also defaulting to `example`.
+- **Compiled maps go to `build/<game>/`,** so two games' maps never collide and game directories hold no build output.
+- **The FGD split:** the example's FGD, `example/trenchbroom/MandrelJSExample.fgd`, adds only `monster_shotgunner` and starts with `@include "engine/mandrel.fgd"`. `npm run install-trenchbroom` links the engine's `trenchbroom/` into the game's as `engine/` (gitignored), next to linking the game's `trenchbroom/` into TrenchBroom, named after the FGD as before (`games/MandrelJSExample`). It also removes the links earlier versions made to `maps/trenchbroom`. The validator resolves `engine/` to the engine's folder itself, so it doesn't need the link.
+- **Scenarios and golden demos stay engine files** (`/spec`, `/demos`, GPL) that run on the example game. `npm run validate -- --game <dir>` checks another game without them.
+
+TrenchBroom's game path for Mandrel.js Example is now the `example/` folder, and has to be set once more.
+
+**Why:**
+
+- `lightstyles.json` is engine vocabulary that the engine's `light` entity must match ("Example content is CC BY 4.0" below), so it stays with the engine's FGD and the schemas, which every game is checked against.
+- The page title and a default map have to come from the game. A small file the validator already knows how to check (it's one more schema in `data/schemas/`) is simpler than parsing TrenchBroom's config in the browser. Quake 3 did the same with a mod's `description.txt`.
+- A URL option works on any shell and needs no server restart, and Vite rejects command-line options it doesn't know, so `npm run dev -- --game` would need a wrapper script.
+- TrenchBroom reads FGDs only from inside a game's config folder, which it reaches through our link. An `@include` with `..` would resolve against TrenchBroom's own games folder on Windows, not the repo. A link inside the game's folder works on every platform, and each game always includes the engine it's installed with.
+
+**Alternatives considered:** moving `lightstyles.json` into each game (Quake kept its patterns in game code, but our FGD shares the `light` entity, so the two would drift apart); a copy of `mandrel.fgd` in each game (goes stale); build output inside each game directory (every game's repo would have to ignore it); an environment variable or a server option for the game (shell-specific, and one game per server); naming the game only in its TrenchBroom config (JSON with comments, awkward to read in the browser).
+
 ## 2026-10-14: The engine is named Mandrel.js
 
 **Decision:** The engine is called Mandrel.js. Where a dot isn't allowed, it's `mandreljs`: the npm scope (`@mandreljs/sim`, `@mandreljs/render`, and so on) and a future GitHub organization. In conversation it's just "Mandrel".

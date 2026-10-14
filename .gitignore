@@ -1,5 +1,5 @@
 ### Mandrel.js
-# Compiled maps (tools/compile writes here)
+# Compiled maps (tools/compile writes here, one folder per game)
 /build/
 
 # Pinned third-party tools installed by tools/src/setup.ts (npm run setup)
@@ -22,8 +22,10 @@
 autosave/
 
 # TrenchBroom per-user settings, written through the install link
-maps/trenchbroom/GameEngineProfiles.cfg
-maps/trenchbroom/CompilationProfiles.cfg
+/example/trenchbroom/GameEngineProfiles.cfg
+/example/trenchbroom/CompilationProfiles.cfg
+# The engine's trenchbroom/ folder, linked in by npm run install-trenchbroom for the FGD's @include
+/example/trenchbroom/engine
 
 # Playwright
 test-results/

@@ -113,8 +113,8 @@ describe("bevels match qbsp", () => {
   });
 });
 
-describe("repo maps", () => {
-  const mapsDir = join(REPO, "maps");
+describe("example maps", () => {
+  const mapsDir = join(REPO, "example", "maps");
   const maps = readdirSync(mapsDir).filter((f) => f.endsWith(".map"));
 
   it.each(maps)("%s: every brush builds", (file) => {
