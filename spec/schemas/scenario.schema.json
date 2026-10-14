@@ -63,7 +63,7 @@
         "note": { "description": "Why this check matters, for whoever reads a failure.", "type": "string" },
         "position": { "description": "Expected player origin; null skips an axis. Needs a tolerance.", "$ref": "#/$defs/vec3_or_null" },
         "velocity": { "description": "Expected velocity in units per second; null skips an axis. Needs a tolerance.", "$ref": "#/$defs/vec3_or_null" },
-        "tolerance": { "description": "Allowed difference per checked axis of position and velocity.", "type": "number", "minimum": 0 },
+        "tolerance": { "description": "Allowed difference per checked axis of position, velocity, and last_hit.", "type": "number", "minimum": 0 },
         "on_ground": { "type": "boolean" },
         "near_marker": {
           "description": "The player origin is within this distance of a marker's origin.",
@@ -83,6 +83,10 @@
           "description": "How many times the player has fired since the start, through this tick (a shotgun blast is one shot).",
           "type": "integer",
           "minimum": 0
+        },
+        "last_hit": {
+          "description": "Where the player's most recent pellet hit a wall or an entity, through this tick (a wall hit stops 1/32 short of the surface); null skips an axis. Needs a tolerance. Fails if nothing has been hit yet.",
+          "$ref": "#/$defs/vec3_or_null"
         }
       },
       "required": ["at"],

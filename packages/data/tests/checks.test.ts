@@ -147,7 +147,7 @@ describe("scenarios", () => {
   it("requires a tolerance on position and velocity checks", () => {
     const s = scenario("step_20_blocks");
     delete s.expect[0]!.tolerance;
-    expect(check(s)).toEqual(["spec/test.json: expect[0] checks position or velocity but has no tolerance"]);
+    expect(check(s)).toEqual(["spec/test.json: expect[0] checks position, velocity, or last_hit but has no tolerance"]);
   });
 
   it("requires weapon selections to be real slots", () => {

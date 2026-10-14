@@ -38,6 +38,8 @@ export interface Scenario {
     readonly weapon?: string;
     /** Shots the player has fired since the start, through this tick. */
     readonly shots?: number;
+    /** Where the player's most recent pellet hit a wall or entity, through this tick. */
+    readonly last_hit?: Vec3OrNull;
   }[];
 }
 
@@ -57,6 +59,8 @@ export interface ScenarioResult {
   readonly states: readonly SimState[];
   /** Shots fired since the start, after every tick (index = tick). */
   readonly shots: readonly number[];
+  /** Where the player's most recent pellet hit, after every tick (index = tick), or null before any hit. */
+  readonly lastHits: readonly (Vec3 | null)[];
 }
 
 const yawUnits = (degrees: number): number => wrapYaw(degreesToUnits(degrees));
@@ -107,10 +111,14 @@ export function runScenario(scenario: Scenario, level: Level, config: SimConfig)
     createSim(config, { origin: marker, yaw: yawUnits(scenario.start.yaw), pitch: degreesToUnits(scenario.start.pitch ?? 0) }, scenario.seed ?? 0),
   ];
   const shots = [0];
+  const lastHits: (Vec3 | null)[] = [null];
   for (const cmd of commands) {
     const { state, events } = step(states.at(-1)!, cmd, ctx);
+    const mine = events.filter((e) => e.entity === state.player.id);
     states.push(state);
-    shots.push(shots.at(-1)! + events.filter((e) => e.type === "fired" && e.entity === state.player.id).length);
+    shots.push(shots.at(-1)! + mine.filter((e) => e.type === "fired").length);
+    const hits = mine.flatMap((e) => (e.type === "hitWall" || e.type === "hitEntity" ? [e.point] : []));
+    lastHits.push(hits.at(-1) ?? lastHits.at(-1)!);
   }
 
   const checks = scenario.expect.map((e): CheckResult => {
@@ -135,7 +143,12 @@ export function runScenario(scenario: Scenario, level: Level, config: SimConfig)
       failures.push(`weapon: expected ${e.weapon}, got ${p.weapon.current} (${p.weapon.phase})`);
     }
     if (e.shots !== undefined && shots[tick] !== e.shots) failures.push(`shots: expected ${e.shots}, got ${shots[tick]}`);
+    if (e.last_hit) {
+      const hit = lastHits[tick];
+      if (hit) compare("last_hit", e.last_hit, hit, tolerance, failures);
+      else failures.push("last_hit: nothing has been hit yet");
+    }
     return { at: e.at, tick, note: e.note, passed: failures.length === 0, failures };
   });
-  return { passed: checks.every((c) => c.passed), checks, states, shots };
+  return { passed: checks.every((c) => c.passed), checks, states, shots, lastHits };
 }

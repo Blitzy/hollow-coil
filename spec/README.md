@@ -11,7 +11,7 @@ A scenario names a map, a start (an `info_marker` plus facing), a timeline of in
 
 Each input segment holds one set of inputs until its `until` time. View angles (`yaw`, `pitch`) carry over to later segments when omitted; everything else (`forward`, `side`, `jump`, `attack`, `weapon`) is neutral unless the segment sets it. After the last segment, inputs are neutral with the view held.
 
-Expectations check the player's origin (`position`), `velocity`, `on_ground`, distance to a marker (`near_marker`), the weapon in hand (`weapon`, by its id in `data/weapons.json`), and how many shots the player has fired so far (`shots`; a shotgun blast is one shot). A `null` axis in `position` or `velocity` is not checked. Weapon timing follows `docs/WEAPONS.md`.
+Expectations check the player's origin (`position`), `velocity`, `on_ground`, distance to a marker (`near_marker`), the weapon in hand (`weapon`, by its id in `data/weapons.json`), how many shots the player has fired so far (`shots`; a shotgun blast is one shot), and where the player's latest pellet hit a wall or an entity (`last_hit`). A `null` axis in `position`, `velocity`, or `last_hit` is not checked. Weapon timing follows `docs/WEAPONS.md`.
 
 ## Conversion rules
 

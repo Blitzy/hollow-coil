@@ -9,7 +9,7 @@
 //   - each scenario's map exists, and every marker it names is an info_marker in
 //     that map (marker names must be unique within a map)
 //   - scenario input segments are in order and fit the duration; checks happen
-//     within the duration; position and velocity checks have a tolerance
+//     within the duration; position, velocity, and last_hit checks have a tolerance
 //   - scenario weapon selections are real weapon slots, and weapon checks name real weapons
 
 import { parseMap } from "@hollow-coil/sim/map/parse";
@@ -33,7 +33,7 @@ export interface ScenarioFile {
   duration: number;
   start: { marker: string };
   inputs: { until: number; weapon?: number }[];
-  expect: { at: number; position?: unknown; velocity?: unknown; tolerance?: number; near_marker?: { name: string }; weapon?: string }[];
+  expect: { at: number; position?: unknown; velocity?: unknown; last_hit?: unknown; tolerance?: number; near_marker?: { name: string }; weapon?: string }[];
 }
 
 /** Entity classnames the FGD defines. */
@@ -152,8 +152,9 @@ export function scenarioCheck(
 
   scenario.expect.forEach((expectation, i) => {
     if (expectation.at > duration) errors.push(`${label}: expect[${i}].at (${expectation.at}) is past the duration ${duration}`);
-    if ((expectation.position !== undefined || expectation.velocity !== undefined) && expectation.tolerance === undefined) {
-      errors.push(`${label}: expect[${i}] checks position or velocity but has no tolerance`);
+    const measured = expectation.position !== undefined || expectation.velocity !== undefined || expectation.last_hit !== undefined;
+    if (measured && expectation.tolerance === undefined) {
+      errors.push(`${label}: expect[${i}] checks position, velocity, or last_hit but has no tolerance`);
     }
     if (expectation.weapon !== undefined && !Object.hasOwn(weapons, expectation.weapon)) {
       errors.push(`${label}: expect[${i}].weapon ${show(expectation.weapon)} is not defined in weapons.json`);

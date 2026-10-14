@@ -4,7 +4,7 @@
 // GPLv2 or later), with times in ticks instead of milliseconds.
 
 import { secondsToTicks } from "../constants.ts";
-import type { WeaponsData } from "../data.ts";
+import type { HitscanData, WeaponsData } from "../data.ts";
 import { BUTTON_ATTACK, type InputCommand } from "../input.ts";
 
 /**
@@ -31,6 +31,8 @@ export interface WeaponContext {
   readonly bySlot: ReadonlyMap<number, string>;
   /** Ticks between shots, by weapon. At least 1. */
   readonly fireTicks: ReadonlyMap<string, number>;
+  /** Each weapon's shot. */
+  readonly attacks: ReadonlyMap<string, HitscanData>;
   readonly lowerTicks: number;
   readonly raiseTicks: number;
 }
@@ -38,15 +40,18 @@ export interface WeaponContext {
 export function weaponContext(weapons: WeaponsData, owned: readonly string[]): WeaponContext {
   const bySlot = new Map<number, string>();
   const fireTicks = new Map<string, number>();
+  const attacks = new Map<string, HitscanData>();
   for (const id of owned) {
     const weapon = weapons.weapons[id];
     if (!weapon) throw new Error(`the player's weapon "${id}" is not in weapons.json`);
     bySlot.set(weapon.slot, id);
     fireTicks.set(id, Math.max(1, secondsToTicks(weapon.fire_interval)));
+    attacks.set(id, weapon.hitscan);
   }
   return {
     bySlot,
     fireTicks,
+    attacks,
     lowerTicks: secondsToTicks(weapons.switching.lower_time),
     raiseTicks: secondsToTicks(weapons.switching.raise_time),
   };

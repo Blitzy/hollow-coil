@@ -55,12 +55,31 @@ describe("weapons", () => {
     expect(spawnAtCourseStart().player.weapon).toEqual({ current: "pistol", desired: "pistol", phase: "ready", time: 0 });
   });
 
-  it("reports each shot as a fired event", () => {
+  it("reports each shot as a fired event, then what its pellet hit", () => {
     const cmd = { ...NEUTRAL_COMMAND, buttons: BUTTON_ATTACK };
     const first = step(spawnAtCourseStart(), cmd, ctx);
-    expect(first.events).toEqual([{ type: "fired", entity: PLAYER_ID, weapon: "pistol" }]);
+    expect(first.events[0]).toEqual({ type: "fired", entity: PLAYER_ID, weapon: "pistol" });
+    expect(first.events.slice(1)).toEqual([expect.objectContaining({ type: "hitWall", entity: PLAYER_ID })]);
     expect(first.state.player.weapon).toMatchObject({ phase: "firing", time: 21 });
     expect(step(first.state, cmd, ctx).events).toEqual([]); // cooling down
+  });
+
+  it("shoots from the eye where the player is after this tick's move", () => {
+    // Running east at full speed, firing straight down: the shot lands under the moved player, not the old position.
+    const sim = spawnAtCourseStart();
+    const running = { ...sim, player: { ...sim.player, origin: vec3(-64, -208, 24 + DIST_EPSILON), velocity: vec3(320, 0, 0), onGround: true } };
+    const { state, events } = step(running, { ...NEUTRAL_COMMAND, forward: 127, pitch: -16384, buttons: BUTTON_ATTACK }, ctx);
+    const hit = events.find((e) => e.type === "hitWall");
+    if (hit?.type !== "hitWall") throw new Error("expected the shot to hit the floor");
+    expect(state.player.origin.x - running.player.origin.x).toBeGreaterThan(4);
+    expect(Math.abs(hit.point.x - state.player.origin.x)).toBeLessThan(1); // within the pistol's 1 degree of spread
+    expect(hit.point.z).toBeCloseTo(DIST_EPSILON, 10);
+  });
+
+  it("draws spread from the sim's RNG only when firing", () => {
+    const sim = spawnAtCourseStart();
+    expect(step(sim, NEUTRAL_COMMAND, ctx).state.rng).toBe(sim.rng);
+    expect(step(sim, { ...NEUTRAL_COMMAND, buttons: BUTTON_ATTACK }, ctx).state.rng).not.toBe(sim.rng);
   });
 });
 

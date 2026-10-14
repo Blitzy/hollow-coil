@@ -1,0 +1,26 @@
+{
+  "$schema": "./schemas/scenario.schema.json",
+  "description": "A pistol shot fired east down test_combat's range flies 1408 units and stops at the arena's east wall, within the pistol's spread of where it was aimed.",
+  "status": "verified",
+  "map": "test_combat",
+  "duration": 0.1,
+  "start": { "marker": "range_origin", "yaw": 0 },
+  "inputs": [
+    { "until": 0.05, "attack": true }
+  ],
+  "expect": [
+    {
+      "at": 0.05,
+      "note": "The east wall's face is at x = 768, and shots stop 1/32 short of the surface they hit.",
+      "shots": 1,
+      "last_hit": [767.96875, null, null],
+      "tolerance": 0.001
+    },
+    {
+      "at": 0.05,
+      "note": "Aimed level from the eye (z = 24 + 1/32 + 22) at y = -704. The pistol's 1 degree of spread on each axis allows 1408 * tan(1 degree), about 24.6 units, either way.",
+      "last_hit": [null, -704, 46.03125],
+      "tolerance": 25
+    }
+  ]
+}

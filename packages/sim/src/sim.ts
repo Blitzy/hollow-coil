@@ -1,6 +1,7 @@
 // The simulation: plain, serializable state advanced one fixed tick at a time by
 // input commands. It reads nothing else: no clock, devices, or renderer.
 
+import { eyePosition, fireHitscan, type PelletHit } from "./combat/hitscan.ts";
 import type { PlayerData, WeaponsData } from "./data.ts";
 import { hullFromData } from "./data.ts";
 import type { InputCommand } from "./input.ts";
@@ -34,8 +35,12 @@ export interface SimState {
   readonly player: PlayerState;
 }
 
-/** Something that happened during a tick, for presentation (audio, effects) and tests. */
-export type SimEvent = { readonly type: "fired"; readonly entity: number; readonly weapon: string };
+/** Something that happened during a tick, for presentation (audio, effects) and tests. entity is who acted. */
+export type SimEvent =
+  | { readonly type: "fired"; readonly entity: number; readonly weapon: string }
+  /** A pellet hit the world, stopping just short of the surface. */
+  | { readonly type: "hitWall"; readonly entity: number; readonly point: Vec3; readonly normal: Vec3 }
+  | { readonly type: "hitEntity"; readonly entity: number; readonly target: number; readonly point: Vec3; readonly damage: number };
 
 export interface StepResult {
   readonly state: SimState;
@@ -80,6 +85,8 @@ export function createSim(config: SimConfig, spawn: Spawn, seed = 0): SimState {
 export interface SimContext {
   readonly movement: MovementContext;
   readonly weapons: WeaponContext;
+  /** How far above the player's origin shots start. */
+  readonly eyeHeight: number;
 }
 
 /** Builds the context once per level and config; pass it to step. */
@@ -87,7 +94,15 @@ export function simContext(level: Level, config: SimConfig): SimContext {
   return {
     movement: { world: level.world, hull: hullFromData(config.player.hull), movement: config.player.movement },
     weapons: weaponContext(config.weapons, config.player.weapons),
+    eyeHeight: config.player.eye_height,
   };
+}
+
+/** The event for one pellet's hit. */
+function hitEvent(shooter: number, hit: PelletHit, damage: number): SimEvent {
+  return hit.kind === "world"
+    ? { type: "hitWall", entity: shooter, point: hit.point, normal: hit.normal }
+    : { type: "hitEntity", entity: shooter, target: hit.entity, point: hit.point, damage };
 }
 
 /** Advances the sim by one tick: the player moves, then uses their weapon (as in Quake), from where they ended up. */
@@ -95,9 +110,18 @@ export function step(state: SimState, cmd: InputCommand, ctx: SimContext): StepR
   const p = state.player;
   const moved = playerMove(p, cmd, ctx.movement);
   const { weapon, fired } = weaponFrame(p.weapon, cmd, ctx.weapons);
-  const events: SimEvent[] = fired ? [{ type: "fired", entity: p.id, weapon: weapon.current }] : [];
+  const events: SimEvent[] = [];
+  let rng = state.rng;
+  if (fired) {
+    events.push({ type: "fired", entity: p.id, weapon: weapon.current });
+    const attack = ctx.weapons.attacks.get(weapon.current)!;
+    // No entities to hit until enemies arrive (M4).
+    const shot = fireHitscan(ctx.movement.world, [], eyePosition(moved.origin, ctx.eyeHeight), cmd.yaw, cmd.pitch, attack, rng);
+    rng = shot.rng;
+    for (const hit of shot.pellets) if (hit) events.push(hitEvent(p.id, hit, attack.damage));
+  }
   return {
-    state: { ...state, tick: state.tick + 1, player: { ...p, ...moved, yaw: cmd.yaw, pitch: cmd.pitch, weapon } },
+    state: { ...state, tick: state.tick + 1, rng, player: { ...p, ...moved, yaw: cmd.yaw, pitch: cmd.pitch, weapon } },
     events,
   };
 }
