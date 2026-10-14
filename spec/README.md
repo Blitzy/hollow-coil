@@ -1,6 +1,6 @@
 # spec
 
-Engine-neutral test scenarios. The web build runs every scenario here (`packages/sim/tests/scenarios.test.ts`); a port to another engine must pass the same expectations, as the Godot build did through M1. Run `python tools/validate.py` to check them; CI does on every push.
+Engine-neutral test scenarios. The web build runs every scenario here (`packages/sim/tests/scenarios.test.ts`); a port to another engine must pass the same expectations, as the Godot build did through M1. Run `npm run validate` to check them; CI does on every push.
 
 - `*.json`: scenarios, validated against `schemas/scenario.schema.json`
 - `schemas/input_command.schema.json`: the per-tick input command, used by the game, scenarios, and demos

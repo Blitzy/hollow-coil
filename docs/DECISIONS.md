@@ -2,6 +2,20 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-13: Tools are TypeScript, run with plain node
+
+**Decision:** Every tool in `/tools` is TypeScript (`tools/src/`, tested with Vitest in `tools/tests/`), run directly by Node 24, which strips types itself, so there is no build step and Python is no longer needed. To make that work everywhere, the tsconfig sets `erasableSyntaxOnly` (no enums, namespaces, or constructor parameter properties) and relative imports end in `.ts`. Logic other apps need lives in packages, with the tool as a thin wrapper: data validation is `packages/data` (browser-safe, for editors), and `bspdump` reads files with the game's own `.bsp` reader. ericw-tools is still pinned and checksummed in `tools/versions.json`; `setup` unpacks it with a small zip reader on `node:zlib`, so there are still no dependencies.
+
+**Why:**
+
+- With one TypeScript engine, the old reason for Python (keeping tools independent of whichever engine lost) is gone, and the reasons have flipped. Sharing code beats keeping it separate: one `.bsp` reader instead of two, and a validator that editors in the browser can run before saving. The planned mod packager needs compiling and validation from a web or Electron app too.
+- One toolchain: contributors and mappers need only Node. CI no longer installs Python, and the dev server compiles maps by calling the compile module instead of spawning Python.
+- Each port was checked against the Python original before it was deleted: identical output on the real data, maps, and compiled `.bsp` files; the Python tests ported to Vitest; deliberate mutations caught; a real download and unpack of the pinned ericw-tools archives (including the Linux build's executable bits); and identical fixture values from the generators. The fixture generator for the `.bsp` reader still parses the file with its own code, so it stays an independent oracle.
+
+**Trade-offs:** Node's zlib and Python's compress differently, so rerunning the placeholder texture generator rewrites 7 PNGs with identical pixels but different bytes; and ericw-tools' `light` isn't byte-deterministic, so regenerating the `.bsp` fixture changes lightmap bytes. Neither has been regenerated; do so only when the inputs change.
+
+**Alternatives considered:** Keeping Python (works, but duplicates the format code and can't run in editors); a TypeScript runner like tsx (a dependency, and unnecessary now that Node strips types); a zip library such as fflate (works, but the format subset we need is about a hundred lines on `node:zlib`).
+
 ## 2026-10-13: One repo of apps and packages (npm workspaces)
 
 **Decision:** The TypeScript code is an npm workspace, set up now, before there is a second app:
@@ -190,6 +204,8 @@ AI-generated art and other assets aren't ruled out, but they're decided case by 
 **Alternatives considered:** Quake 1 + WAD (works, but adds a lossy conversion step and name limits); Quake 1 + loose PNGs (qbsp doesn't support it); always loading collision from the .map alongside the .bsp (unnecessary now that the .bsp has brushes).
 
 ## 2026-10-11: Tools are Python, with pinned versions
+
+*Superseded on 2026-10-13: the tools are TypeScript now (see above). The pinning approach (versions.json, checksums, version banner) carried over unchanged.*
 
 **Decision:** Scripts in /tools are written in Python using the standard library. Third-party tool versions live in `tools/versions.json`. ericw-tools is downloaded by `tools/setup.py` into a gitignored `.tools/` folder, checked against a pinned SHA-256, and verified by its version banner. Godot and TrenchBroom are installed by each developer and are not pinned for now.
 

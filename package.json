@@ -20,7 +20,9 @@
     "validate": "node tools/src/validate.ts",
     "bspdump": "node tools/src/bspdump.ts",
     "compile": "node tools/src/compile.ts",
-    "setup": "node tools/src/setup.ts"
+    "setup": "node tools/src/setup.ts",
+    "install-trenchbroom": "node tools/src/install-trenchbroom.ts",
+    "make-placeholder-textures": "node tools/src/make-placeholder-textures.ts"
   },
   "devDependencies": {
     "@types/node": "24.19.0",

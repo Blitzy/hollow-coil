@@ -24,7 +24,6 @@ You'll need:
 
 - [Node.js](https://nodejs.org/) 24 or newer
 - [TrenchBroom](https://trenchbroom.github.io/) 2026.2 or newer, to edit maps
-- Python 3.11 or newer, for now only to link TrenchBroom (below)
 
 From the repo root, install the dependencies and the pinned map compiler ([ericw-tools](https://ericw.github.io/ericw-tools/)), which goes into `.tools/`:
 
@@ -44,7 +43,7 @@ and open http://localhost:5173/?map=greybox_01. See [apps/game/README.md](apps/g
 To edit maps, link the Hollow Coil game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Hollow Coil and set the game path to the repo root (the folder containing `maps` and `textures`):
 
 ```
-python tools/install_trenchbroom.py
+npm run install-trenchbroom
 ```
 
 Other root commands: `npm test` (every app, package, and tool), `npm run typecheck`, `npm run build`, `npm run compile` (all maps, or name some; `-- --mode release` for full-quality lighting), `npm run validate`, `npm run bspdump -- build/<name>.bsp`, and `npm run check-files`.
@@ -58,7 +57,7 @@ Other root commands: `npm test` (every app, package, and tool), `npm run typeche
 | `data/` | Weapons, enemies, and movement values, with JSON Schemas |
 | `spec/` | Engine-neutral test scenarios |
 | `demos/` | Golden demo recordings |
-| `tools/` | Setup, map compiling, and validation scripts (Python) |
+| `tools/` | Command-line tools: setup, map compiling, validation, and `.bsp` inspection (TypeScript, run with `node`) |
 | `apps/` | Things you run: `game/` (the game), and future editors and tools |
 | `packages/` | Shared TypeScript libraries: `sim/` (simulation and file formats), `render/` (Three.js presentation), `dev-server/` (serves game files in development), `testing/` (test helpers) |
 | `docs/` | Plan, decision log, and the movement reference |
