@@ -1,8 +1,8 @@
 // Validates the engine's light styles, a game directory, and the test scenarios
 // against their schemas, then runs the cross-file checks (see packages/defs).
 // packages/defs/lightstyles.json and each file in the game's data/ are checked
-// against packages/defs/schemas/<name>.schema.json, and each spec/<name>.json
-// scenario against spec/schemas/scenario.schema.json. The game's data is
+// against packages/defs/schemas/<name>.schema.json, and each scenarios/<name>.json
+// scenario against scenarios/schemas/scenario.schema.json. The game's data is
 // checked against its TrenchBroom FGD, which includes the engine's.
 //
 // Usage: node tools/src/validate.ts [--game dir]   (or npm run validate)
@@ -24,7 +24,7 @@ import {
 } from "@mandreljs/defs/checks";
 import type { DataFiles, GameFile, LightStylesFile, ScenarioFile } from "@mandreljs/defs/checks";
 import { SchemaError, SchemaValidator } from "@mandreljs/defs/schema";
-import { DEFS_DIR, EXAMPLE_GAME, gameDir, relativeToRepo, repoPath } from "@mandreljs/toolchain/layout";
+import { DEFS_DIR, EXAMPLE_GAME, gameDir, relativeToRepo, repoPath } from "./layout.ts";
 import { isMain } from "./cli.ts";
 
 const GAME_DATA = ["game", "player", "weapons", "enemies"];
@@ -101,11 +101,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
   const dataValidator = folderValidator(join(DEFS_DIR, "schemas"));
   const lightstyles = validateFile(join(DEFS_DIR, "lightstyles.json"), dataValidator, "lightstyles.schema.json");
   const data = validateFolder(join(game, "data"), dataValidator, (name) => `${name}.schema.json`);
-  const spec = withScenarios ? validateFolder(repoPath("spec"), folderValidator(repoPath("spec", "schemas")), () => "scenario.schema.json") : null;
-  if (!withScenarios) console.log("skip  spec/ (scenarios run on the example game)");
+  const scenarios = withScenarios ? validateFolder(repoPath("scenarios"), folderValidator(repoPath("scenarios", "schemas")), () => "scenario.schema.json") : null;
+  if (!withScenarios) console.log("skip  scenarios/ (they run on the example game)");
 
   const missing = GAME_DATA.filter((name) => !data.valid.has(name)).map((name) => `${relativeToRepo(join(game, "data"))}/${name}.json`);
-  if (lightstyles === undefined || data.failed || spec?.failed || missing.length > 0) {
+  if (lightstyles === undefined || data.failed || scenarios?.failed || missing.length > 0) {
     if (missing.length > 0) console.log(`FAIL  missing or invalid data files: ${missing.join(", ")}`);
     console.log("cross-file checks skipped until every file is valid");
     return 1;
@@ -128,7 +128,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const fgd = config.definitions[0] === undefined ? { text: "", problems: ["trenchbroom/GameConfig.cfg: no entity definition files"] } : gameFgd(game, config.definitions[0]);
     errors.push(...fgd.problems, ...crossCheck(files, fgdClassnames(fgd.text)), ...lightStyleCheck(files.lightstyles, fgdStyleChoices(fgd.text)));
   }
-  for (const [name, scenario] of spec?.valid ?? []) errors.push(...scenarioCheck(name, scenario as ScenarioFile, files, (map) => readGameMap(game, map)));
+  for (const [name, scenario] of scenarios?.valid ?? []) errors.push(...scenarioCheck(name, scenario as ScenarioFile, files, (map) => readGameMap(game, map)));
 
   console.log(`${errors.length === 0 ? "ok  " : "FAIL"}  cross-file checks`);
   for (const error of errors) console.log(`        ${error}`);

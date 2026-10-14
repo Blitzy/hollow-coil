@@ -1,4 +1,4 @@
-import { readRepoBytes, readRepoFile } from "@mandreljs/testing";
+import { readRepoBytes, readRepoFile } from "../src/testing.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { dump, main } from "../src/bspdump.ts";
 

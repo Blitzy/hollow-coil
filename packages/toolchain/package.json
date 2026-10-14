@@ -1,9 +1,0 @@
-{
-  "name": "@mandreljs/toolchain",
-  "private": true,
-  "type": "module",
-  "description": "Node-only: the repo layout (game directories and build output), the pinned ericw-tools and their install, and map compiling. Used by the tools, the dev server, and tests.",
-  "exports": {
-    "./*": "./src/*.ts"
-  }
-}

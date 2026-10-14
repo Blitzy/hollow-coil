@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readRepoBytes } from "@mandreljs/testing";
+import { readRepoBytes } from "@mandreljs/tools/testing";
 import { lightmapExtents, readBsp } from "@mandreljs/sim/map/bsp";
 import { LIGHT_STYLES, LightStyleAnimator, letterValue, styleValuesAt, type LightStyleData } from "@mandreljs/render/light-styles";
 import { composeLightmaps, packLightmaps } from "@mandreljs/render/lightmap-atlas";

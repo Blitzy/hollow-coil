@@ -12,7 +12,7 @@ Import modules by path, such as `import { readBsp } from "@mandreljs/sim/map/bsp
 - `src/sim.ts`: sim state, spawning, and `step()`, which advances one tick and returns events
 - `src/snapshot.ts`: snapshots (JSON) and the per-tick state hash
 - `src/rng.ts`: the seeded RNG (mulberry32), with reference values in its test
-- `src/scenario.ts`: runs `/spec` scenarios; `tests/scenarios.test.ts` runs every one
+- `src/scenario.ts`: runs the scenarios in `/scenarios`; `tests/scenarios.test.ts` runs every one
 - `src/testing/`: small box-and-ramp worlds for tests
 - `tests/`: the tests, mirroring `src/`, plus `scenarios.test.ts` and `sim-purity.test.ts`
 - `tests/fixtures/bevels/`: brushes compiled by qbsp, to check our bevels. Regenerate with `node packages/sim/tests/fixtures/bevels/generate.ts`.

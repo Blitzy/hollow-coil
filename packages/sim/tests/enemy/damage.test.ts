@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadSimConfig } from "@mandreljs/testing";
+import { loadSimConfig } from "@mandreljs/tools/testing";
 import { DIST_EPSILON } from "@mandreljs/sim/collision/trace";
 import { updateEnemy } from "@mandreljs/sim/enemy/ai";
 import { damageEnemy } from "@mandreljs/sim/enemy/damage";

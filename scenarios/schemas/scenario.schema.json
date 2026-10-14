@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "scenario.schema.json",
   "title": "Scenario",
-  "description": "An engine-neutral test: a map, a start, a timeline of inputs, and expectations. Times are in seconds and convert to ticks as described in spec/README.md.",
+  "description": "An engine-neutral test: a map, a start, a timeline of inputs, and expectations. Times are in seconds and convert to ticks as described in scenarios/README.md.",
   "type": "object",
   "properties": {
     "$schema": { "type": "string" },

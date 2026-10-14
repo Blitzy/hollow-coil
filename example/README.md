@@ -1,6 +1,6 @@
 # Mandrel.js Example
 
-The example game: a game directory, like Quake's `id1/`, with the content the engine is played and tested with. It's a sample, not a product. The engine's tests (`/spec` scenarios, golden demos, and compile tests) use only this content, and every engine behavior is used by something here.
+The example game: a game directory, like Quake's `id1/`, with the content the engine is played and tested with. It's a sample, not a product. The engine's tests (`/scenarios`, golden demos, and compile tests) use only this content, and every engine behavior is used by something here.
 
 - `data/`: `game.json` (the game's name and start map), plus the player, weapon, and enemy data. See `packages/defs/README.md` for what each file holds; the schemas are there too.
 - `maps/`: TrenchBroom maps. See `maps/README.md`.

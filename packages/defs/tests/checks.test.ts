@@ -1,6 +1,6 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { loadSimConfig, readRepoFile, REPO_ROOT } from "@mandreljs/testing";
+import { loadSimConfig, readRepoFile, REPO_ROOT } from "@mandreljs/tools/testing";
 import { describe, expect, it } from "vitest";
 import {
   crossCheck, fgdClassnames, fgdStyleChoices, gameCheck, lightStyleCheck, mapGameName, mapMarkers, resolveFgdIncludes, scenarioCheck,
@@ -98,12 +98,12 @@ describe("scenarios", () => {
       return null;
     }
   };
-  const scenario = (name: string): ScenarioFile & Record<string, any> => loadJson(`spec/${name}.json`);
+  const scenario = (name: string): ScenarioFile & Record<string, any> => loadJson(`scenarios/${name}.json`);
   const check = (s: ScenarioFile): string[] => scenarioCheck("test", s, DATA, readMap);
-  const specValidator = new SchemaValidator((name) => loadJson(`spec/schemas/${name}`));
+  const specValidator = new SchemaValidator((name) => loadJson(`scenarios/schemas/${name}`));
 
   it("passes every real scenario, schema and checks", () => {
-    for (const file of readdirSync(join(REPO_ROOT, "spec")).filter((f) => f.endsWith(".json"))) {
+    for (const file of readdirSync(join(REPO_ROOT, "scenarios")).filter((f) => f.endsWith(".json"))) {
       const s = scenario(file.replace(/\.json$/, ""));
       expect(specValidator.validate(s, "scenario.schema.json"), file).toEqual([]);
       expect(scenarioCheck(file, s, DATA, readMap), file).toEqual([]);
@@ -124,7 +124,7 @@ describe("scenarios", () => {
   it("reports an unknown map", () => {
     const s = scenario("step_18_succeeds");
     s.map = "no_such_map";
-    expect(check(s)).toEqual(["spec/test.json: map 'no_such_map' not found (no_such_map.map)"]);
+    expect(check(s)).toEqual(["scenarios/test.json: map 'no_such_map' not found (no_such_map.map)"]);
   });
 
   it("reports unknown markers", () => {
@@ -132,8 +132,8 @@ describe("scenarios", () => {
     s.start.marker = "nowhere";
     s.expect.at(-1)!.near_marker!.name = "also_nowhere";
     const errors = check(s);
-    expect(errors).toContain("spec/test.json: marker 'nowhere' is not an info_marker in test_movement.map");
-    expect(errors).toContain("spec/test.json: marker 'also_nowhere' is not an info_marker in test_movement.map");
+    expect(errors).toContain("scenarios/test.json: marker 'nowhere' is not an info_marker in test_movement.map");
+    expect(errors).toContain("scenarios/test.json: marker 'also_nowhere' is not an info_marker in test_movement.map");
   });
 
   it("checks segment order and the duration", () => {
@@ -142,21 +142,21 @@ describe("scenarios", () => {
     s.duration = 8.0; // inputs run until 8.5
     s.expect.at(-1)!.at = 9.0;
     const errors = check(s);
-    expect(errors).toContain("spec/test.json: inputs[1].until (4) must be after 4.45");
-    expect(errors).toContain("spec/test.json: inputs run until 8.5, past the duration 8");
-    expect(errors).toContain("spec/test.json: expect[1].at (9) is past the duration 8");
+    expect(errors).toContain("scenarios/test.json: inputs[1].until (4) must be after 4.45");
+    expect(errors).toContain("scenarios/test.json: inputs run until 8.5, past the duration 8");
+    expect(errors).toContain("scenarios/test.json: expect[1].at (9) is past the duration 8");
   });
 
   it("requires a tolerance on position and velocity checks", () => {
     const s = scenario("step_20_blocks");
     delete s.expect[0]!.tolerance;
-    expect(check(s)).toEqual(["spec/test.json: expect[0] checks a position, velocity, or last_hit but has no tolerance"]);
+    expect(check(s)).toEqual(["scenarios/test.json: expect[0] checks a position, velocity, or last_hit but has no tolerance"]);
   });
 
   it("requires weapon selections to be real slots", () => {
     const s = scenario("step_18_succeeds");
     s.inputs[0]!.weapon = 7;
-    expect(check(s)).toEqual(["spec/test.json: inputs[0].weapon 7 is not a weapon slot in weapons.json"]);
+    expect(check(s)).toEqual(["scenarios/test.json: inputs[0].weapon 7 is not a weapon slot in weapons.json"]);
   });
 
   it("checks scenario enemies: real types, one placement each, and markers that exist", () => {
@@ -167,27 +167,27 @@ describe("scenarios", () => {
       { type: "shotgunner", marker: "nowhere", position: [0, 0, 24], yaw: 0 },
     ];
     expect(check(s)).toEqual([
-      "spec/test.json: marker 'nowhere' is not an info_marker in test_movement.map",
-      "spec/test.json: enemies[0].type 'imp' is not defined in enemies.json",
-      "spec/test.json: enemies[1] needs exactly one of marker and position",
-      "spec/test.json: enemies[2] needs exactly one of marker and position",
+      "scenarios/test.json: marker 'nowhere' is not an info_marker in test_movement.map",
+      "scenarios/test.json: enemies[0].type 'imp' is not defined in enemies.json",
+      "scenarios/test.json: enemies[1] needs exactly one of marker and position",
+      "scenarios/test.json: enemies[2] needs exactly one of marker and position",
     ]);
   });
 
   it("requires enemy checks to name an enemy the scenario has, counting the map's when asked", () => {
     const s = scenario("pistol_fire_rate"); // test_combat, which has two shotgunners
     s.expect[0]!.enemy = { index: 0 };
-    expect(check(s)).toEqual(["spec/test.json: expect[0].enemy.index 0 is past the scenario's 0 enemies"]);
+    expect(check(s)).toEqual(["scenarios/test.json: expect[0].enemy.index 0 is past the scenario's 0 enemies"]);
     s.map_enemies = true;
     expect(check(s)).toEqual([]);
     s.expect[0]!.enemy = { index: 2 };
-    expect(check(s)).toEqual(["spec/test.json: expect[0].enemy.index 2 is past the scenario's 2 enemies"]);
+    expect(check(s)).toEqual(["scenarios/test.json: expect[0].enemy.index 2 is past the scenario's 2 enemies"]);
   });
 
   it("requires weapon checks to name real weapons", () => {
     const s = scenario("step_18_succeeds");
     s.expect[0]!.weapon = "railgun";
-    expect(check(s)).toEqual(["spec/test.json: expect[0].weapon 'railgun' is not defined in weapons.json"]);
+    expect(check(s)).toEqual(["scenarios/test.json: expect[0].weapon 'railgun' is not defined in weapons.json"]);
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readRepoBytes } from "@mandreljs/testing";
+import { readRepoBytes } from "@mandreljs/tools/testing";
 import { lightmapExtents, readBsp, type Bsp } from "@mandreljs/sim/map/bsp";
 import { AtlasError, composeLightmaps, lightmapUv, packLightmaps, type LightmapAtlas } from "@mandreljs/render/lightmap-atlas";
 

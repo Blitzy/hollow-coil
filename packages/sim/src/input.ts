@@ -1,4 +1,4 @@
-// The sim's only input: one command per tick. Matches spec/schemas/input_command.schema.json.
+// The sim's only input: one command per tick. Matches scenarios/schemas/input_command.schema.json.
 
 export interface InputCommand {
   /** Absolute yaw, 65536 units per turn; 0 faces +x, increasing counterclockwise. */
@@ -21,7 +21,7 @@ export const ANGLE_UNITS_PER_TURN = 65536;
 
 export const angleToRadians = (units: number): number => (units * 2 * Math.PI) / ANGLE_UNITS_PER_TURN;
 
-/** Degrees to angle units, rounding to the nearest unit (spec/README.md, Conversion rules). */
+/** Degrees to angle units, rounding to the nearest unit (scenarios/README.md, Conversion rules). */
 export const degreesToUnits = (degrees: number): number => Math.floor((degrees * ANGLE_UNITS_PER_TURN) / 360 + 0.5);
 
 /** Wraps a yaw in angle units into 0..65535. */

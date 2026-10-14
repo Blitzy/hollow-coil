@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadEnemiesData, readRepoFile } from "@mandreljs/testing";
+import { loadEnemiesData, readRepoFile } from "@mandreljs/tools/testing";
 import { DIST_EPSILON } from "@mandreljs/sim/collision/trace";
 import { createEnemy, enemyContext, enemySpawns } from "@mandreljs/sim/enemy/enemy";
 import { levelFromMap, type Level } from "@mandreljs/sim/level";

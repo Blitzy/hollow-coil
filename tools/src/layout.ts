@@ -1,10 +1,10 @@
-// Where things are in the repo, for Node code: the tools, the dev server, and tests.
+// Where things are in the repo, for the tools, the dev server, and tests.
 
 import { existsSync } from "node:fs";
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
 
 /** The repo root: the engine, with game directories (example/ and any others) inside it. */
-export const REPO_ROOT = join(import.meta.dirname, "../../..");
+export const REPO_ROOT = join(import.meta.dirname, "../..");
 
 /** A path inside the repo, from slash-separated parts. */
 export const repoPath = (...parts: string[]): string => join(REPO_ROOT, ...parts);

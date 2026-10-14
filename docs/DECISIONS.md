@@ -2,6 +2,31 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-14: Every top-level folder says what it is in one line
+
+**Decision:** The layout is simplified so that each folder can be described in one plain line:
+
+```
+apps/game-client/  plays a game in the browser
+example/           the example game: maps, textures, settings
+packages/          the engine's code: sim, render, defs
+tools/             developer tools, run in Node and never shipped
+scenarios/         test scenarios, played on the example game
+demos/             recorded games, replayed as tests
+docs/
+```
+
+- **`packages/` is only the engine's code** (`sim`, `render`, `defs`). The Node-only packages fold into `tools/`: `toolchain` (map compiling, setup, the repo layout), `dev-server` (now `tools/src/dev-server.ts`), and `testing` (now `tools/src/testing.ts` and `tools/src/level-parity.ts`). `tools/versions.json` is back where it was.
+- **One dependency rule:** engine code never imports from `tools/`; tests and an app's `vite.config.ts` may. `tools/tests/engine-imports.test.ts` checks it. This replaces the longer rule written earlier today.
+- **`apps/game` is `apps/game-client`.** "Game" now means a game directory such as `example/`; the app is what plays one.
+- **`spec/` is `scenarios/`,** which says what the files are.
+
+This supersedes `packages/toolchain` in "Shared definitions and map compiling move into packages" below, and the `dev-server` and `testing` packages in "One repo of apps and packages" (2026-10-13).
+
+**Why:** after today's earlier moves, the layout was correct but hard to read. `tools/` sat next to `packages/toolchain` with no clear difference, three small packages held Node-only code, and "spec" and "game" needed explaining. Splitting along one line, engine code versus developer tooling, is easy to see and easy to check with a test.
+
+**Alternatives considered:** keeping the Node-only packages separate (each is small, and the split they enforced is now a test); `apps/play` or `apps/runtime` for the game client (Ryan preferred `game-client`; "client" suggests a server there isn't, but it fits if multiplayer ever comes, since the sim follows Quake's); grouping `scenarios/` and `demos/` under `tests/` (one more level, for little gain).
+
 ## 2026-10-14: Shared definitions and map compiling move into packages
 
 **Decision:** Two moves, so that the engine is its packages and only a game's data is in a folder called `data/`:

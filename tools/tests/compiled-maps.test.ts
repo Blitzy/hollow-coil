@@ -1,6 +1,6 @@
 // Every map in example/maps/, compiled with the pinned ericw-tools, loads from its .bsp
 // as the same level it is as a .map: the same entities, the same brushes, the
-// same sweep results, and the same /spec scenario runs (player and enemies),
+// same sweep results, and the same /scenarios runs (player and enemies),
 // tick for tick. The game can then load either file. Skipped when the tools
 // aren't installed (npm run setup); CI installs them before testing.
 
@@ -8,21 +8,21 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadSimConfig, readRepoFile } from "@mandreljs/testing";
-import { brushBounds, brushMismatches, compareSweeps, near } from "@mandreljs/testing/level-parity";
+import { loadSimConfig, readRepoFile } from "../src/testing.ts";
+import { brushBounds, brushMismatches, compareSweeps, near } from "../src/level-parity.ts";
 import { hullFromData } from "@mandreljs/sim/data";
 import { levelFromBsp, levelFromMap, type Level } from "@mandreljs/sim/level";
 import { lightmapExtents, readBsp, type Bsp } from "@mandreljs/sim/map/bsp";
 import { PLAYER_MASK } from "@mandreljs/sim/player/movement";
 import { runScenario, type Scenario } from "@mandreljs/sim/scenario";
-import { compileMap, compileOk, findMaps } from "@mandreljs/toolchain/compile";
-import { repoPath } from "@mandreljs/toolchain/layout";
-import { toolsInstalled } from "@mandreljs/toolchain/setup";
+import { compileMap, compileOk, findMaps } from "../src/compile.ts";
+import { repoPath } from "../src/layout.ts";
+import { toolsInstalled } from "../src/setup.ts";
 
 const MAPS = findMaps([]).map((path) => basename(path, ".map"));
-const SCENARIOS = readdirSync(repoPath("spec"))
+const SCENARIOS = readdirSync(repoPath("scenarios"))
   .filter((f) => f.endsWith(".json"))
-  .map((f) => [f, JSON.parse(readRepoFile(`spec/${f}`)) as Scenario] as const);
+  .map((f) => [f, JSON.parse(readRepoFile(`scenarios/${f}`)) as Scenario] as const);
 const config = loadSimConfig();
 
 /** How far apart the player may be, tick for tick, in a scenario run on the .map and the .bsp. */
@@ -89,7 +89,7 @@ describe.skipIf(!toolsInstalled())("compiled maps match their .map (needs ericw-
     });
   });
 
-  describe.each(SCENARIOS)("spec/%s", (_, scenario) => {
+  describe.each(SCENARIOS)("scenarios/%s", (_, scenario) => {
     it("runs the same on the .bsp as on the .map, tick for tick", () => {
       const { map, bsp } = levels.get(scenario.map)!;
       const a = runScenario(scenario, map, config);

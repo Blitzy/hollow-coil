@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadWeaponsData } from "@mandreljs/testing";
+import { loadWeaponsData } from "@mandreljs/tools/testing";
 import { BUTTON_ATTACK, NEUTRAL_COMMAND, type InputCommand } from "@mandreljs/sim/input";
 import { startingWeapon, weaponContext, weaponFrame, type WeaponContext, type WeaponState } from "@mandreljs/sim/player/weapons";
 

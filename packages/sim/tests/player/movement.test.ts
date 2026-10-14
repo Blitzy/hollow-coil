@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadPlayerData } from "@mandreljs/testing";
+import { loadPlayerData } from "@mandreljs/tools/testing";
 import { TICK_RATE } from "@mandreljs/sim/constants";
 import { hullFromData } from "@mandreljs/sim/data";
 import { BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "@mandreljs/sim/input";

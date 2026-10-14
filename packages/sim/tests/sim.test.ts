@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadSimConfig, readRepoFile } from "@mandreljs/testing";
+import { loadSimConfig, readRepoFile } from "@mandreljs/tools/testing";
 import { DIST_EPSILON } from "@mandreljs/sim/collision/trace";
 import { BUTTON_ATTACK, BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "@mandreljs/sim/input";
 import { levelFromMap } from "@mandreljs/sim/level";

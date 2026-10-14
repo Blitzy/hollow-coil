@@ -24,7 +24,7 @@ import { homedir } from "node:os";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { trenchbroomConfig } from "@mandreljs/defs/checks";
-import { DEFS_DIR, gameDir, repoPath } from "@mandreljs/toolchain/layout";
+import { DEFS_DIR, gameDir, repoPath } from "./layout.ts";
 import { isMain } from "./cli.ts";
 
 /** The engine's TrenchBroom files: the FGD every game's FGD includes. */

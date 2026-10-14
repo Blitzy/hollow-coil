@@ -1,5 +1,5 @@
-// Runs the engine-neutral scenarios in /spec, following the conversion rules in
-// spec/README.md. The caller loads the scenario JSON, the level, and the data.
+// Runs the engine-neutral scenarios in /scenarios, following the conversion rules in
+// scenarios/README.md. The caller loads the scenario JSON, the level, and the data.
 
 import { secondsToTicks, TICK_RATE } from "./constants.ts";
 import { BUTTON_ATTACK, BUTTON_JUMP, degreesToUnits, NEUTRAL_COMMAND, wrapYaw, type InputCommand } from "./input.ts";
@@ -84,7 +84,7 @@ export interface ScenarioResult {
 
 const yawUnits = (degrees: number): number => wrapYaw(degreesToUnits(degrees));
 
-/** The input command for every tick of the scenario, by the segment rules in spec/README.md. */
+/** The input command for every tick of the scenario, by the segment rules in scenarios/README.md. */
 export function scenarioCommands(scenario: Scenario, tickRate = TICK_RATE): InputCommand[] {
   const total = secondsToTicks(scenario.duration, tickRate);
   let yaw = yawUnits(scenario.start.yaw);

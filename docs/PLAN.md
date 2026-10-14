@@ -4,7 +4,7 @@
 
 Build a small vertical slice on the web (TypeScript + Three.js). Desktop releases will wrap the web build in Electron.
 
-The slice started as a two-engine comparison: the same slice built on the web and in Godot 4.7. After M1, with both engines passing the same scenarios and playing identically, the web build was chosen and Godot dropped (see DECISIONS.md, 2026-10-13). Most work still lives in shared, engine-neutral files (the example game in `/example`, plus `/data` and `/spec`), which keeps a future port possible and checkable.
+The slice started as a two-engine comparison: the same slice built on the web and in Godot 4.7. After M1, with both engines passing the same scenarios and playing identically, the web build was chosen and Godot dropped (see DECISIONS.md, 2026-10-13). Most work still lives in shared, engine-neutral files (the example game in `/example`, and `/scenarios`), which keeps a future port possible and checkable.
 
 Design goals beyond the slice:
 
@@ -55,13 +55,13 @@ Out of scope for the spike:
   textures/    Textures (PNG), next to maps/ as Quake tools expect
   data/        game.json (name, start map), player.json (health, hull, movement), weapons.json, enemies.json
   trenchbroom/ The game's TrenchBroom config and FGD
-/spec        Engine-neutral test scenarios (JSON)
-/tools       Command-line wrappers: compile, bspdump, validate, setup, install-trenchbroom
+/scenarios   Engine-neutral test scenarios (JSON), played on the example game
+/tools       Developer tools, run in Node: compile, validate, bspdump, setup, install-trenchbroom,
+             the dev server's Vite plugin, and test helpers
 /build       Compiled .bsp output, per game (build/example/; gitignored)
 /demos       Golden demo recordings for regression tests
-/apps        Things you run: game/ (the game), and future editors and tools
-/packages    Shared TypeScript libraries: sim/, render/, defs/ (schemas, light styles, the shared FGD,
-             and validation), toolchain/ (map compiling), dev-server/, testing/
+/apps        Things you run: game-client/ (plays a game in the browser), and future editors
+/packages    The engine's code: sim/, render/, defs/ (schemas, light styles, the shared FGD, and the checks)
 /docs        PLAN.md, DECISIONS.md, MOVEMENT.md
 ```
 
@@ -201,14 +201,14 @@ Mostly hands-on tuning by Ryan, with few tests.
 ## Testing
 
 - **Unit tests** in Vitest (the sim runs in Node with no Three.js imports).
-- **Scenarios** in /spec: each names a map, a start marker, a timeline of inputs, and expectations at given times (in seconds, converted to ticks by exact rules) with tolerances. They are engine-neutral, so a future port must pass them too. Format and conversion rules are in spec/README.md.
+- **Scenarios** in /scenarios: each names a map, a start marker, a timeline of inputs, and expectations at given times (in seconds, converted to ticks by exact rules) with tolerances. They are engine-neutral, so a future port must pass them too. Format and conversion rules are in scenarios/README.md.
 - **Golden demos** in /demos: recorded inputs plus keyframe snapshots and a per-tick state hash, with a copy of the /data files they were recorded with. CI replays them with that copy and fails at the first divergent tick, so tuning /data never breaks a demo; only code changes can. After an intentional code change, a command rebaselines a demo from its recorded inputs. Demos are only valid at the tick rate they were recorded with, so any tick rate experiments (such as 35 Hz) happen before recording goldens.
 - **Compile check**: CI compiles every map in fast check mode and fails on leaks, missing textures, or errors. It is part of the single CI job (see DECISIONS.md).
 - **Visual smoke tests**: Playwright screenshots per map.
 
 ## Input Commands
 
-The sim's only input is one command per tick, in an engine-neutral format used by the game, scenarios, and demos. Values are quantized so replays are exact. The schema is `spec/schemas/input_command.schema.json`:
+The sim's only input is one command per tick, in an engine-neutral format used by the game, scenarios, and demos. Values are quantized so replays are exact. The schema is `scenarios/schemas/input_command.schema.json`:
 
 - View angles are absolute, not deltas: yaw and pitch as 16-bit integers, 65536 units per full turn (Quake's scheme). Yaw 0 faces +x (east) and increases counterclockwise; pitch is positive looking up. Presentation accumulates mouse input at full precision and quantizes when building the command.
 - Movement: forward and side as integers from -127 to 127 (positive is forward and right), scaled to max speed by the sim.
@@ -218,3 +218,4 @@ The sim's only input is one command per tick, in an engine-neutral format used b
 ## Open Decisions
 
 - Cross-browser determinism (custom trig or lookup tables), deferred until demos need to play across browsers. Desktop builds sidestep it, since Electron bundles one browser engine.
+- Release builds for a game directory. Today `npm run build` builds the game client with no game, and only the dev server serves game files, so a built client can't load any game. A release is the engine plus one game (DECISIONS.md, 2026-10-14), so we need something like `npm run build -- --game <dir>` that puts the client, the game's compiled maps, textures, and data in `dist/`. Still to decide: whether a game's repo must sit inside an engine checkout (as now) or can use the engine from outside, such as through published npm packages; and whether a shipped build still accepts `?game=` or plays only its own game.

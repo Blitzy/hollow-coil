@@ -231,7 +231,7 @@ export function scenarioCheck(
 ): string[] {
   const weapons = data.weapons.weapons;
   const enemies = data.enemies.enemies;
-  const label = `spec/${name}.json`;
+  const label = `scenarios/${name}.json`;
   const mapFile = `${scenario.map}.map`;
   const text = readMap(scenario.map);
   if (text === null) return [`${label}: map ${show(scenario.map)} not found (${mapFile})`];

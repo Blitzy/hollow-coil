@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadEnemiesData, loadWeaponsData, readRepoFile } from "@mandreljs/testing";
+import { loadEnemiesData, loadWeaponsData, readRepoFile } from "@mandreljs/tools/testing";
 import { aimAngles, aimVectors, eyePosition, fireHitscan, rayBoxFraction, type HitTarget, type PelletHit } from "@mandreljs/sim/combat/hitscan";
 import { entityBox } from "@mandreljs/sim/collision/box";
 import { DIST_EPSILON } from "@mandreljs/sim/collision/trace";

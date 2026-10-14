@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readRepoBytes, readRepoFile } from "@mandreljs/testing";
+import { readRepoBytes, readRepoFile } from "@mandreljs/tools/testing";
 import { CONTENTS } from "@mandreljs/sim/constants";
 import { cross, dot, sub, vec3 } from "@mandreljs/sim/math/vec3";
 import { BSP_LUMP_NAMES, BspError, faceNormal, lightmapExtents, modelBrushes, readBsp, type Bsp } from "@mandreljs/sim/map/bsp";

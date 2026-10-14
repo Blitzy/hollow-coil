@@ -1,9 +1,9 @@
-// Runs every engine-neutral scenario in /spec against the sim, and checks on
+// Runs every engine-neutral scenario in /scenarios against the sim, and checks on
 // every tick of every scenario that no enemy is ever inside the world.
 
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { loadSimConfig, readRepoFile, REPO_ROOT } from "@mandreljs/testing";
+import { loadSimConfig, readRepoFile, REPO_ROOT } from "@mandreljs/tools/testing";
 import { describe, expect, it } from "vitest";
 import { trace } from "@mandreljs/sim/collision/trace";
 import { CONTENTS } from "@mandreljs/sim/constants";
@@ -22,11 +22,11 @@ const enemyTypes = enemyContext(config.enemies).types;
 /** The brushes that block enemies (other entities aside). */
 const WALLS = CONTENTS.SOLID | CONTENTS.WINDOW | CONTENTS.MONSTERCLIP;
 
-const files = readdirSync(join(REPO_ROOT, "spec")).filter((f) => f.endsWith(".json"));
+const files = readdirSync(join(REPO_ROOT, "scenarios")).filter((f) => f.endsWith(".json"));
 
-describe("spec scenarios", () => {
+describe("scenarios", () => {
   it.each(files)("%s", (file) => {
-    const scenario = JSON.parse(readRepoFile(`spec/${file}`)) as Scenario;
+    const scenario = JSON.parse(readRepoFile(`scenarios/${file}`)) as Scenario;
     const result = runScenario(scenario, level(scenario.map), config);
     const report = result.checks
       .filter((c) => !c.passed)

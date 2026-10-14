@@ -2,7 +2,7 @@ import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:f
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EXAMPLE_GAME } from "@mandreljs/toolchain/layout";
+import { EXAMPLE_GAME } from "../src/layout.ts";
 import { gameFgd, main, readGameMap } from "../src/validate.ts";
 
 describe("validate", () => {
@@ -33,15 +33,15 @@ describe("validate", () => {
     expect(lines).toContain("ok    packages/defs/lightstyles.json");
     expect(lines).toContain("ok    example/data/game.json");
     expect(lines).toContain("ok    example/data/player.json");
-    expect(lines).toContain("ok    spec/step_18_succeeds.json");
+    expect(lines).toContain("ok    scenarios/step_18_succeeds.json");
     expect(lines.at(-1)).toBe("ok    cross-file checks");
   });
 
   it("checks another game directory, without the scenarios", () => {
     const { code, lines } = run(["--game", copyOfExample()]);
     expect(code).toBe(0);
-    expect(lines).toContain("skip  spec/ (scenarios run on the example game)");
-    expect(lines.some((line) => line.includes("spec/step_18_succeeds.json"))).toBe(false);
+    expect(lines).toContain("skip  scenarios/ (they run on the example game)");
+    expect(lines.some((line) => line.includes("scenarios/step_18_succeeds.json"))).toBe(false);
   });
 
   it("fails a game whose enemy isn't in its FGD, or whose maps name another game", () => {

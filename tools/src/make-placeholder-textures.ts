@@ -10,7 +10,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { crc32, deflateSync } from "node:zlib";
-import { EXAMPLE_GAME, relativeToRepo } from "@mandreljs/toolchain/layout";
+import { EXAMPLE_GAME, relativeToRepo } from "./layout.ts";
 import { isMain } from "./cli.ts";
 
 export const OUT_DIR = join(EXAMPLE_GAME, "textures", "dev");

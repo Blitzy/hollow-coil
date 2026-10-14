@@ -2,7 +2,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXAMPLE_GAME, REPO_ROOT } from "@mandreljs/toolchain/layout";
+import { EXAMPLE_GAME, REPO_ROOT } from "./layout.ts";
 import type { EnemiesData, PlayerData, WeaponsData } from "@mandreljs/sim/data";
 import type { SimConfig } from "@mandreljs/sim/sim";
 

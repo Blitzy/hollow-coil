@@ -2,13 +2,12 @@
   "name": "@mandreljs/tools",
   "private": true,
   "type": "module",
-  "description": "Command-line tools: thin wrappers for map compiling, validation, .bsp inspection, setup, and the TrenchBroom install. Run with plain node; see the root package.json scripts.",
+  "description": "Developer tools, run in Node and never shipped: the command-line tools, map compiling with the pinned ericw-tools, the dev server's Vite plugin, and test helpers.",
   "exports": {
     "./*": "./src/*.ts"
   },
   "dependencies": {
     "@mandreljs/defs": "*",
-    "@mandreljs/sim": "*",
-    "@mandreljs/toolchain": "*"
+    "@mandreljs/sim": "*"
   }
 }

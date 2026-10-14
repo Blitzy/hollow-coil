@@ -9,7 +9,7 @@
 import { execFileSync } from "node:child_process";
 import { statSync } from "node:fs";
 import { join } from "node:path";
-import { REPO_ROOT } from "@mandreljs/toolchain/layout";
+import { REPO_ROOT } from "./layout.ts";
 import { isMain } from "./cli.ts";
 
 export const MAX_BYTES = 2 * 1024 * 1024;

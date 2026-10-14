@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadSimConfig, readRepoFile } from "@mandreljs/testing";
+import { loadSimConfig, readRepoFile } from "@mandreljs/tools/testing";
 import { canSee, updateEnemy } from "@mandreljs/sim/enemy/ai";
 import { createEnemy, enemyContext, enemySpawns, type EnemyState } from "@mandreljs/sim/enemy/enemy";
 import { CONTENTS } from "@mandreljs/sim/constants";

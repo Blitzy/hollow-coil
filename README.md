@@ -40,7 +40,7 @@ Then play:
 npm run dev
 ```
 
-and open http://localhost:5173/?map=greybox_01. See [apps/game/README.md](apps/game/README.md) for URL options and how the dev server compiles maps as you edit them.
+and open http://localhost:5173/?map=greybox_01. See [apps/game-client/README.md](apps/game-client/README.md) for URL options and how the dev server compiles maps as you edit them.
 
 To edit maps, link the Mandrel.js Example game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Mandrel.js Example and set the game path to the `example` folder (the one containing `maps` and `textures`):
 
@@ -59,11 +59,11 @@ The engine plays game directories, like Quake's `id1/`. The example game is `exa
 | Folder | Contents |
 |---|---|
 | `example/` | The example game: maps, textures, weapon, enemy, and movement data, and its TrenchBroom config |
-| `spec/` | Engine-neutral test scenarios |
-| `demos/` | Golden demo recordings |
-| `tools/` | Command-line tools: setup, map compiling, validation, `.bsp` inspection, and the TrenchBroom install (TypeScript, run with `node`) |
-| `apps/` | Things you run: `game/` (the game), and future editors and tools |
-| `packages/` | Shared TypeScript libraries: `sim/` (simulation and file formats), `render/` (Three.js presentation), `defs/` (the schemas, light styles, and shared entities every game is checked against, and the validation), `toolchain/` (map compiling with the pinned ericw-tools), `dev-server/` (serves game files in development), `testing/` (test helpers) |
+| `scenarios/` | Test scenarios, played on the example game |
+| `demos/` | Recorded games, replayed as tests |
+| `tools/` | Developer tools, run in Node and never shipped: map compiling, validation, the dev server, the TrenchBroom install, and test helpers |
+| `apps/` | Things you run: `game-client/` (plays a game in the browser), and future editors |
+| `packages/` | The engine's code: `sim/` (game rules, physics, and map files), `render/` (drawing, with Three.js), `defs/` (what game content must look like, and the checks for it) |
 | `docs/` | Plan, decision log, and the movement reference |
 
 The TypeScript side is one [npm workspace](https://docs.npmjs.com/cli/using-npm/workspaces): install once at the root, and apps import packages as `@mandreljs/<name>/<module>`, straight from source with no build step.

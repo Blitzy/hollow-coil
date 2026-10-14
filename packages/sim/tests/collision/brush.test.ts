@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { REPO_ROOT } from "@mandreljs/testing";
+import { REPO_ROOT } from "@mandreljs/tools/testing";
 import { describe, expect, it } from "vitest";
 import { CONTENTS } from "@mandreljs/sim/constants";
 import { vec3 } from "@mandreljs/sim/math/vec3";

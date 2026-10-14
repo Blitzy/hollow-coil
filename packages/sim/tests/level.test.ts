@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { loadPlayerData, readRepoBytes, readRepoFile } from "@mandreljs/testing";
-import { brushMismatches, compareSweeps } from "@mandreljs/testing/level-parity";
+import { loadPlayerData, readRepoBytes, readRepoFile } from "@mandreljs/tools/testing";
+import { brushMismatches, compareSweeps } from "@mandreljs/tools/level-parity";
 import type { Plane } from "@mandreljs/sim/collision/plane";
 import { hullFromData } from "@mandreljs/sim/data";
 import { levelFromBsp, levelFromMap, LevelError, type Level } from "@mandreljs/sim/level";
@@ -29,7 +29,7 @@ describe("levelFromMap", () => {
   });
 });
 
-// The real maps get the same comparisons in packages/toolchain/tests/compiled-maps.test.ts, which compiles them.
+// The real maps get the same comparisons in tools/tests/compiled-maps.test.ts, which compiles them.
 describe("levelFromBsp", () => {
   // qbsp reorders brushes, so each .map brush is matched by shape, not by position.
   it.each(["bevels/shapes", "bsp/lit_room"])("%s: has the same brushes as the .map, bevels included", (path) => {

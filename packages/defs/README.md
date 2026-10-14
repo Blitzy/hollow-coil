@@ -1,6 +1,6 @@
 # @mandreljs/defs
 
-The definitions every game is checked against, and the code that checks them. Browser-safe (no file access), so editors can check what they save the same way CI does. `npm run validate` (`tools/src/validate.ts`) runs it over the engine's files, a game directory, and the `/spec` scenarios.
+What game content must look like, and the checks for it. Browser-safe (no file access), so editors can check what they save the same way CI does. `npm run validate` (`tools/src/validate.ts`) runs it over the engine's files, a game directory, and the scenarios in `/scenarios`.
 
 ## Definitions
 

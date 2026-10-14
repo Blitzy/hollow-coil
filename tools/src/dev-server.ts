@@ -10,9 +10,9 @@
 import { createReadStream, statSync } from "node:fs";
 import type { ServerResponse } from "node:http";
 import { extname, join, normalize, sep } from "node:path";
-import { compileMap, compileOk } from "@mandreljs/toolchain/compile";
-import { isGameDir, REPO_ROOT } from "@mandreljs/toolchain/layout";
-import { toolsInstalled } from "@mandreljs/toolchain/setup";
+import { compileMap, compileOk } from "./compile.ts";
+import { isGameDir, REPO_ROOT } from "./layout.ts";
+import { toolsInstalled } from "./setup.ts";
 import type { Plugin } from "vite";
 
 const GAME_FOLDERS = ["maps", "textures", "data", "build"]; // served at /games/<game>/<folder>/...

@@ -13,7 +13,7 @@ const base: Scenario = {
   expect: [{ at: 0.5, on_ground: true }],
 };
 
-describe("conversion rules (spec/README.md)", () => {
+describe("conversion rules (scenarios/README.md)", () => {
   it("rounds seconds to the nearest tick", () => {
     expect(secondsToTicks(0.1)).toBe(6);
     expect(secondsToTicks(4.45)).toBe(267); // 4.45 * 60 is 267.00000000000003 in floating point

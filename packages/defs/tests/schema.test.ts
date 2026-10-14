@@ -1,4 +1,4 @@
-import { readRepoFile } from "@mandreljs/testing";
+import { readRepoFile } from "@mandreljs/tools/testing";
 import { describe, expect, it } from "vitest";
 import { jsonType, SchemaError, SchemaValidator } from "@mandreljs/defs/schema";
 

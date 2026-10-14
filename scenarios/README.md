@@ -1,4 +1,4 @@
-# spec
+# scenarios
 
 Engine-neutral test scenarios, run on the example game's maps and data (`example/`). The web build runs every scenario here (`packages/sim/tests/scenarios.test.ts`); a port to another engine must pass the same expectations, as the Godot build did through M1. Run `npm run validate` to check them; CI does on every push.
 

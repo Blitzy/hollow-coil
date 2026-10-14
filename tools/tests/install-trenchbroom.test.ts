@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { gameLinkName, install, InstallError, removeOldLink, trenchbroomUserDir, uninstall } from "../src/install-trenchbroom.ts";
-import { EXAMPLE_GAME } from "@mandreljs/toolchain/layout";
+import { EXAMPLE_GAME } from "../src/layout.ts";
 
 describe("install-trenchbroom", () => {
   const dirs: string[] = [];
