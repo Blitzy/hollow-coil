@@ -2,11 +2,11 @@
 // from a level's monster entities. The AI is in ai.ts, and taking damage in
 // damage.ts. See docs/ENEMIES.md.
 
-import { CONTENTS, secondsToTicks, SPAWN_RAISE } from "../constants.ts";
+import { CONTENTS, secondsToTicks, SPAWN_RAISE, TICK_RATE } from "../constants.ts";
 import { entityBox } from "../collision/box.ts";
 import { trace, type CollisionBrush } from "../collision/trace.ts";
 import { hullFromData, type EnemiesData, type EnemyData, type Hull } from "../data.ts";
-import { degreesToUnits, wrapYaw } from "../input.ts";
+import { ANGLE_UNITS_PER_TURN, degreesToUnits, wrapYaw } from "../input.ts";
 import { entityOrigin, type Level } from "../level.ts";
 import { add, sub, vec3, type Vec3 } from "../math/vec3.ts";
 
@@ -28,6 +28,10 @@ export interface EnemyState {
   readonly origin: Vec3;
   /** Facing, in angle units. */
   readonly yaw: number;
+  /** The direction it's heading, which it turns toward (Quake's ideal_yaw). */
+  readonly idealYaw: number;
+  /** True while it has a direction to step in; a blocked step clears it until the next think. */
+  readonly moving: boolean;
   readonly health: number;
   readonly mode: EnemyMode;
   /** The tick of the next AI decision. */
@@ -47,6 +51,12 @@ export interface EnemyType {
   readonly thinkTicks: number;
   readonly reactionTicks: number;
   readonly painTicks: number;
+  /** How far it moves each tick while chasing. */
+  readonly runStep: number;
+  /** How far it moves in one think interval: the step it tests when choosing a direction. */
+  readonly thinkStep: number;
+  /** How much it can turn each tick, in angle units. */
+  readonly turnStep: number;
   /** Cosine of half the field of view: the player is in view when cos(angle off facing) is at least this. */
   readonly viewCos: number;
 }
@@ -67,6 +77,9 @@ export function enemyContext(data: EnemiesData): EnemyContext {
       thinkTicks: Math.max(1, secondsToTicks(enemy.think_interval)),
       reactionTicks: secondsToTicks(enemy.reaction_delay),
       painTicks: secondsToTicks(enemy.pain.stun),
+      runStep: enemy.run_speed / TICK_RATE,
+      thinkStep: (enemy.run_speed * Math.max(1, secondsToTicks(enemy.think_interval))) / TICK_RATE,
+      turnStep: Math.round((enemy.turn_speed * ANGLE_UNITS_PER_TURN) / 360 / TICK_RATE),
       viewCos: Math.cos((enemy.field_of_view * Math.PI) / 360),
     });
     byClassname.set(enemy.classname, id);
@@ -96,15 +109,18 @@ export function enemySpawns(level: Level, ctx: EnemyContext): EnemySpawn[] {
   const spawns: EnemySpawn[] = [];
   for (const entity of level.entities) {
     const type = ctx.byClassname.get(entity.classname ?? "");
-    if (type === undefined) continue;
-    const { hull } = ctx.types.get(type)!;
-    const placed = entityOrigin(entity);
-    const start = add(placed, vec3(0, 0, SPAWN_RAISE));
-    const drop = trace(level.world, start, sub(start, vec3(0, 0, DROP_TO_FLOOR)), hull.mins, hull.maxs, ENEMY_MASK);
-    const origin = drop.fraction < 1 && !drop.startSolid ? drop.endpos : placed;
-    spawns.push({ type, origin, yaw: wrapYaw(degreesToUnits(Number(entity.angle ?? 0))) });
+    if (type !== undefined) spawns.push(spawnEnemy(level, ctx, type, entityOrigin(entity), Number(entity.angle ?? 0)));
   }
   return spawns;
+}
+
+/** One enemy of a type placed at a point, facing angle degrees, dropped onto the floor as enemySpawns describes. */
+export function spawnEnemy(level: Level, ctx: EnemyContext, type: string, placed: Vec3, angle: number): EnemySpawn {
+  const { hull } = ctx.types.get(type)!;
+  const start = add(placed, vec3(0, 0, SPAWN_RAISE));
+  const drop = trace(level.world, start, sub(start, vec3(0, 0, DROP_TO_FLOOR)), hull.mins, hull.maxs, ENEMY_MASK);
+  const origin = drop.fraction < 1 && !drop.startSolid ? drop.endpos : placed;
+  return { type, origin, yaw: wrapYaw(degreesToUnits(angle)) };
 }
 
 /** A new enemy, idle. index is its place among the level's enemies, which offsets its think ticks. */
@@ -114,6 +130,8 @@ export function createEnemy(id: number, spawn: EnemySpawn, type: EnemyType, inde
     type: spawn.type,
     origin: spawn.origin,
     yaw: spawn.yaw,
+    idealYaw: spawn.yaw,
+    moving: false,
     health: type.data.health,
     mode: "idle",
     nextThink: 1 + (index % type.thinkTicks),

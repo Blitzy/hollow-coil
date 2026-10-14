@@ -9,7 +9,7 @@ import type { Level } from "@hollow-coil/sim/level";
 import { vec3 } from "@hollow-coil/sim/math/vec3";
 import { nextRandom } from "@hollow-coil/sim/rng";
 import { createSim, simContext, step, type SimConfig, type SimEvent, type SimState } from "@hollow-coil/sim/sim";
-import { box, world } from "@hollow-coil/sim/testing/worlds";
+import { box, surroundingsFor, world } from "@hollow-coil/sim/testing/worlds";
 
 const config = loadSimConfig();
 const shotgunner = enemyContext(config.enemies).types.get("shotgunner")!;
@@ -81,10 +81,10 @@ describe("damageEnemy", () => {
 
   it("recovers on its first think once the stun is over", () => {
     const flinching = enemy({ mode: "pain", target: PLAYER, painUntil: 28, nextThink: 25 });
-    const player = { id: PLAYER, eye: vec3(-500, 0, 46) };
-    const at25 = updateEnemy(flinching, 25, shotgunner, world(), player).enemy;
+    const around = surroundingsFor(world(box([-2048, -2048, -64], [2048, 2048, 0])), vec3(-500, 0, 24));
+    const at25 = updateEnemy(flinching, 25, shotgunner, around, 0).enemy;
     expect(at25.mode).toBe("pain");
-    expect(updateEnemy(at25, 31, shotgunner, world(), player).enemy.mode).toBe("chase");
+    expect(updateEnemy(at25, 31, shotgunner, around, 0).enemy.mode).toBe("chase");
   });
 });
 
@@ -134,7 +134,9 @@ describe("shooting enemies in the sim", () => {
   });
 
   it("a living enemy blocks the player", () => {
-    const { state } = run(scene(300), Array(120).fill({ ...NEUTRAL_COMMAND, forward: 127 }));
+    // Facing away, so it never sees the player and stays put.
+    const facingAway = { ...scene(300), enemies: [{ ...scene(300).enemies[0]!, yaw: 0 }] };
+    const { state } = run(facingAway, Array(120).fill({ ...NEUTRAL_COMMAND, forward: 127 }));
     // The player's box (16 wide each way) stops against the enemy's (from x = 284), 1/32 short.
     expect(state.player.origin.x).toBeCloseTo(284 - 16 - DIST_EPSILON, 6);
   });

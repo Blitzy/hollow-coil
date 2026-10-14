@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { loadSimConfig, readRepoFile } from "@hollow-coil/testing";
-import { canSee, updateEnemy, type ThinkPlayer } from "@hollow-coil/sim/enemy/ai";
+import { canSee, updateEnemy } from "@hollow-coil/sim/enemy/ai";
 import { createEnemy, enemyContext, enemySpawns, type EnemyState } from "@hollow-coil/sim/enemy/enemy";
 import { CONTENTS } from "@hollow-coil/sim/constants";
 import { degreesToUnits, NEUTRAL_COMMAND } from "@hollow-coil/sim/input";
 import { levelFromMap, type Level } from "@hollow-coil/sim/level";
 import { vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
 import { createSim, simContext, step, type SimState } from "@hollow-coil/sim/sim";
-import { box, world } from "@hollow-coil/sim/testing/worlds";
+import { box, surroundingsFor, world } from "@hollow-coil/sim/testing/worlds";
 
 const config = loadSimConfig();
 const shotgunner = enemyContext(config.enemies).types.get("shotgunner")!;
@@ -17,7 +17,8 @@ const OPEN = world(FLOOR);
 /** A shotgunner standing at the origin, facing +x (its eye is at z = 46). */
 const enemyAt = (index = 0): EnemyState => createEnemy(2, { type: "shotgunner", origin: vec3(0, 0, 24), yaw: 0 }, shotgunner, index);
 const eyeAt = (x: number, y: number, z = 46): Vec3 => vec3(x, y, z);
-const player = (eye: Vec3): ThinkPlayer => ({ id: 1, eye });
+/** Surroundings in the open world with the player's eye at eye. */
+const around = (eye: Vec3) => surroundingsFor(OPEN, vec3(eye.x, eye.y, eye.z - 22));
 
 describe("canSee", () => {
   it("sees a point ahead, in range, with nothing in between", () => {
@@ -49,7 +50,7 @@ describe("updateEnemy", () => {
     const changes: { tick: number; mode: string; events: number }[] = [];
     let state = enemy;
     for (let tick = from; tick <= to; tick++) {
-      const update = updateEnemy(state, tick, shotgunner, OPEN, player(eye(tick)));
+      const update = updateEnemy(state, tick, shotgunner, around(eye(tick)), 0);
       if (update.enemy.mode !== state.mode || update.events.length > 0) changes.push({ tick, mode: update.enemy.mode, events: update.events.length });
       state = update.enemy;
     }
@@ -60,7 +61,7 @@ describe("updateEnemy", () => {
     let enemy = enemyAt(1);
     const thinks: number[] = [];
     for (let tick = 1; tick <= 20; tick++) {
-      const next = updateEnemy(enemy, tick, shotgunner, OPEN, player(eyeAt(-500, 0))).enemy; // behind it: never seen
+      const next = updateEnemy(enemy, tick, shotgunner, around(eyeAt(-500, 0)), 0).enemy; // behind it: never seen
       if (next.nextThink !== enemy.nextThink) thinks.push(tick);
       enemy = next;
     }
@@ -74,8 +75,23 @@ describe("updateEnemy", () => {
     expect(state).toMatchObject({ mode: "chase", target: 1, attackReadyAt: 8 + 36 });
   });
 
+  it("while chasing, picks its heading only on think ticks but moves every tick", () => {
+    // The player is ahead and to the left, so it heads for the north-east diagonal.
+    let enemy: EnemyState = { ...enemyAt(0), mode: "chase", target: 1 };
+    const rows: { tick: number; heading: number; moving: boolean; x: number }[] = [];
+    for (let tick = 1; tick <= 13; tick++) {
+      enemy = updateEnemy(enemy, tick, shotgunner, around(eyeAt(600, 400)), 0).enemy;
+      rows.push({ tick, heading: enemy.idealYaw, moving: enemy.moving, x: enemy.origin.x });
+    }
+    const changed = rows.filter((r, i) => i > 0 && (r.heading !== rows[i - 1]!.heading || r.moving !== rows[i - 1]!.moving)).map((r) => r.tick);
+    expect(changed.every((t) => t % 6 === 1)).toBe(true); // index 0 thinks on ticks 1, 7, 13
+    expect(rows[0]).toMatchObject({ heading: 8192, moving: true });
+    const moved = rows.filter((r, i) => i > 0 && r.x !== rows[i - 1]!.x).length;
+    expect(moved).toBeGreaterThanOrEqual(8); // turning toward 45 degrees first, then a step every tick
+  });
+
   it("reports the sighting", () => {
-    const update = updateEnemy(enemyAt(0), 1, shotgunner, OPEN, player(eyeAt(500, 0)));
+    const update = updateEnemy(enemyAt(0), 1, shotgunner, around(eyeAt(500, 0)), 0);
     expect(update.events).toEqual([{ type: "sighted", entity: 2, target: 1 }]);
   });
 });

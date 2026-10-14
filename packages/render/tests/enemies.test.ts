@@ -10,7 +10,7 @@ const HULL = { mins: vec3(-16, -16, -24), maxs: vec3(16, 16, 32) };
 const looks = new Map([["shotgunner", { hull: HULL, eyeHeight: 22 }]]);
 
 const enemy = (overrides: Partial<EnemyState> = {}): EnemyState => ({
-  id: 2, type: "shotgunner", origin: vec3(100, 0, 24), yaw: 0, health: 40, mode: "idle",
+  id: 2, type: "shotgunner", origin: vec3(100, 0, 24), yaw: 0, idealYaw: 0, moving: false, health: 40, mode: "idle",
   nextThink: 1, target: 0, attackReadyAt: 0, painUntil: 0, ...overrides,
 });
 

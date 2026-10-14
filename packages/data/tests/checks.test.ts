@@ -87,7 +87,7 @@ describe("lightStyleCheck", () => {
 });
 
 describe("scenarios", () => {
-  const WEAPONS = realData().weapons.weapons;
+  const DATA = realData();
   const readMap = (name: string): string | null => {
     try {
       return readRepoFile(`maps/${name}.map`);
@@ -96,14 +96,14 @@ describe("scenarios", () => {
     }
   };
   const scenario = (name: string): ScenarioFile & Record<string, any> => loadJson(`spec/${name}.json`);
-  const check = (s: ScenarioFile): string[] => scenarioCheck("test", s, WEAPONS, readMap);
+  const check = (s: ScenarioFile): string[] => scenarioCheck("test", s, DATA, readMap);
   const specValidator = new SchemaValidator((name) => loadJson(`spec/schemas/${name}`));
 
   it("passes every real scenario, schema and checks", () => {
     for (const file of readdirSync(join(REPO_ROOT, "spec")).filter((f) => f.endsWith(".json"))) {
       const s = scenario(file.replace(/\.json$/, ""));
       expect(specValidator.validate(s, "scenario.schema.json"), file).toEqual([]);
-      expect(scenarioCheck(file, s, WEAPONS, readMap), file).toEqual([]);
+      expect(scenarioCheck(file, s, DATA, readMap), file).toEqual([]);
     }
   });
 
@@ -147,13 +147,38 @@ describe("scenarios", () => {
   it("requires a tolerance on position and velocity checks", () => {
     const s = scenario("step_20_blocks");
     delete s.expect[0]!.tolerance;
-    expect(check(s)).toEqual(["spec/test.json: expect[0] checks position, velocity, or last_hit but has no tolerance"]);
+    expect(check(s)).toEqual(["spec/test.json: expect[0] checks a position, velocity, or last_hit but has no tolerance"]);
   });
 
   it("requires weapon selections to be real slots", () => {
     const s = scenario("step_18_succeeds");
     s.inputs[0]!.weapon = 7;
     expect(check(s)).toEqual(["spec/test.json: inputs[0].weapon 7 is not a weapon slot in weapons.json"]);
+  });
+
+  it("checks scenario enemies: real types, one placement each, and markers that exist", () => {
+    const s = scenario("step_18_succeeds");
+    s.enemies = [
+      { type: "imp", position: [0, 0, 24], yaw: 0 },
+      { type: "shotgunner", yaw: 0 },
+      { type: "shotgunner", marker: "nowhere", position: [0, 0, 24], yaw: 0 },
+    ];
+    expect(check(s)).toEqual([
+      "spec/test.json: marker 'nowhere' is not an info_marker in test_movement.map",
+      "spec/test.json: enemies[0].type 'imp' is not defined in enemies.json",
+      "spec/test.json: enemies[1] needs exactly one of marker and position",
+      "spec/test.json: enemies[2] needs exactly one of marker and position",
+    ]);
+  });
+
+  it("requires enemy checks to name an enemy the scenario has, counting the map's when asked", () => {
+    const s = scenario("pistol_fire_rate"); // test_combat, which has two shotgunners
+    s.expect[0]!.enemy = { index: 0 };
+    expect(check(s)).toEqual(["spec/test.json: expect[0].enemy.index 0 is past the scenario's 0 enemies"]);
+    s.map_enemies = true;
+    expect(check(s)).toEqual([]);
+    s.expect[0]!.enemy = { index: 2 };
+    expect(check(s)).toEqual(["spec/test.json: expect[0].enemy.index 2 is past the scenario's 2 enemies"]);
   });
 
   it("requires weapon checks to name real weapons", () => {

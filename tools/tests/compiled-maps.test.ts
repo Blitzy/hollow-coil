@@ -1,8 +1,8 @@
 // Every map in maps/, compiled with the pinned ericw-tools, loads from its .bsp
 // as the same level it is as a .map: the same entities, the same brushes, the
-// same sweep results, and the same /spec scenario runs, tick for tick. The game
-// can then load either file. Skipped when the tools aren't installed (npm run
-// setup); CI installs them before testing.
+// same sweep results, and the same /spec scenario runs (player and enemies),
+// tick for tick. The game can then load either file. Skipped when the tools
+// aren't installed (npm run setup); CI installs them before testing.
 
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -86,6 +86,12 @@ describe.skipIf(!toolsInstalled())("compiled maps match their .map (needs ericw-
         const where = `tick ${tick}: ${JSON.stringify(pa.origin)} vs ${JSON.stringify(pb.origin)}`;
         expect(near(pa.origin, pb.origin, SCENARIO_TOLERANCE), where).toBe(true);
         expect(pb.onGround, where).toBe(pa.onGround);
+        sa.enemies.forEach((ea, i) => {
+          const eb = b.states[tick]!.enemies[i]!;
+          const enemyWhere = `tick ${tick}, enemy ${i}: ${JSON.stringify(ea.origin)} vs ${JSON.stringify(eb.origin)}`;
+          expect(near(ea.origin, eb.origin, SCENARIO_TOLERANCE), enemyWhere).toBe(true);
+          expect(eb.mode, enemyWhere).toBe(ea.mode);
+        });
       });
     });
   });

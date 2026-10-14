@@ -7,11 +7,11 @@ Engine-neutral test scenarios. The web build runs every scenario here (`packages
 
 ## Scenario format
 
-A scenario names a map, a start (an `info_marker` plus facing), a timeline of input segments, and expectations at given times. See the schema's descriptions for every field, and the existing scenarios for examples.
+A scenario names a map, a start (an `info_marker` plus facing), a timeline of input segments, and expectations at given times. It can place enemies (`enemies`), each at a marker or a position and dropped onto the floor below, like the map's own; the map's own enemies spawn only with `"map_enemies": true`, so a scenario has just the enemies it lists. Enemies are numbered in spawn order from 0: the map's first, then the scenario's. See the schema's descriptions for every field, and the existing scenarios for examples.
 
 Each input segment holds one set of inputs until its `until` time. View angles (`yaw`, `pitch`) carry over to later segments when omitted; everything else (`forward`, `side`, `jump`, `attack`, `weapon`) is neutral unless the segment sets it. After the last segment, inputs are neutral with the view held.
 
-Expectations check the player's origin (`position`), `velocity`, `on_ground`, distance to a marker (`near_marker`), the weapon in hand (`weapon`, by its id in `data/weapons.json`), how many shots the player has fired so far (`shots`; a shotgun blast is one shot), and where the player's latest pellet hit a wall or an entity (`last_hit`). A `null` axis in `position`, `velocity`, or `last_hit` is not checked. Weapon timing follows `docs/WEAPONS.md`.
+Expectations check the player's origin (`position`), `velocity`, `on_ground`, distance to a marker (`near_marker`), the weapon in hand (`weapon`, by its id in `data/weapons.json`), how many shots the player has fired so far (`shots`; a shotgun blast is one shot), where the player's latest pellet hit a wall or an entity (`last_hit`), and one enemy's mode, health, position, or distance from the player (`enemy`). Enemies follow `docs/ENEMIES.md`. A `null` axis in `position`, `velocity`, `last_hit`, or an enemy's `position` is not checked. Besides its expectations, every scenario must keep every enemy out of the world on every tick; the test harness checks that. Weapon timing follows `docs/WEAPONS.md`.
 
 ## Conversion rules
 

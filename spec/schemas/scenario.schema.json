@@ -25,6 +25,15 @@
       "required": ["marker", "yaw"],
       "additionalProperties": false
     },
+    "map_enemies": {
+      "description": "Spawn the map's own enemies too, before any listed in enemies. Defaults to false, so scenarios have only the enemies they list.",
+      "type": "boolean"
+    },
+    "enemies": {
+      "description": "Enemies placed for this scenario, spawned after the map's (if any), in order. Each is dropped onto the floor below where it's placed, as map enemies are.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/enemy_spawn" }
+    },
     "inputs": {
       "description": "Consecutive segments. Each holds one set of inputs from the previous segment's end (or 0) until its own 'until'. After the last segment, inputs are neutral with the view held.",
       "type": "array",
@@ -32,7 +41,7 @@
       "items": { "$ref": "#/$defs/segment" }
     },
     "expect": {
-      "description": "Checks on the player's state at given times.",
+      "description": "Checks on the player's and enemies' state at given times.",
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/$defs/expectation" }
@@ -41,6 +50,18 @@
   "required": ["description", "status", "map", "duration", "start", "inputs", "expect"],
   "additionalProperties": false,
   "$defs": {
+    "enemy_spawn": {
+      "description": "One enemy, placed at a marker or a position (exactly one of the two).",
+      "type": "object",
+      "properties": {
+        "type": { "description": "Enemy id in data/enemies.json.", "type": "string" },
+        "marker": { "description": "Name of an info_marker in the map.", "type": "string" },
+        "position": { "description": "Where to place it, in map coordinates.", "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "yaw": { "description": "Facing in degrees; 0 is east (+x), 90 is north (+y).", "type": "number", "minimum": 0, "exclusiveMaximum": 360 }
+      },
+      "required": ["type", "yaw"],
+      "additionalProperties": false
+    },
     "segment": {
       "type": "object",
       "properties": {
@@ -83,6 +104,19 @@
           "description": "How many times the player has fired since the start, through this tick (a shotgun blast is one shot).",
           "type": "integer",
           "minimum": 0
+        },
+        "enemy": {
+          "description": "Checks on one enemy. Uses the expectation's tolerance for position.",
+          "type": "object",
+          "properties": {
+            "index": { "description": "The enemy's place in spawn order, from 0: the map's enemies (with map_enemies), then the scenario's.", "type": "integer", "minimum": 0 },
+            "mode": { "enum": ["idle", "chase", "pain", "dead"] },
+            "health": { "type": "number" },
+            "position": { "description": "Expected origin; null skips an axis. Needs a tolerance.", "$ref": "#/$defs/vec3_or_null" },
+            "near_player": { "description": "The enemy's origin is within this distance of the player's.", "type": "number", "exclusiveMinimum": 0 }
+          },
+          "required": ["index"],
+          "additionalProperties": false
         },
         "last_hit": {
           "description": "Where the player's most recent pellet hit a wall or an entity, through this tick (a wall hit stops 1/32 short of the surface); null skips an axis. Needs a tolerance. Fails if nothing has been hit yet.",

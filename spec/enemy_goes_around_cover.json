@@ -1,0 +1,28 @@
+{
+  "$schema": "./schemas/scenario.schema.json",
+  "description": "A shotgunner that sees the player over a 32-high low cover can't climb it (its step height is 18), so it stops against the cover, tries other directions as Quake's movetogoal does, gets around the cover's south end, and reaches the player. It is never inside the cover.",
+  "status": "verified",
+  "map": "test_combat",
+  "duration": 10.0,
+  "start": { "marker": "north_west", "yaw": 270 },
+  "enemies": [
+    { "type": "shotgunner", "position": [300, 512, 24], "yaw": 180 }
+  ],
+  "inputs": [
+    { "until": 0.35, "forward": 127 },
+    { "until": 10.0 }
+  ],
+  "expect": [
+    {
+      "at": 2.5,
+      "note": "Stopped against the cover's east face (x = 64; its box reaches 16 west of its origin), level with the cover (y 496 to 528).",
+      "enemy": { "index": 0, "mode": "chase", "position": [84, 490, 24.03125] },
+      "tolerance": 4
+    },
+    {
+      "at": 10.0,
+      "note": "Around the cover and across to the player, stopping about 42 units away as in enemy_chases_up_step.",
+      "enemy": { "index": 0, "mode": "chase", "near_player": 48 }
+    }
+  ]
+}

@@ -2,7 +2,8 @@
 // input commands. It reads nothing else: no clock, devices, or renderer.
 
 import { eyePosition, fireHitscan, type HitTarget, type PelletHit } from "./combat/hitscan.ts";
-import { withBrushes } from "./collision/box.ts";
+import { entityBox, withBrushes } from "./collision/box.ts";
+import { CONTENTS } from "./constants.ts";
 import type { EnemiesData, PlayerData, WeaponsData } from "./data.ts";
 import { hullFromData } from "./data.ts";
 import type { InputCommand } from "./input.ts";
@@ -12,7 +13,7 @@ import { playerMove, type MovementContext } from "./player/movement.ts";
 import { startingWeapon, weaponContext, weaponFrame, type WeaponContext, type WeaponState } from "./player/weapons.ts";
 import { seedRandom } from "./rng.ts";
 import { SPAWN_RAISE } from "./constants.ts";
-import { updateEnemy, type EnemyEvent } from "./enemy/ai.ts";
+import { updateEnemy, type EnemyEvent, type Quarry } from "./enemy/ai.ts";
 import { damageEnemy, type DamageEvent } from "./enemy/damage.ts";
 import { alive, createEnemy, enemyBrush, enemyContext, type EnemyContext, type EnemySpawn, type EnemyState } from "./enemy/enemy.ts";
 
@@ -163,12 +164,19 @@ export function step(state: SimState, cmd: InputCommand, ctx: SimContext): StepR
       });
     }
   }
-  const player = { id: p.id, eye: eyePosition(moved.origin, ctx.eyeHeight) };
-  enemies = enemies.map((enemy) => {
-    const update = updateEnemy(enemy, tick, ctx.enemies.types.get(enemy.type)!, ctx.movement.world, player);
+  // Each enemy in turn, seeing the others where they are by now. The player's box blocks enemies like an enemy's does.
+  const playerBox = entityBox(moved.origin, ctx.movement.hull, CONTENTS.MONSTER);
+  const player: Quarry = { id: p.id, origin: moved.origin, eye: eyePosition(moved.origin, ctx.eyeHeight), mins: playerBox.mins, maxs: playerBox.maxs };
+  const updated = [...enemies];
+  updated.forEach((enemy, i) => {
+    const others = updated.filter((e, j) => j !== i && alive(e)).map((e) => enemyBrush(e, ctx.enemies.types.get(e.type)!));
+    const surroundings = { world: ctx.movement.world, blockers: withBrushes(ctx.movement.world, [playerBox, ...others]), player };
+    const update = updateEnemy(enemy, tick, ctx.enemies.types.get(enemy.type)!, surroundings, rng);
+    rng = update.rng;
     events.push(...update.events);
-    return update.enemy;
+    updated[i] = update.enemy;
   });
+  enemies = updated;
   return {
     state: { ...state, tick, rng, player: { ...p, ...moved, yaw: cmd.yaw, pitch: cmd.pitch, weapon }, enemies },
     events,

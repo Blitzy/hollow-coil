@@ -11,6 +11,8 @@
 //   - scenario input segments are in order and fit the duration; checks happen
 //     within the duration; position, velocity, and last_hit checks have a tolerance
 //   - scenario weapon selections are real weapon slots, and weapon checks name real weapons
+//   - scenario enemies are real enemy types, placed at a marker or a position (not
+//     both), and enemy checks name an enemy the scenario has
 
 import { parseMap } from "@hollow-coil/sim/map/parse";
 import { show } from "./schema.ts";
@@ -32,8 +34,19 @@ export interface ScenarioFile {
   map: string;
   duration: number;
   start: { marker: string };
+  map_enemies?: boolean;
+  enemies?: { type: string; marker?: string; position?: number[]; yaw: number }[];
   inputs: { until: number; weapon?: number }[];
-  expect: { at: number; position?: unknown; velocity?: unknown; last_hit?: unknown; tolerance?: number; near_marker?: { name: string }; weapon?: string }[];
+  expect: {
+    at: number;
+    position?: unknown;
+    velocity?: unknown;
+    last_hit?: unknown;
+    tolerance?: number;
+    near_marker?: { name: string };
+    weapon?: string;
+    enemy?: { index: number; position?: unknown };
+  }[];
 }
 
 /** Entity classnames the FGD defines. */
@@ -98,22 +111,23 @@ export function lightStyleCheck(lightstyles: LightStylesFile, choices: ReadonlyM
 }
 
 /** info_marker origins by name from .map text, plus any problems (such as duplicate names or a syntax error). */
-export function mapMarkers(text: string, fileName: string): { markers: Map<string, number[]>; problems: string[] } {
+export function mapMarkers(text: string, fileName: string): { markers: Map<string, number[]>; classnames: string[]; problems: string[] } {
   const markers = new Map<string, number[]>();
   const problems: string[] = [];
   let entities;
   try {
     entities = parseMap(text);
   } catch (error) {
-    return { markers, problems: [`${fileName}: ${error instanceof Error ? error.message : String(error)}`] };
+    return { markers, classnames: [], problems: [`${fileName}: ${error instanceof Error ? error.message : String(error)}`] };
   }
+  const classnames = entities.map((e) => e.properties.classname ?? "");
   for (const { properties } of entities) {
     if (properties.classname !== "info_marker") continue;
     const name = properties.name ?? "";
     if (markers.has(name)) problems.push(`${fileName}: marker name ${show(name)} is used more than once`);
     markers.set(name, (properties.origin ?? "0 0 0").trim().split(/\s+/).map(Number));
   }
-  return { markers, problems };
+  return { markers, classnames, problems };
 }
 
 /**
@@ -123,21 +137,38 @@ export function mapMarkers(text: string, fileName: string): { markers: Map<strin
 export function scenarioCheck(
   name: string,
   scenario: ScenarioFile,
-  weapons: DataFiles["weapons"]["weapons"],
+  data: Pick<DataFiles, "weapons" | "enemies">,
   readMap: (map: string) => string | null,
 ): string[] {
+  const weapons = data.weapons.weapons;
+  const enemies = data.enemies.enemies;
   const label = `spec/${name}.json`;
   const mapFile = `${scenario.map}.map`;
   const text = readMap(scenario.map);
   if (text === null) return [`${label}: map ${show(scenario.map)} not found (${mapFile})`];
-  const { markers, problems } = mapMarkers(text, mapFile);
+  const { markers, classnames, problems } = mapMarkers(text, mapFile);
   const errors = [...problems];
   const weaponSlots = new Set(Object.values(weapons).map((w) => w.slot));
 
-  const named = [scenario.start.marker, ...scenario.expect.flatMap((e) => (e.near_marker ? [e.near_marker.name] : []))];
+  const placed = scenario.enemies ?? [];
+  const named = [
+    scenario.start.marker,
+    ...scenario.expect.flatMap((e) => (e.near_marker ? [e.near_marker.name] : [])),
+    ...placed.flatMap((e) => (e.marker !== undefined ? [e.marker] : [])),
+  ];
   for (const marker of named) {
     if (!markers.has(marker)) errors.push(`${label}: marker ${show(marker)} is not an info_marker in ${mapFile}`);
   }
+
+  placed.forEach((enemy, i) => {
+    if (!Object.hasOwn(enemies, enemy.type)) errors.push(`${label}: enemies[${i}].type ${show(enemy.type)} is not defined in enemies.json`);
+    if ((enemy.marker === undefined) === (enemy.position === undefined)) {
+      errors.push(`${label}: enemies[${i}] needs exactly one of marker and position`);
+    }
+  });
+  const enemyClassnames = new Set(Object.values(enemies).map((e) => e.classname));
+  const mapEnemies = scenario.map_enemies ? classnames.filter((c) => enemyClassnames.has(c)).length : 0;
+  const enemyCount = mapEnemies + placed.length;
 
   const { duration } = scenario;
   let previous = 0;
@@ -152,9 +183,13 @@ export function scenarioCheck(
 
   scenario.expect.forEach((expectation, i) => {
     if (expectation.at > duration) errors.push(`${label}: expect[${i}].at (${expectation.at}) is past the duration ${duration}`);
-    const measured = expectation.position !== undefined || expectation.velocity !== undefined || expectation.last_hit !== undefined;
+    const measured =
+      expectation.position !== undefined || expectation.velocity !== undefined || expectation.last_hit !== undefined || expectation.enemy?.position !== undefined;
     if (measured && expectation.tolerance === undefined) {
-      errors.push(`${label}: expect[${i}] checks position, velocity, or last_hit but has no tolerance`);
+      errors.push(`${label}: expect[${i}] checks a position, velocity, or last_hit but has no tolerance`);
+    }
+    if (expectation.enemy && expectation.enemy.index >= enemyCount) {
+      errors.push(`${label}: expect[${i}].enemy.index ${expectation.enemy.index} is past the scenario's ${enemyCount} enemies`);
     }
     if (expectation.weapon !== undefined && !Object.hasOwn(weapons, expectation.weapon)) {
       errors.push(`${label}: expect[${i}].weapon ${show(expectation.weapon)} is not defined in weapons.json`);

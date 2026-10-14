@@ -1,6 +1,9 @@
 // Small worlds built from boxes and ramps, for tests.
 
+import { entityBox } from "../collision/box.ts";
 import { buildBrush, type Brush } from "../collision/brush.ts";
+import { CONTENTS } from "../constants.ts";
+import type { Surroundings } from "../enemy/ai.ts";
 import type { CollisionWorld } from "../collision/trace.ts";
 import { cross, dot, sub, vec3, type Vec3 } from "../math/vec3.ts";
 import type { MapFace } from "../map/parse.ts";
@@ -44,3 +47,13 @@ export function rampX(x0: number, x1: number, y0: number, y1: number, bottom: nu
 }
 
 export const world = (...brushes: Brush[]): CollisionWorld => ({ brushes });
+
+/** An enemy's surroundings in a world with no other entities, the player standing at origin (Quake's player hull and eye). */
+export function surroundingsFor(level: CollisionWorld, playerOrigin: Vec3): Surroundings {
+  const box = entityBox(playerOrigin, { mins: vec3(-16, -16, -24), maxs: vec3(16, 16, 32) }, CONTENTS.MONSTER);
+  return {
+    world: level,
+    blockers: { brushes: [...level.brushes, box] },
+    player: { id: 1, origin: playerOrigin, eye: vec3(playerOrigin.x, playerOrigin.y, playerOrigin.z + 22), mins: box.mins, maxs: box.maxs },
+  };
+}

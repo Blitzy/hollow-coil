@@ -66,7 +66,7 @@ export function main(): number {
   const fgd = readFileSync(repoPath("maps", "trenchbroom", "hollowcoil.fgd"), "utf-8");
   const files = Object.fromEntries(data.valid) as unknown as DataFiles & { lightstyles: LightStylesFile };
   const errors = [...crossCheck(files, fgdClassnames(fgd)), ...lightStyleCheck(files.lightstyles, fgdStyleChoices(fgd))];
-  for (const [name, scenario] of spec.valid) errors.push(...scenarioCheck(name, scenario as ScenarioFile, files.weapons.weapons, readRepoMap));
+  for (const [name, scenario] of spec.valid) errors.push(...scenarioCheck(name, scenario as ScenarioFile, files, readRepoMap));
 
   console.log(`${errors.length === 0 ? "ok  " : "FAIL"}  cross-file checks`);
   for (const error of errors) console.log(`        ${error}`);

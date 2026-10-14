@@ -3,8 +3,9 @@
 
 import { secondsToTicks, TICK_RATE } from "./constants.ts";
 import { BUTTON_ATTACK, BUTTON_JUMP, degreesToUnits, NEUTRAL_COMMAND, wrapYaw, type InputCommand } from "./input.ts";
+import { enemySpawns, spawnEnemy, type EnemyMode, type EnemySpawn } from "./enemy/enemy.ts";
 import type { Level } from "./level.ts";
-import { length, sub, type Vec3 } from "./math/vec3.ts";
+import { length, sub, vec3, type Vec3 } from "./math/vec3.ts";
 import { createSim, simContext, step, type SimConfig, type SimState } from "./sim.ts";
 
 type Vec3OrNull = readonly [number | null, number | null, number | null];
@@ -16,6 +17,15 @@ export interface Scenario {
   readonly seed?: number;
   readonly duration: number;
   readonly start: { readonly marker: string; readonly yaw: number; readonly pitch?: number };
+  /** Spawn the map's own enemies too (before the scenario's). */
+  readonly map_enemies?: boolean;
+  readonly enemies?: readonly {
+    readonly type: string;
+    readonly marker?: string;
+    readonly position?: readonly [number, number, number];
+    /** Degrees. */
+    readonly yaw: number;
+  }[];
   readonly inputs: readonly {
     readonly until: number;
     readonly yaw?: number;
@@ -40,6 +50,14 @@ export interface Scenario {
     readonly shots?: number;
     /** Where the player's most recent pellet hit a wall or entity, through this tick. */
     readonly last_hit?: Vec3OrNull;
+    readonly enemy?: {
+      /** Place in spawn order: the map's enemies (with map_enemies), then the scenario's. */
+      readonly index: number;
+      readonly mode?: EnemyMode;
+      readonly health?: number;
+      readonly position?: Vec3OrNull;
+      readonly near_player?: number;
+    };
   }[];
 }
 
@@ -107,9 +125,14 @@ export function runScenario(scenario: Scenario, level: Level, config: SimConfig)
 
   const commands = scenarioCommands(scenario);
   const ctx = simContext(level, config);
-  const states: SimState[] = [
-    createSim(config, { origin: marker, yaw: yawUnits(scenario.start.yaw), pitch: degreesToUnits(scenario.start.pitch ?? 0) }, scenario.seed ?? 0),
-  ];
+  const placed = (scenario.enemies ?? []).map((e): EnemySpawn => {
+    const at = e.marker !== undefined ? level.markers.get(e.marker) : e.position && vec3(...e.position);
+    if (!at) throw new Error(`enemy placement ${e.marker ?? "(no marker or position)"} not found in ${scenario.map}`);
+    return spawnEnemy(level, ctx.enemies, e.type, at, e.yaw);
+  });
+  const spawns = [...(scenario.map_enemies ? enemySpawns(level, ctx.enemies) : []), ...placed];
+  const player = { origin: marker, yaw: yawUnits(scenario.start.yaw), pitch: degreesToUnits(scenario.start.pitch ?? 0) };
+  const states: SimState[] = [createSim(config, player, scenario.seed ?? 0, spawns)];
   const shots = [0];
   const lastHits: (Vec3 | null)[] = [null];
   for (const cmd of commands) {
@@ -143,6 +166,19 @@ export function runScenario(scenario: Scenario, level: Level, config: SimConfig)
       failures.push(`weapon: expected ${e.weapon}, got ${p.weapon.current} (${p.weapon.phase})`);
     }
     if (e.shots !== undefined && shots[tick] !== e.shots) failures.push(`shots: expected ${e.shots}, got ${shots[tick]}`);
+    if (e.enemy) {
+      const want = e.enemy;
+      const enemy = states[tick]!.enemies[want.index];
+      if (!enemy) throw new Error(`no enemy ${want.index} in this scenario`);
+      const label = `enemy[${want.index}]`;
+      if (want.mode !== undefined && enemy.mode !== want.mode) failures.push(`${label}.mode: expected ${want.mode}, got ${enemy.mode}`);
+      if (want.health !== undefined && enemy.health !== want.health) failures.push(`${label}.health: expected ${want.health}, got ${enemy.health}`);
+      if (want.position) compare(`${label}.position`, want.position, enemy.origin, tolerance, failures);
+      if (want.near_player !== undefined) {
+        const distance = length(sub(enemy.origin, p.origin));
+        if (distance > want.near_player) failures.push(`${label} near the player: expected within ${want.near_player}, got ${distance.toFixed(1)}`);
+      }
+    }
     if (e.last_hit) {
       const hit = lastHits[tick];
       if (hit) compare("last_hit", e.last_hit, hit, tolerance, failures);

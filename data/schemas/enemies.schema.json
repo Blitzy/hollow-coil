@@ -18,6 +18,7 @@
           "eye_height": { "description": "Eye position above the origin, for line-of-sight checks.", "type": "number" },
           "think_interval": { "description": "Time between AI decisions. Each enemy also gets a per-enemy offset.", "$ref": "common.schema.json#/$defs/seconds" },
           "run_speed": { "description": "Chase speed, units per second.", "type": "number", "exclusiveMinimum": 0 },
+          "turn_speed": { "description": "How fast it turns toward where it's going, in degrees per second (Quake's yaw_speed: a grunt's 20 per think is 200).", "type": "number", "exclusiveMinimum": 0 },
           "sight_range": { "description": "Furthest distance at which the player can be noticed.", "type": "number", "exclusiveMinimum": 0 },
           "field_of_view": { "description": "Full view cone width, in degrees.", "type": "number", "exclusiveMinimum": 0, "maximum": 360 },
           "reaction_delay": { "description": "Delay between first sighting the player and acting.", "$ref": "common.schema.json#/$defs/seconds" },
@@ -40,7 +41,7 @@
             "additionalProperties": false
           }
         },
-        "required": ["classname", "health", "hull", "eye_height", "think_interval", "run_speed", "sight_range", "field_of_view", "reaction_delay", "attack", "pain"],
+        "required": ["classname", "health", "hull", "eye_height", "think_interval", "run_speed", "turn_speed", "sight_range", "field_of_view", "reaction_delay", "attack", "pain"],
         "additionalProperties": false
       }
     }

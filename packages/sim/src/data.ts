@@ -63,6 +63,8 @@ export interface EnemyData {
   readonly eye_height: number;
   readonly think_interval: number;
   readonly run_speed: number;
+  /** Degrees per second. */
+  readonly turn_speed: number;
   readonly sight_range: number;
   /** Full width of the view cone, in degrees. */
   readonly field_of_view: number;

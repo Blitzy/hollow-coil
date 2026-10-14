@@ -8,6 +8,7 @@
       "eye_height": 22,
       "think_interval": 0.1,
       "run_speed": 110,
+      "turn_speed": 200,
       "sight_range": 1500,
       "field_of_view": 120,
       "reaction_delay": 0.6,
