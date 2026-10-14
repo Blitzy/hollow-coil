@@ -22,14 +22,24 @@ Hollow Coil is built with agentic coding. Most of the code is written with an AI
 
 You'll need:
 
-- Python 3.11 or newer
+- [Node.js](https://nodejs.org/) 24 or newer
 - [TrenchBroom](https://trenchbroom.github.io/) 2026.2 or newer, to edit maps
+- Python 3.11 or newer, for now only to link TrenchBroom (below)
 
-Then install the pinned map compiler ([ericw-tools](https://ericw.github.io/ericw-tools/)) into `.tools/`:
+From the repo root, install the dependencies and the pinned map compiler ([ericw-tools](https://ericw.github.io/ericw-tools/)), which goes into `.tools/`:
 
 ```
-python tools/setup.py
+npm install
+npm run setup
 ```
+
+Then play:
+
+```
+npm run dev
+```
+
+and open http://localhost:5173/?map=greybox_01. See [apps/game/README.md](apps/game/README.md) for URL options and how the dev server compiles maps as you edit them.
 
 To edit maps, link the Hollow Coil game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Hollow Coil and set the game path to the repo root (the folder containing `maps` and `textures`):
 
@@ -37,16 +47,7 @@ To edit maps, link the Hollow Coil game config into TrenchBroom, then in TrenchB
 python tools/install_trenchbroom.py
 ```
 
-To play, you'll also need Node.js 24 or newer. Then, from the repo root:
-
-```
-npm install
-npm run dev
-```
-
-and open http://localhost:5173/?map=greybox_01. See [apps/game/README.md](apps/game/README.md) for URL options and how the dev server compiles maps as you edit them.
-
-Other root commands: `npm test` (every app and package), `npm run typecheck`, `npm run build`, and shortcuts for the Python tools: `npm run setup`, `npm run compile`, `npm run validate`.
+Other root commands: `npm test` (every app, package, and tool), `npm run typecheck`, `npm run build`, `npm run compile` (all maps, or name some; `-- --mode release` for full-quality lighting), `npm run validate`, `npm run bspdump -- build/<name>.bsp`, and `npm run check-files`.
 
 ## Repository Layout
 

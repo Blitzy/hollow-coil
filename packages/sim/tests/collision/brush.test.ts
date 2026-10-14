@@ -71,7 +71,7 @@ describe("buildBrush", () => {
 });
 
 describe("bevels match qbsp", () => {
-  // shapes.map and expected.json come from tests/fixtures/bevels/generate.py, which
+  // shapes.map and expected.json come from tests/fixtures/bevels/generate.ts, which
   // compiles the shapes with the pinned qbsp and records the planes it stored.
   const expected: Record<string, number[][]> = JSON.parse(readFileSync(join(FIXTURES, "expected.json"), "utf-8"));
   const world = parseMap(readFileSync(join(FIXTURES, "shapes.map"), "utf-8"))[0]!;

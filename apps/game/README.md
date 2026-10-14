@@ -12,9 +12,9 @@ Tests and type-checking run for the whole repo from the root (`npm test`, `npm r
 
 In the browser, click to capture the mouse, then move with WASD, look with the mouse, and jump with space. The dev server (the `@hollow-coil/dev-server` plugin) serves the repo's `maps/`, `textures/`, `data/`, and `build/` folders at `/game/`, so saving a map in TrenchBroom and reloading the page picks it up. (A production build doesn't bundle those files yet.)
 
-The world is drawn from the compiled `.bsp` with its baked lighting. When the page asks for `build/<name>.bsp` and the `.map` is newer, the dev server compiles it first with `tools/compile.py` in check mode (about a tenth of a second), so lighting stays current. If the compile fails or ericw-tools isn't installed, the page falls back to the unlit `.map` and shows why in the overlay; the full report is in the browser console and the dev server's output. The sim always loads collision and entities from the `.map`. Lights with a `style` animate using the patterns in `data/lightstyles.json`, stepped on sim ticks.
+The world is drawn from the compiled `.bsp` with its baked lighting. When the page asks for `build/<name>.bsp` and the `.map` is newer, the dev server compiles it first in check mode (with `tools/src/compile.ts`) (about a tenth of a second), so lighting stays current. If the compile fails or ericw-tools isn't installed, the page falls back to the unlit `.map` and shows why in the overlay; the full report is in the browser console and the dev server's output. The sim always loads collision and entities from the `.map`. Lights with a `style` animate using the patterns in `data/lightstyles.json`, stepped on sim ticks.
 
-The dev server runs `python` on Windows and `python3` elsewhere; set `PYTHON` to override. Pass Vite options after `--`, such as `npm run dev -- --port 5199`.
+Pass Vite options after `--`, such as `npm run dev -- --port 5199`.
 
 ## URL options
 

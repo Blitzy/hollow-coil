@@ -4,7 +4,7 @@ import { cross, dot, sub } from "@hollow-coil/sim/math/vec3";
 import { BSP_LUMP_NAMES, BspError, faceNormal, lightmapExtents, readBsp } from "@hollow-coil/sim/map/bsp";
 import { parseEntities, parseMap } from "@hollow-coil/sim/map/parse";
 
-// Compiled by tests/fixtures/bsp/generate.py; expected.json holds what tools/bspdump.py reads from it.
+// Compiled by tests/fixtures/bsp/generate.ts; expected.json holds what that script reads from it with its own parser.
 const FIXTURE = "packages/sim/tests/fixtures/bsp";
 
 interface ExpectedFace {

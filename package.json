@@ -19,8 +19,8 @@
     "check-files": "node tools/src/check-files.ts",
     "validate": "node tools/src/validate.ts",
     "bspdump": "node tools/src/bspdump.ts",
-    "compile": "python tools/compile.py",
-    "setup": "python tools/setup.py"
+    "compile": "node tools/src/compile.ts",
+    "setup": "node tools/src/setup.ts"
   },
   "devDependencies": {
     "@types/node": "24.19.0",

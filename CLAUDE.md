@@ -68,16 +68,16 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 
 ## Commands
 
-- `python tools/setup.py [tool ...]`: install pinned third-party tools (ericw-tools) into `.tools/`. Name tools to install only those. `--check` verifies without changing anything; `--force` reinstalls.
-- `python tools/compile.py [map ...] [--mode check|release]`: compile maps to `build/<name>.bsp`. Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
+- `npm run setup [-- tool ...]`: install pinned third-party tools (ericw-tools) into `.tools/`. Name tools to install only those. `-- --check` verifies without changing anything; `-- --force` reinstalls.
+- `npm run compile [-- map ...] [-- --mode check|release]`: compile maps to `build/<name>.bsp`. Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
 - `npm run bspdump -- build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON, read with the game's own `.bsp` reader.
-- `python -m unittest discover -s tools/tests`: test the tools (needs ericw-tools installed).
 - `npm run validate`: validate `data/*.json` and the `spec/*.json` scenarios against their schemas, plus cross-file checks (runs in CI). The checks themselves live in `packages/data`, so editors can use them too.
 - `npm run check-files`: fail if any tracked file is over 2 MB (runs in CI).
 - `python tools/install_trenchbroom.py`: link `maps/trenchbroom` into TrenchBroom's games folder as "Hollow Coil". `--uninstall` removes the link.
 - `python tools/make_placeholder_textures.py`: regenerate the placeholder PNGs in `textures/dev/`.
 
-TypeScript (run from the repo root): `npm install`, then `npm run dev` (play at http://localhost:5173/?map=test_movement; pass Vite options after `--`), `npm test` (Vitest, every app and package), `npm run typecheck` (includes the sim-only check), and `npm run build`. `npm run setup`, `npm run compile`, and `npm run validate` run the Python tools above.
+Everything runs from the repo root: `npm install` once, then `npm run dev` (play at http://localhost:5173/?map=test_movement; pass Vite options after `--`), `npm test` (Vitest: every app, package, and tool; the compile tests need ericw-tools and skip without it), `npm run typecheck` (includes the sim-only check), and `npm run build`.
+
 ## Tools
 
 - Tools in `/tools` are being ported from Python to TypeScript. New and ported tools live in `tools/src/` (tests in `tools/tests/`) and run with plain `node`, which strips TypeScript types itself. That's why the tsconfig sets `erasableSyntaxOnly` (no enums, namespaces, or constructor parameter properties) and relative imports end in `.ts`. Use Node's standard library and our packages; ask before adding a dependency.

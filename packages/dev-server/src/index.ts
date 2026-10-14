@@ -3,9 +3,10 @@
 // use. A request for build/<name>.bsp compiles the map first when it has
 // changed, so saving in TrenchBroom and reloading shows new lighting.
 
-import { execFile } from "node:child_process";
 import { createReadStream, statSync } from "node:fs";
 import { extname, join, normalize, sep } from "node:path";
+import { compileMap, compileOk } from "@hollow-coil/tools/compile";
+import { toolsInstalled } from "@hollow-coil/tools/setup";
 import type { Plugin } from "vite";
 
 /** The repo root: the game root holding maps/, textures/, and data/. */
@@ -18,8 +19,6 @@ const TYPES: Record<string, string> = {
   ".png": "image/png",
   ".bsp": "application/octet-stream",
 };
-const PYTHON = process.env.PYTHON ?? (process.platform === "win32" ? "python" : "python3");
-
 const modified = (path: string): number => {
   try {
     return statSync(path).mtimeMs;
@@ -39,15 +38,18 @@ const compiling = new Map<string, Promise<string | null>>();
 function ensureBsp(root: string, name: string, log: (message: string) => void): Promise<string | null> {
   const map = modified(join(root, "maps", `${name}.map`));
   if (map < 0 || modified(join(root, "build", `${name}.bsp`)) >= map) return Promise.resolve(null);
+  if (!toolsInstalled()) return Promise.resolve("ericw-tools is not installed; run: npm run setup");
   let pending = compiling.get(name);
   if (!pending) {
-    pending = new Promise<string | null>((resolve) => {
-      execFile(PYTHON, [join("tools", "compile.py"), name], { cwd: root }, (error, stdout, stderr) => {
-        compiling.delete(name);
-        const report = `${stdout}${stderr}`.trim();
-        log(error ? `compile failed: ${name}\n${report}` : `compiled ${name}`);
-        resolve(error ? report || error.message : null);
-      });
+    pending = compileMap(join(root, "maps", `${name}.map`), join(root, "build"), "check", root).then((result) => {
+      compiling.delete(name);
+      if (compileOk(result)) {
+        log(`compiled ${name} (${result.seconds.toFixed(1)}s)`);
+        return null;
+      }
+      const report = result.problems.join("\n");
+      log(`compile failed: ${name}\n${report}`);
+      return report;
     });
     compiling.set(name, pending);
   }

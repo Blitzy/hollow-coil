@@ -1,7 +1,8 @@
 name: Maps
 
 # Compiles maps only when something that affects them changes, to save CI
-# minutes (see "CI compiles maps in check mode" in docs/DECISIONS.md).
+# minutes (see "CI compiles maps in check mode" in docs/DECISIONS.md). Also
+# runs the tool tests that need ericw-tools, which the web workflow skips.
 # Keep these path lists in sync.
 on:
   push:
@@ -9,21 +10,17 @@ on:
     paths:
       - "maps/**"
       - "textures/**"
-      - "tools/compile.py"
-      - "tools/bspdump.py"
-      - "tools/setup.py"
-      - "tools/versions.json"
-      - "tools/tests/**"
+      - "tools/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/maps.yml"
   pull_request:
     paths:
       - "maps/**"
       - "textures/**"
-      - "tools/compile.py"
-      - "tools/bspdump.py"
-      - "tools/setup.py"
-      - "tools/versions.json"
-      - "tools/tests/**"
+      - "tools/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/maps.yml"
   workflow_dispatch:
     inputs:
@@ -50,9 +47,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-node@v7.0.0
         with:
-          python-version: "3.11"
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install
+        run: npm ci
 
       - name: Cache tool downloads
         uses: actions/cache@v6
@@ -61,13 +63,13 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('tools/versions.json') }}
 
       - name: Install pinned tools
-        run: python tools/setup.py ericw-tools
+        run: npm run setup -- ericw-tools
 
-      - name: Test tools
-        run: python -m unittest discover -s tools/tests -v
+      - name: Test tools (with ericw-tools)
+        run: npx vitest run tools
 
       - name: Compile maps (${{ env.MODE }} mode)
-        run: python tools/compile.py --mode "$MODE"
+        run: npm run compile -- --mode "$MODE"
 
       - name: Upload release build
         if: env.MODE == 'release'

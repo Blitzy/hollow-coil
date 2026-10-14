@@ -12,7 +12,7 @@ Light entities use ericw-tools' default linear falloff: a light's `light` value 
 
 ## Previewing lighting without the game
 
-TrenchBroom doesn't show baked lighting. To see it without an engine, use `lightpreview`, which ships with ericw-tools: run `.tools/ericw-tools/<version>/lightpreview.exe` (installed by `python tools/setup.py`), open a `.map` from this folder, set the **qbsp** field to `-q2bsp`, leave **common**, **vis**, and **light** empty, and press **Reload**. It compiles next to the map; those outputs are gitignored. Fly with WASD plus Q/E; Alt+1 to Alt+3 switch between lightmapped, lightmap-only, and fullbright views.
+TrenchBroom doesn't show baked lighting. To see it without an engine, use `lightpreview`, which ships with ericw-tools: run `.tools/ericw-tools/<version>/lightpreview.exe` (installed by `npm run setup`), open a `.map` from this folder, set the **qbsp** field to `-q2bsp`, leave **common**, **vis**, and **light** empty, and press **Reload**. It compiles next to the map; those outputs are gitignored. Fly with WASD plus Q/E; Alt+1 to Alt+3 switch between lightmapped, lightmap-only, and fullbright views.
 
 ## Maps
 
