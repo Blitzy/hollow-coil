@@ -165,7 +165,10 @@ Tests:
 
 ### M4: Enemy
 
-- States: idle, alert, chase, attack, pain, dead
+In progress. Enemy AI follows Quake's, infighting included (see `docs/ENEMIES.md`). Done: spawning, the think cadence, and noticing the player by sight. Remaining: damage, chasing, shooting back, the game, and golden demos.
+
+- States: idle, chase, attack, pain, dead. The reaction delay holds the first attack, as in Quake, rather than being a separate alert state.
+- Infighting, as in Quake: an enemy hurt by another enemy turns on it, then returns to the player
 - Movement toward the player using the same world collision as the player, with step-up
 - Think cadence: decisions only on the enemy's think ticks, offset per enemy
 - Line-of-sight checks against world collision
@@ -179,7 +182,7 @@ Tests:
 - Damage at known ranges matches data within tolerance
 - Enemy dies at zero health and stops acting
 - Scenario: a chasing enemy closes distance to the player, steps up stairs, and never passes through walls
-- Golden demo: record a short fight in `greybox_01` with a per-tick state hash, and replay it in CI
+- Golden demo: Ryan records a short fight in `greybox_01` with an in-game recorder; CI replays it against its per-tick state hashes
 
 ### M5: Feel and Presentation
 
@@ -196,7 +199,7 @@ Mostly hands-on tuning by Ryan, with few tests.
 
 - **Unit tests** in Vitest (the sim runs in Node with no Three.js imports).
 - **Scenarios** in /spec: each names a map, a start marker, a timeline of inputs, and expectations at given times (in seconds, converted to ticks by exact rules) with tolerances. They are engine-neutral, so a future port must pass them too. Format and conversion rules are in spec/README.md.
-- **Golden demos** in /demos: recorded inputs plus keyframe snapshots and a per-tick state hash. CI replays them and fails at the first divergent tick. Demos are only valid at the tick rate they were recorded with, so any tick rate experiments (such as 35 Hz) happen before recording goldens.
+- **Golden demos** in /demos: recorded inputs plus keyframe snapshots and a per-tick state hash, with a copy of the /data files they were recorded with. CI replays them with that copy and fails at the first divergent tick, so tuning /data never breaks a demo; only code changes can. After an intentional code change, a command rebaselines a demo from its recorded inputs. Demos are only valid at the tick rate they were recorded with, so any tick rate experiments (such as 35 Hz) happen before recording goldens.
 - **Compile check**: CI compiles every map in fast check mode and fails on leaks, missing textures, or errors. It is part of the single CI job (see DECISIONS.md).
 - **Visual smoke tests**: Playwright screenshots per map.
 
@@ -211,5 +214,4 @@ The sim's only input is one command per tick, in an engine-neutral format used b
 
 ## Open Decisions
 
-- Enemy navigation: Quake-style `movetogoal` (step toward the goal, try other directions when blocked) versus something smarter. Start with the Quake approach.
 - Cross-browser determinism (custom trig or lookup tables), deferred until demos need to play across browsers. Desktop builds sidestep it, since Electron bundles one browser engine.

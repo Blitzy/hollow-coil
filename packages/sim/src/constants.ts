@@ -10,5 +10,8 @@ export const CONTENTS = {
   MONSTERCLIP: 0x20000,
 } as const;
 
+/** Spawn origins are raised 1 unit so nothing starts touching the floor (docs/MOVEMENT.md, Spawning). */
+export const SPAWN_RAISE = 1;
+
 /** Seconds to whole ticks, rounding to the nearest tick (spec/README.md, Conversion rules). */
 export const secondsToTicks = (seconds: number, tickRate = TICK_RATE): number => Math.floor(seconds * tickRate + 0.5);

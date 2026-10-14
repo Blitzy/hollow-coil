@@ -55,6 +55,27 @@ export interface WeaponsData {
   readonly weapons: Readonly<Record<string, WeaponData>>;
 }
 
+export interface EnemyData {
+  /** The map entity classname that spawns this enemy. */
+  readonly classname: string;
+  readonly health: number;
+  readonly hull: HullData;
+  readonly eye_height: number;
+  readonly think_interval: number;
+  readonly run_speed: number;
+  readonly sight_range: number;
+  /** Full width of the view cone, in degrees. */
+  readonly field_of_view: number;
+  readonly reaction_delay: number;
+  readonly attack: { readonly cooldown: number; readonly hitscan: HitscanData };
+  readonly pain: { readonly chance: number; readonly stun: number };
+}
+
+/** data/enemies.json. */
+export interface EnemiesData {
+  readonly enemies: Readonly<Record<string, EnemyData>>;
+}
+
 export interface Hull {
   readonly mins: Vec3;
   readonly maxs: Vec3;

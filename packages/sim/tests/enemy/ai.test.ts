@@ -1,0 +1,122 @@
+import { describe, expect, it } from "vitest";
+import { loadSimConfig, readRepoFile } from "@hollow-coil/testing";
+import { canSee, updateEnemy, type ThinkPlayer } from "@hollow-coil/sim/enemy/ai";
+import { createEnemy, enemyContext, enemySpawns, type EnemyState } from "@hollow-coil/sim/enemy/enemy";
+import { CONTENTS } from "@hollow-coil/sim/constants";
+import { degreesToUnits, NEUTRAL_COMMAND } from "@hollow-coil/sim/input";
+import { levelFromMap, type Level } from "@hollow-coil/sim/level";
+import { vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
+import { createSim, simContext, step, type SimState } from "@hollow-coil/sim/sim";
+import { box, world } from "@hollow-coil/sim/testing/worlds";
+
+const config = loadSimConfig();
+const shotgunner = enemyContext(config.enemies).types.get("shotgunner")!;
+const FLOOR = box([-2048, -2048, -64], [2048, 2048, 0]);
+const OPEN = world(FLOOR);
+
+/** A shotgunner standing at the origin, facing +x (its eye is at z = 46). */
+const enemyAt = (index = 0): EnemyState => createEnemy(2, { type: "shotgunner", origin: vec3(0, 0, 24), yaw: 0 }, shotgunner, index);
+const eyeAt = (x: number, y: number, z = 46): Vec3 => vec3(x, y, z);
+const player = (eye: Vec3): ThinkPlayer => ({ id: 1, eye });
+
+describe("canSee", () => {
+  it("sees a point ahead, in range, with nothing in between", () => {
+    expect(canSee(enemyAt(), shotgunner, OPEN, eyeAt(500, 0))).toBe(true);
+  });
+
+  it("doesn't see beyond sight_range (1500)", () => {
+    expect(canSee(enemyAt(), shotgunner, OPEN, eyeAt(1499, 0))).toBe(true);
+    expect(canSee(enemyAt(), shotgunner, OPEN, eyeAt(1501, 0))).toBe(false);
+  });
+
+  it("sees within 60 degrees of its facing (a 120 degree view), and not beyond", () => {
+    const at = (degrees: number): Vec3 => eyeAt(500 * Math.cos((degrees * Math.PI) / 180), 500 * Math.sin((degrees * Math.PI) / 180));
+    expect(canSee(enemyAt(), shotgunner, OPEN, at(59))).toBe(true);
+    expect(canSee(enemyAt(), shotgunner, OPEN, at(-59))).toBe(true);
+    expect(canSee(enemyAt(), shotgunner, OPEN, at(61))).toBe(false);
+    expect(canSee(enemyAt(), shotgunner, OPEN, at(180))).toBe(false);
+  });
+
+  it("doesn't see through solid walls, but does through windows", () => {
+    expect(canSee(enemyAt(), shotgunner, world(FLOOR, box([200, -64, 0], [232, 64, 128])), eyeAt(500, 0))).toBe(false);
+    expect(canSee(enemyAt(), shotgunner, world(FLOOR, box([200, -64, 0], [232, 64, 128], CONTENTS.WINDOW)), eyeAt(500, 0))).toBe(true);
+  });
+});
+
+describe("updateEnemy", () => {
+  // Enemy 1 (index 1) thinks on ticks 2, 8, 14, and so on.
+  const run = (from: number, to: number, eye: (tick: number) => Vec3, enemy = enemyAt(1)) => {
+    const changes: { tick: number; mode: string; events: number }[] = [];
+    let state = enemy;
+    for (let tick = from; tick <= to; tick++) {
+      const update = updateEnemy(state, tick, shotgunner, OPEN, player(eye(tick)));
+      if (update.enemy.mode !== state.mode || update.events.length > 0) changes.push({ tick, mode: update.enemy.mode, events: update.events.length });
+      state = update.enemy;
+    }
+    return { changes, state };
+  };
+
+  it("thinks every think_interval, from its offset", () => {
+    let enemy = enemyAt(1);
+    const thinks: number[] = [];
+    for (let tick = 1; tick <= 20; tick++) {
+      const next = updateEnemy(enemy, tick, shotgunner, OPEN, player(eyeAt(-500, 0))).enemy; // behind it: never seen
+      if (next.nextThink !== enemy.nextThink) thinks.push(tick);
+      enemy = next;
+    }
+    expect(thinks).toEqual([2, 8, 14, 20]);
+  });
+
+  it("notices the player only on a think tick, then hunts them, holding its first attack for the reaction delay", () => {
+    // The player steps into view on tick 3; the enemy's next think is tick 8.
+    const { changes, state } = run(1, 20, (tick) => (tick < 3 ? eyeAt(-500, 0) : eyeAt(500, 0)));
+    expect(changes).toEqual([{ tick: 8, mode: "chase", events: 1 }]);
+    expect(state).toMatchObject({ mode: "chase", target: 1, attackReadyAt: 8 + 36 });
+  });
+
+  it("reports the sighting", () => {
+    const update = updateEnemy(enemyAt(0), 1, shotgunner, OPEN, player(eyeAt(500, 0)));
+    expect(update.events).toEqual([{ type: "sighted", entity: 2, target: 1 }]);
+  });
+});
+
+describe("enemies in the sim", () => {
+  const openLevel: Level = { world: OPEN, entities: [{ classname: "worldspawn" }], markers: new Map(), playerStart: null };
+
+  /** The tick each enemy first started chasing, by enemy index. */
+  function chaseTicks(level: Level, sim: SimState, ticks: number): (number | null)[] {
+    const ctx = simContext(level, config);
+    const started: (number | null)[] = sim.enemies.map(() => null);
+    let state = sim;
+    for (let t = 0; t < ticks; t++) {
+      state = step(state, NEUTRAL_COMMAND, ctx).state;
+      state.enemies.forEach((e, i) => {
+        if (e.mode === "chase" && started[i] === null) started[i] = state.tick;
+      });
+    }
+    return started;
+  }
+
+  it("gives enemies with different offsets different think ticks", () => {
+    const west = degreesToUnits(180);
+    const spawns = [0, 1, 2].map((i) => ({ type: "shotgunner", origin: vec3(400, i * 64, 24), yaw: west }));
+    const sim = createSim(config, { origin: vec3(0, 0, 24), yaw: 0 }, 0, spawns);
+    expect(sim.enemies.map((e) => e.id)).toEqual([2, 3, 4]);
+    expect(sim.nextEntityId).toBe(5);
+    expect(chaseTicks(openLevel, sim, 12)).toEqual([1, 2, 3]);
+  });
+
+  describe("test_combat", () => {
+    const level = levelFromMap(readRepoFile("maps/test_combat.map"));
+    const spawns = enemySpawns(level, enemyContext(config.enemies));
+    const at = (marker: string): SimState => createSim(config, { origin: level.markers.get(marker)!, yaw: 0 }, 0, spawns);
+
+    it("the east shotgunner doesn't see the player at west through the center wall", () => {
+      expect(chaseTicks(level, at("west"), 120)[0]).toBeNull();
+    });
+
+    it("the north_east shotgunner sees the player at north_west across the open floor", () => {
+      expect(chaseTicks(level, at("north_west"), 12)[1]).toBe(2);
+    });
+  });
+});

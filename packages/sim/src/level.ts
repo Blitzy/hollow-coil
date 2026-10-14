@@ -33,8 +33,9 @@ export class LevelError extends Error {
   override name = "LevelError";
 }
 
-function parseOrigin(text: string | undefined): Vec3 {
-  const parts = (text ?? "0 0 0").trim().split(/\s+/).map(Number);
+/** An entity's "origin" key as a point; the world origin if it has none. */
+export function entityOrigin(entity: EntityProperties): Vec3 {
+  const parts = (entity.origin ?? "0 0 0").trim().split(/\s+/).map(Number);
   return vec3(parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0);
 }
 
@@ -46,8 +47,8 @@ function levelFromEntities(world: CollisionWorld, entities: readonly EntityPrope
   const markers = new Map<string, Vec3>();
   let playerStart: Level["playerStart"] = null;
   for (const p of entities) {
-    if (p.classname === "info_marker" && p.name !== undefined) markers.set(p.name, parseOrigin(p.origin));
-    if (p.classname === "info_player_start" && !playerStart) playerStart = { origin: parseOrigin(p.origin), angle: Number(p.angle ?? 0) };
+    if (p.classname === "info_marker" && p.name !== undefined) markers.set(p.name, entityOrigin(p));
+    if (p.classname === "info_player_start" && !playerStart) playerStart = { origin: entityOrigin(p), angle: Number(p.angle ?? 0) };
   }
   return { world, entities, markers, playerStart };
 }

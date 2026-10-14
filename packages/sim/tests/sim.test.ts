@@ -4,7 +4,8 @@ import { DIST_EPSILON } from "@hollow-coil/sim/collision/trace";
 import { BUTTON_ATTACK, BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "@hollow-coil/sim/input";
 import { levelFromMap } from "@hollow-coil/sim/level";
 import { vec3 } from "@hollow-coil/sim/math/vec3";
-import { createSim, PLAYER_ID, simContext, SPAWN_RAISE, step, type SimState } from "@hollow-coil/sim/sim";
+import { SPAWN_RAISE } from "@hollow-coil/sim/constants";
+import { createSim, PLAYER_ID, simContext, step, type SimState } from "@hollow-coil/sim/sim";
 import { hashState, restore, snapshot } from "@hollow-coil/sim/snapshot";
 
 const config = loadSimConfig();
@@ -109,7 +110,7 @@ describe("determinism, snapshots, and hashes", () => {
 
   it("doesn't depend on key order, and treats -0 like 0", () => {
     const sim = spawnAtCourseStart();
-    const reordered = { player: sim.player, nextEntityId: sim.nextEntityId, rng: sim.rng, tick: sim.tick };
+    const reordered = { enemies: sim.enemies, player: sim.player, nextEntityId: sim.nextEntityId, rng: sim.rng, tick: sim.tick };
     expect(hashState(reordered)).toBe(hashState(sim));
     expect(hashState({ ...sim, player: { ...sim.player, velocity: vec3(-0, 0, -0) } })).toBe(hashState(sim));
   });

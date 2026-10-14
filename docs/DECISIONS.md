@@ -2,6 +2,30 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-14: Golden demos carry their own data
+
+**Decision:** A golden demo stores a copy of the `/data` files it was recorded with (player, weapons, enemies), and replays with that copy instead of the current files. When a code change alters behavior on purpose, a command rebaselines a demo: it replays the recorded inputs on the new code and saves the new state hashes, and the commit message says so. Ryan records demos by playing, with an in-game recorder.
+
+**Why:**
+
+- A demo's per-tick state hash changes with any change to behavior, including tuning. Re-recording by hand after every data tweak would make the M5 feel pass miserable, and demos exist to catch code changes nobody intended, not tuning.
+- A demo that carries its data is self-contained: it replays the same way however `/data` changes later.
+- Rebaselining keeps the recorded inputs, so it takes seconds. The fight can drift (recorded shots may miss an enemy that now moves differently); when it stops being a good fight, record a new one.
+
+**Alternatives considered:** Replaying with the current data (every tweak breaks every demo); scripted demos (repeatable, but test only what the script does, where real play finds what nobody thought to script).
+
+## 2026-10-14: Enemy AI follows Quake's
+
+**Decision:** Enemies follow Quake's monster AI (`ai.qc`, `fight.qc`, `combat.qc`), with rules in `docs/ENEMIES.md`. They notice the player by range, view cone, and line of sight (through windows, as in Quake 2). Spotting the player starts the chase at once and holds the first attack for the reaction delay (Quake's `HuntTarget`), so there's no separate alert state. They navigate with Quake's `movetogoal`: step toward the goal, try other directions when blocked, step up stairs, and don't walk off ledges. They infight as in Quake's `T_Damage`: an enemy hurt by another turns on it, then returns to the player; enemies of the same type don't, unless their data says so (Quake's grunts, our shotgunner's model, do).
+
+**Why:**
+
+- The slice is "in the spirit of" Quake, and the plan's open navigation question already leaned toward `movetogoal`. Quake's AI is simple, readable, and era-authentic, and it reuses our box traces for movement and sight.
+- Doom and Quake both delay the first attack rather than the chase, which reads well: an enemy reacts visibly, then shoots.
+- Infighting (Ryan's call): it makes fights with several enemies emergent, and players can turn enemies on each other, a staple of the era.
+
+**Alternatives considered:** Shots that hurt other enemies without infighting (simpler); shots that pass through enemies (simplest, but enemies become perfect shooters in crowds); smarter navigation such as path graphs (later, if levels need it).
+
 ## 2026-10-13: Weapon switching follows Quake 3
 
 **Decision:** Weapon switching and firing follow Quake 3's `PM_Weapon` (rules in `docs/WEAPONS.md`). A weapon key pressed during the fire cooldown waits for the cooldown to end; then the weapon lowers (`lower_time`) and the new one raises (`raise_time`), with no firing in between. A key pressed while lowering changes which weapon comes up; one pressed while raising starts lowering again. The one change: a raised weapon can fire on the same tick, so a switch takes exactly `lower_time + raise_time`.

@@ -18,7 +18,8 @@ import { ImpactMarks } from "@hollow-coil/render/impacts";
 import type { LightStyleData } from "@hollow-coil/render/light-styles";
 import { buildLevelMeshes, loadTextures, textureNames } from "@hollow-coil/render/level-mesh";
 import { TICK_RATE } from "@hollow-coil/sim/constants";
-import type { PlayerData, WeaponsData } from "@hollow-coil/sim/data";
+import type { EnemiesData, PlayerData, WeaponsData } from "@hollow-coil/sim/data";
+import { enemySpawns } from "@hollow-coil/sim/enemy/enemy";
 import { angleToRadians, degreesToUnits, wrapYaw } from "@hollow-coil/sim/input";
 import { levelFromBsp, levelFromMap, type Level } from "@hollow-coil/sim/level";
 import { readBsp } from "@hollow-coil/sim/map/bsp";
@@ -82,12 +83,17 @@ async function main(): Promise<void> {
   const overlay = document.getElementById("overlay")!;
   overlay.textContent = `loading ${mapName}...`;
 
-  const [playerText, weaponsText, lightStylesText] = await Promise.all([
+  const [playerText, weaponsText, enemiesText, lightStylesText] = await Promise.all([
     fetchText(`${GAME}/data/player.json`),
     fetchText(`${GAME}/data/weapons.json`),
+    fetchText(`${GAME}/data/enemies.json`),
     fetchText(`${GAME}/data/lightstyles.json`),
   ]);
-  const config: SimConfig = { player: JSON.parse(playerText) as PlayerData, weapons: JSON.parse(weaponsText) as WeaponsData };
+  const config: SimConfig = {
+    player: JSON.parse(playerText) as PlayerData,
+    weapons: JSON.parse(weaponsText) as WeaponsData,
+    enemies: JSON.parse(enemiesText) as EnemiesData,
+  };
   const lightStyles = JSON.parse(lightStylesText) as LightStyleData;
   const brightness = Number(params.get("brightness") ?? DEFAULT_BRIGHTNESS);
   const world = await loadLevel(mapName, lightStyles, params.get("lighting") !== "off", Number.isFinite(brightness) ? brightness : DEFAULT_BRIGHTNESS);
@@ -128,7 +134,7 @@ async function main(): Promise<void> {
   const weaponData = config.weapons.weapons;
   const slots = config.player.weapons.map((id) => weaponData[id]!.slot).sort((a, b) => a - b);
 
-  let previous: SimState = createSim(config, { origin: start.origin, yaw: startYaw });
+  let previous: SimState = createSim(config, { origin: start.origin, yaw: startYaw }, 0, enemySpawns(level, ctx.enemies));
   let current = previous;
   const stepper = new FixedStep(TICK_RATE);
   let lastTime = performance.now();

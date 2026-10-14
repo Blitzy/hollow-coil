@@ -2,7 +2,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { PlayerData, WeaponsData } from "@hollow-coil/sim/data";
+import type { EnemiesData, PlayerData, WeaponsData } from "@hollow-coil/sim/data";
 import type { SimConfig } from "@hollow-coil/sim/sim";
 
 export const REPO_ROOT = join(import.meta.dirname, "../../..");
@@ -15,5 +15,7 @@ export const loadPlayerData = (): PlayerData => JSON.parse(readRepoFile("data/pl
 
 export const loadWeaponsData = (): WeaponsData => JSON.parse(readRepoFile("data/weapons.json")) as WeaponsData;
 
+export const loadEnemiesData = (): EnemiesData => JSON.parse(readRepoFile("data/enemies.json")) as EnemiesData;
+
 /** The sim's config from the repo's /data files. */
-export const loadSimConfig = (): SimConfig => ({ player: loadPlayerData(), weapons: loadWeaponsData() });
+export const loadSimConfig = (): SimConfig => ({ player: loadPlayerData(), weapons: loadWeaponsData(), enemies: loadEnemiesData() });
