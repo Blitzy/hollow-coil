@@ -1,5 +1,5 @@
 // Compiles small fixture maps with the pinned ericw-tools. Skipped when the
-// tools aren't installed (npm run setup); CI's maps workflow installs them.
+// tools aren't installed (npm run setup); CI installs them before testing.
 
 import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

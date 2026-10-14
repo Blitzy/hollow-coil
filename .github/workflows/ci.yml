@@ -1,9 +1,18 @@
 name: CI
 
+# One job for everything: setup (checkout, Node, npm ci) is most of the run,
+# and GitHub bills each job rounded up to a whole minute, so one job is cheaper
+# than several (see "CI is one job" in docs/DECISIONS.md). Docs-only changes skip it.
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   workflow_dispatch:
 
 concurrency:
@@ -14,8 +23,8 @@ permissions:
   contents: read
 
 jobs:
-  shared:
-    name: Validate
+  ci:
+    name: Check, test, and compile
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -30,11 +39,28 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Cache tool downloads
+        uses: actions/cache@v6
+        with:
+          path: .tools/downloads
+          key: tools-${{ runner.os }}-${{ hashFiles('tools/versions.json') }}
+
+      # Before the tests, so the tests that need ericw-tools run instead of skipping.
+      - name: Install pinned tools
+        run: npm run setup -- ericw-tools
+
       - name: Check file sizes
         run: npm run check-files
 
       - name: Validate data and scenarios
         run: npm run validate
 
-  # Map compiles run in maps.yml, and the TypeScript tests (the validator's included) in web.yml,
-  # each only when relevant files change.
+      - name: Type-check (including the sim-only check)
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      # Fast lighting: leaks, missing textures, and compiler errors fail the build.
+      - name: Check maps compile
+        run: npm run compile -- --mode check

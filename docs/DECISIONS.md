@@ -2,6 +2,19 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-13: CI is one job
+
+**Decision:** CI is a single workflow (`ci.yml`) with a single job: install, then install the pinned ericw-tools, check file sizes, validate, type-check, run every test, and compile every map in check mode. It runs on pushes to main and on pull requests, skipping changes that touch only docs (`docs/**`, `**/*.md`). The separate maps and web workflows, their per-folder path filters, and the manual release-build artifact are gone; full-quality builds run locally (`npm run compile -- --mode release`). This supersedes "CI compiles maps in check mode, only when maps change" (below).
+
+**Why:**
+
+- Setup is most of a run. On the last push the three workflows did about 25 seconds of real work, but each job is billed rounded up to a whole minute, so it cost 3 minutes. One job costs 1.
+- Compiling every map in check mode takes under a second today, so it doesn't need its own trigger. The path filters rarely saved anything anyway: nearly every code push touched files that triggered all three workflows.
+- With ericw-tools installed before the tests, the tests that need it (compiling fixtures, and comparing real maps' `.map` and `.bsp` levels) run in CI instead of skipping. A leak still fails CI, as the testing rules require, even when a change wasn't compiled locally first.
+- Release builds are deployments, which the project doesn't need yet.
+
+**Alternatives considered:** Keeping separate path-filtered workflows (more billed minutes for the same work); one workflow with per-job path filters through a third-party action (another dependency, for savings measured in seconds); dropping map compiles from CI and relying on local compiles (saves about two seconds, but loses the leak check and the tests that need ericw-tools). If check-mode compiles get slow as maps grow, split them out again or cache compiled maps by content hash.
+
 ## 2026-10-13: Tools are TypeScript, run with plain node
 
 **Decision:** Every tool in `/tools` is TypeScript (`tools/src/`, tested with Vitest in `tools/tests/`), run directly by Node 24, which strips types itself, so there is no build step and Python is no longer needed. To make that work everywhere, the tsconfig sets `erasableSyntaxOnly` (no enums, namespaces, or constructor parameter properties) and relative imports end in `.ts`. Logic other apps need lives in packages, with the tool as a thin wrapper: data validation is `packages/data` (browser-safe, for editors), and `bspdump` reads files with the game's own `.bsp` reader. ericw-tools is still pinned and checksummed in `tools/versions.json`; `setup` unpacks it with a small zip reader on `node:zlib`, so there are still no dependencies.
@@ -162,6 +175,8 @@ AI-generated art and other assets aren't ruled out, but they're decided case by 
 **Alternatives considered:** Keeping `maps/textures/` and passing paths everywhere (works for our scripts but not for tools that infer paths); a link from `textures/` to `maps/textures/` (fragile on Windows and confusing).
 
 ## 2026-10-11: CI compiles maps in check mode, only when maps change
+
+*Superseded on 2026-10-13: CI is one job that always compiles in check mode (see "CI is one job" above). The two lighting modes carried over unchanged.*
 
 **Decision:** `tools/compile.py` has two lighting modes: `check` (fast, the default) and `release` (full quality, `-extra4`). CI compiles every map in check mode, in a separate `maps.yml` workflow that runs only when map-related files change (maps, textures, the compile and setup scripts, the tool versions). Release builds run locally or through a manual run of that workflow, which uploads the .bsp files as an artifact. Compiled-output caching is deferred until the number of maps makes it worthwhile.
 

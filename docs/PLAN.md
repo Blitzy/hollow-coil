@@ -195,7 +195,7 @@ Mostly hands-on tuning by Ryan, with few tests.
 - **Unit tests** in Vitest (the sim runs in Node with no Three.js imports).
 - **Scenarios** in /spec: each names a map, a start marker, a timeline of inputs, and expectations at given times (in seconds, converted to ticks by exact rules) with tolerances. They are engine-neutral, so a future port must pass them too. Format and conversion rules are in spec/README.md.
 - **Golden demos** in /demos: recorded inputs plus keyframe snapshots and a per-tick state hash. CI replays them and fails at the first divergent tick. Demos are only valid at the tick rate they were recorded with, so any tick rate experiments (such as 35 Hz) happen before recording goldens.
-- **Compile check**: CI compiles every map in fast check mode and fails on leaks, missing textures, or errors. It runs only when map-related files change (see DECISIONS.md).
+- **Compile check**: CI compiles every map in fast check mode and fails on leaks, missing textures, or errors. It is part of the single CI job (see DECISIONS.md).
 - **Visual smoke tests**: Playwright screenshots per map.
 
 ## Input Commands
