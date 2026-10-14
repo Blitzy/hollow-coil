@@ -3,10 +3,10 @@
 // side it faces. The dead lie flat. Positions are interpolated between ticks.
 
 import * as THREE from "three";
-import type { Hull } from "@hollow-coil/sim/data";
-import type { EnemyMode, EnemyState } from "@hollow-coil/sim/enemy/enemy";
-import { angleToRadians } from "@hollow-coil/sim/input";
-import { vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
+import type { Hull } from "@mandreljs/sim/data";
+import type { EnemyMode, EnemyState } from "@mandreljs/sim/enemy/enemy";
+import { angleToRadians } from "@mandreljs/sim/input";
+import { vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
 import { toThree } from "./coords.ts";
 
 export const MODE_COLORS: Readonly<Record<EnemyMode, number>> = {

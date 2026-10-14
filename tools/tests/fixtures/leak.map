@@ -1,4 +1,4 @@
-// Game: Hollow Coil
+// Game: Mandrel.js Example
 // Format: Quake2 (Valve)
 // Compile test fixture: the north wall is missing. Must fail with a leak.
 {

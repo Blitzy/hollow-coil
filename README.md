@@ -1,6 +1,8 @@
-# Hollow Coil
+# Mandrel.js
 
-An open-source first-person shooter in the spirit of mid-90s shooters like Doom and Quake. Levels are hand-authored and abstract rather than realistic, built for fun, variety, and fast combat. It is not currently intended to be a commercial product.
+An open-source web engine for first-person shooters in the spirit of mid-90s shooters like Doom and Quake, with a free example game to play and test it with.
+
+Levels are hand-authored and abstract rather than realistic, made for fun, variety, and fast combat. (A mandrel is the core a coil is wound around and takes its shape from.)
 
 ## Status
 
@@ -16,7 +18,7 @@ See [docs/PLAN.md](docs/PLAN.md) for the current plan.
 
 ## How It's Made
 
-Hollow Coil is built with agentic coding. Most of the code is written with an AI coding agent ([Claude Code](https://claude.com/claude-code)), and every change is reviewed by a human before it's committed. The content you play is made by hand: levels are built in TrenchBroom, and weapon tuning, encounters, and art direction are human decisions. The agent handles the plumbing so more time goes into the parts that make a game feel good. See [docs/DECISIONS.md](docs/DECISIONS.md) for the reasoning and how AI-generated assets are handled.
+Mandrel.js is built with agentic coding. Most of the code is written with an AI coding agent ([Claude Code](https://claude.com/claude-code)), and every change is reviewed by a human before it's committed. The content you play is made by hand: levels are built in TrenchBroom, and weapon tuning, encounters, and art direction are human decisions. The agent handles the plumbing so more time goes into the parts that make a game feel good. See [docs/DECISIONS.md](docs/DECISIONS.md) for the reasoning and how AI-generated assets are handled.
 
 ## Getting Started
 
@@ -40,7 +42,7 @@ npm run dev
 
 and open http://localhost:5173/?map=greybox_01. See [apps/game/README.md](apps/game/README.md) for URL options and how the dev server compiles maps as you edit them.
 
-To edit maps, link the Hollow Coil game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Hollow Coil and set the game path to the repo root (the folder containing `maps` and `textures`):
+To edit maps, link the Mandrel.js Example game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Mandrel.js Example and set the game path to the repo root (the folder containing `maps` and `textures`):
 
 ```
 npm run install-trenchbroom
@@ -62,7 +64,7 @@ Other root commands: `npm test` (every app, package, and tool), `npm run typeche
 | `packages/` | Shared TypeScript libraries: `sim/` (simulation and file formats), `render/` (Three.js presentation), `dev-server/` (serves game files in development), `testing/` (test helpers) |
 | `docs/` | Plan, decision log, and the movement reference |
 
-The TypeScript side is one [npm workspace](https://docs.npmjs.com/cli/using-npm/workspaces): install once at the root, and apps import packages as `@hollow-coil/<name>/<module>`, straight from source with no build step.
+The TypeScript side is one [npm workspace](https://docs.npmjs.com/cli/using-npm/workspaces): install once at the root, and apps import packages as `@mandreljs/<name>/<module>`, straight from source with no build step.
 
 ## Contributing
 
@@ -70,4 +72,4 @@ Project guidelines live in [CLAUDE.md](CLAUDE.md). Design decisions and their re
 
 ## License
 
-Hollow Coil's code is licensed under the [GNU General Public License v3.0 or later](LICENSE), with an additional permission for linking with platform SDKs such as Steamworks. See [LICENSE-EXCEPTION.md](LICENSE-EXCEPTION.md) for details, including how game assets are handled.
+Mandrel.js is licensed under the [GNU General Public License v3.0 or later](LICENSE), with an additional permission for linking with platform SDKs such as Steamworks. The example content (maps, textures, and gameplay data) is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See [LICENSE-EXCEPTION.md](LICENSE-EXCEPTION.md) for exactly which files are covered by which license.

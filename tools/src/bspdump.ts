@@ -1,6 +1,6 @@
 // Prints a compiled Quake 2 .bsp's contents as JSON: entities, element counts,
 // textures used, and lightmap stats. Built on the game's own .bsp reader
-// (@hollow-coil/sim/map/bsp), so tools and game read the format one way.
+// (@mandreljs/sim/map/bsp), so tools and game read the format one way.
 //
 // Lightmap sizes are computed from face geometry the way Quake 2 does (one
 // luxel per 16 texels) and checked against the lighting data: each face's
@@ -14,8 +14,8 @@
 
 import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
-import { BSP_LUMP_NAMES, BspError, lightmapExtents, readBsp, type Bsp } from "@hollow-coil/sim/map/bsp";
-import { parseEntities } from "@hollow-coil/sim/map/parse";
+import { BSP_LUMP_NAMES, BspError, lightmapExtents, readBsp, type Bsp } from "@mandreljs/sim/map/bsp";
+import { parseEntities } from "@mandreljs/sim/map/parse";
 import { isMain } from "./repo.ts";
 
 /** Bytes per record, for lumps that are arrays of fixed-size records. */

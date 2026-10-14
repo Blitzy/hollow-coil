@@ -1,6 +1,6 @@
 // Turns the player's held keys and mouse-look angles into the sim's quantized input command.
 
-import { ANGLE_UNITS_PER_TURN, BUTTON_ATTACK, BUTTON_JUMP, wrapYaw, type InputCommand } from "@hollow-coil/sim/input";
+import { ANGLE_UNITS_PER_TURN, BUTTON_ATTACK, BUTTON_JUMP, wrapYaw, type InputCommand } from "@mandreljs/sim/input";
 
 export interface HeldInput {
   /** View yaw in radians, accumulated from the mouse at full precision. */

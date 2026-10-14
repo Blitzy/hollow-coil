@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { loadEnemiesData, readRepoFile } from "@hollow-coil/testing";
-import { DIST_EPSILON } from "@hollow-coil/sim/collision/trace";
-import { createEnemy, enemyContext, enemySpawns } from "@hollow-coil/sim/enemy/enemy";
-import { levelFromMap, type Level } from "@hollow-coil/sim/level";
-import { vec3 } from "@hollow-coil/sim/math/vec3";
-import { box, world } from "@hollow-coil/sim/testing/worlds";
+import { loadEnemiesData, readRepoFile } from "@mandreljs/testing";
+import { DIST_EPSILON } from "@mandreljs/sim/collision/trace";
+import { createEnemy, enemyContext, enemySpawns } from "@mandreljs/sim/enemy/enemy";
+import { levelFromMap, type Level } from "@mandreljs/sim/level";
+import { vec3 } from "@mandreljs/sim/math/vec3";
+import { box, world } from "@mandreljs/sim/testing/worlds";
 
 const ctx = enemyContext(loadEnemiesData());
 const shotgunner = ctx.types.get("shotgunner")!;

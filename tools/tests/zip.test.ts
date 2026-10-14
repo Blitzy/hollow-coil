@@ -58,7 +58,7 @@ function makeZip(entries: TestEntry[]): Uint8Array {
 describe("zip", () => {
   const dirs: string[] = [];
   const tempDir = (): string => {
-    const dir = mkdtempSync(join(tmpdir(), "hc-zip-"));
+    const dir = mkdtempSync(join(tmpdir(), "mandrel-zip-"));
     dirs.push(dir);
     return dir;
   };

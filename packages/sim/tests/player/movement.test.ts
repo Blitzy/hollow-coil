@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { loadPlayerData } from "@hollow-coil/testing";
-import { TICK_RATE } from "@hollow-coil/sim/constants";
-import { hullFromData } from "@hollow-coil/sim/data";
-import { BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "@hollow-coil/sim/input";
-import { length, vec3, ZERO, type Vec3 } from "@hollow-coil/sim/math/vec3";
-import { box, rampX, world } from "@hollow-coil/sim/testing/worlds";
-import { DIST_EPSILON, type CollisionWorld } from "@hollow-coil/sim/collision/trace";
+import { loadPlayerData } from "@mandreljs/testing";
+import { TICK_RATE } from "@mandreljs/sim/constants";
+import { hullFromData } from "@mandreljs/sim/data";
+import { BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "@mandreljs/sim/input";
+import { length, vec3, ZERO, type Vec3 } from "@mandreljs/sim/math/vec3";
+import { box, rampX, world } from "@mandreljs/sim/testing/worlds";
+import { DIST_EPSILON, type CollisionWorld } from "@mandreljs/sim/collision/trace";
 import {
   accelerate, airAccelerate, asWallIfSteep, categorizePosition, clipVelocity, friction, playerMove, withoutPushInto,
   type MovementContext, type Mover, type PlayerBody,
-} from "@hollow-coil/sim/player/movement";
+} from "@mandreljs/sim/player/movement";
 
 const player = loadPlayerData();
 const mv = player.movement;

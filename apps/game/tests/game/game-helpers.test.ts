@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUTTON_ATTACK, BUTTON_JUMP } from "@hollow-coil/sim/input";
+import { BUTTON_ATTACK, BUTTON_JUMP } from "@mandreljs/sim/input";
 import { buildCommand, MAX_PITCH, type HeldInput } from "../../src/game/command.ts";
 import { FixedStep } from "../../src/game/fixed-step.ts";
 import { lockPointer } from "../../src/game/input.ts";

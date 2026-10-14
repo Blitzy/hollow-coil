@@ -2,8 +2,8 @@
 // light styles into it. Plain data, no Three.js: the renderer uploads the
 // composed RGBA bytes as a texture and re-composes when light styles change.
 
-import { lightmapExtents, texelCoords, LUXEL_SIZE, type Bsp } from "@hollow-coil/sim/map/bsp";
-import type { Vec3 } from "@hollow-coil/sim/math/vec3";
+import { lightmapExtents, texelCoords, LUXEL_SIZE, type Bsp } from "@mandreljs/sim/map/bsp";
+import type { Vec3 } from "@mandreljs/sim/math/vec3";
 
 /** Where one face's lightmap sits in the atlas, in luxels. */
 export interface AtlasBlock {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { CONTENTS } from "@hollow-coil/sim/constants";
-import { vec3, ZERO } from "@hollow-coil/sim/math/vec3";
-import { box, rampX, world } from "@hollow-coil/sim/testing/worlds";
-import { DIST_EPSILON, trace } from "@hollow-coil/sim/collision/trace";
+import { CONTENTS } from "@mandreljs/sim/constants";
+import { vec3, ZERO } from "@mandreljs/sim/math/vec3";
+import { box, rampX, world } from "@mandreljs/sim/testing/worlds";
+import { DIST_EPSILON, trace } from "@mandreljs/sim/collision/trace";
 
 const PLAYER_MINS = vec3(-16, -16, -24);
 const PLAYER_MAXS = vec3(16, 16, 32);

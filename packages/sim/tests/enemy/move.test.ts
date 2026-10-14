@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { DIST_EPSILON } from "@hollow-coil/sim/collision/trace";
-import { ENEMY_MASK } from "@hollow-coil/sim/enemy/enemy";
-import { changeYaw, checkBottom, closeEnough, moveStep, moveToward, newChaseDir, yawDelta, type ChaseChooser } from "@hollow-coil/sim/enemy/move";
-import { vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
-import { box, world } from "@hollow-coil/sim/testing/worlds";
+import { DIST_EPSILON } from "@mandreljs/sim/collision/trace";
+import { ENEMY_MASK } from "@mandreljs/sim/enemy/enemy";
+import { changeYaw, checkBottom, closeEnough, moveStep, moveToward, newChaseDir, yawDelta, type ChaseChooser } from "@mandreljs/sim/enemy/move";
+import { vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
+import { box, world } from "@mandreljs/sim/testing/worlds";
 
 const HULL = { mins: vec3(-16, -16, -24), maxs: vec3(16, 16, 32) };
 const FLOOR = box([-512, -512, -64], [512, 512, 0]);

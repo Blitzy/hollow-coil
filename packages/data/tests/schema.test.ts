@@ -1,6 +1,6 @@
-import { readRepoFile } from "@hollow-coil/testing";
+import { readRepoFile } from "@mandreljs/testing";
 import { describe, expect, it } from "vitest";
-import { jsonType, SchemaError, SchemaValidator } from "@hollow-coil/data/schema";
+import { jsonType, SchemaError, SchemaValidator } from "@mandreljs/data/schema";
 
 /** Validates value against a schema given inline, with any other schema files it references. */
 function check(schema: object, value: unknown, otherFiles: Record<string, object> = {}): string[] {

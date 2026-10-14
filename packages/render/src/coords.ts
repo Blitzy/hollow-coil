@@ -1,7 +1,7 @@
 // Quake is Z-up; Three.js is Y-up. Everything crosses between them here.
 // The mapping (x, y, z) -> (x, z, -y) is a rotation, so triangle winding is preserved.
 
-import type { Vec3 } from "@hollow-coil/sim/math/vec3";
+import type { Vec3 } from "@mandreljs/sim/math/vec3";
 
 export const toThree = (v: Vec3): [number, number, number] => [v.x, v.z, -v.y];
 

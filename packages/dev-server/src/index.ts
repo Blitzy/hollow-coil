@@ -5,8 +5,8 @@
 
 import { createReadStream, statSync } from "node:fs";
 import { extname, join, normalize, sep } from "node:path";
-import { compileMap, compileOk } from "@hollow-coil/tools/compile";
-import { toolsInstalled } from "@hollow-coil/tools/setup";
+import { compileMap, compileOk } from "@mandreljs/tools/compile";
+import { toolsInstalled } from "@mandreljs/tools/setup";
 import type { Plugin } from "vite";
 
 /** The repo root: the game root holding maps/, textures/, and data/. */
@@ -59,9 +59,9 @@ function ensureBsp(root: string, name: string, log: (message: string) => void): 
 /** Serves the repo's game files at /game/ and compiles stale maps on request. */
 export function gameFiles(root: string = REPO_ROOT): Plugin {
   return {
-    name: "hollow-coil-game-files",
+    name: "mandreljs-game-files",
     configureServer(server) {
-      const log = (message: string): void => server.config.logger.info(`[hollow-coil] ${message}`, { timestamp: true });
+      const log = (message: string): void => server.config.logger.info(`[mandreljs] ${message}`, { timestamp: true });
       server.middlewares.use("/game", (req, res, next) => {
         const path = normalize(decodeURIComponent((req.url ?? "/").split("?")[0]!)).replace(/^[\\/]+/, "");
         const parts = path.split(sep);

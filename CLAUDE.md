@@ -1,20 +1,23 @@
-# Hollow Coil Project Guidelines
+# Mandrel.js Project Guidelines
 
 ## What This Is
 
-Hollow Coil is an open-source first-person shooter in the spirit of mid-90s shooters like Doom and Quake. Levels are hand-authored and abstract rather than realistic, built for fun, variety, and fast combat. The game is not currently intended to be a commercial product.
+Mandrel.js is an open-source web engine for first-person shooters in the spirit of mid-90s shooters like Doom and Quake. This repo holds the engine plus a free example game to play and test it with. Levels are hand-authored and abstract rather than realistic, built for fun, variety, and fast combat.
+
+A game made with Mandrel.js keeps its own content in its own repo under its own license; this repo holds only the engine and its example content (see DECISIONS.md, 2026-10-14).
 
 The current work plan lives in `docs/PLAN.md`. Decisions and their reasons go in `docs/DECISIONS.md`. Player movement and world collision must follow `docs/MOVEMENT.md`, weapons `docs/WEAPONS.md`, and enemies `docs/ENEMIES.md`.
 
-The game is built for the web (TypeScript + Three.js); desktop builds will wrap it in Electron. A Godot version was built through M1 for comparison and then dropped (see DECISIONS.md).
+The engine is built for the web (TypeScript + Three.js); desktop builds will wrap it in Electron. A Godot version was built through M1 for comparison and then dropped (see DECISIONS.md).
 
-The TypeScript code is an npm workspace. `apps/` holds things you run (`apps/game` is the game; editors and tools will join it). `packages/` holds shared libraries: `sim` (simulation and file formats), `render` (Three.js presentation), `dev-server` (the development Vite plugin), and `testing` (Node-only test helpers). Apps import packages by module path (`@hollow-coil/sim/map/bsp`), straight from TypeScript source. Shared code goes in a package, never imported from another app. Only `apps/game` ships to players.
+The TypeScript code is an npm workspace. `apps/` holds things you run (`apps/game` is the game; editors and tools will join it). `packages/` holds shared libraries: `sim` (simulation and file formats), `render` (Three.js presentation), `dev-server` (the development Vite plugin), and `testing` (Node-only test helpers). Apps import packages by module path (`@mandreljs/sim/map/bsp`), straight from TypeScript source. Shared code goes in a package, never imported from another app. Only `apps/game` ships to players.
 
 ## Design Principles
 
 - Feel over realism. Movement, weapon response, and enemy readability matter more than physical accuracy.
 - Authored levels. Tools exist to support hand design, not replace it.
 - Data-driven gameplay. Weapons, enemies, and movement constants live in `/data`, not in code.
+- Behavior lives in the engine; content combines it. Content never contains code. A new behavior is a generic engine action, named for what it does and never for one monster, plus example content and tests that use it.
 - Era-authentic presentation, with options rather than a single locked look.
 
 ## Pipeline
@@ -48,7 +51,7 @@ The simulation is strictly separated from presentation. These rules are not opti
 
 - TypeScript in strict mode.
 - Prefer small, readable modules over clever abstractions.
-- Tests live in each app's or package's `tests/` folder, mirroring `src/` (`packages/sim/src/map/bsp.ts` is tested by `packages/sim/tests/map/bsp.test.ts`). Package tests import the package by module path (`@hollow-coil/sim/map/bsp`), as other code does.
+- Tests live in each app's or package's `tests/` folder, mirroring `src/` (`packages/sim/src/map/bsp.ts` is tested by `packages/sim/tests/map/bsp.test.ts`). Package tests import the package by module path (`@mandreljs/sim/map/bsp`), as other code does.
 
 ## Commit Messages
 
@@ -62,6 +65,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 ## Licensing
 
 - Code is GPLv3 or later, with an additional permission for platform SDKs (`LICENSE`, `LICENSE-EXCEPTION.md`).
+- Example content (maps, textures, gameplay data values, and future example audio and models) is CC BY 4.0. `LICENSE-EXCEPTION.md` lists which files are covered by which license; keep that list current when adding a new kind of content.
 - Adapting code from Quake, ericw-tools, or other GPLv2-or-later / GPLv3 projects is allowed. Credit the source in a comment next to the adapted code.
 - Do not copy code from GPLv2-only projects; it cannot be combined with GPLv3.
 - New dependencies must have GPLv3-compatible licenses (MIT, BSD, Apache-2.0, LGPL, GPLv3, and similar). Ask before adding anything else.
@@ -73,7 +77,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 - `npm run bspdump -- build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON, read with the game's own `.bsp` reader.
 - `npm run validate`: validate `data/*.json` and the `spec/*.json` scenarios against their schemas, plus cross-file checks (runs in CI). The checks themselves live in `packages/data`, so editors can use them too.
 - `npm run check-files`: fail if any tracked file is over 2 MB (runs in CI).
-- `npm run install-trenchbroom`: link `maps/trenchbroom` into TrenchBroom's games folder as "Hollow Coil". `-- --uninstall` removes the link.
+- `npm run install-trenchbroom`: link `maps/trenchbroom` into TrenchBroom's games folder as "Mandrel.js Example" (and remove links left under earlier names). `-- --uninstall` removes the link.
 - `npm run make-placeholder-textures`: regenerate the placeholder PNGs in `textures/dev/`.
 
 Everything runs from the repo root: `npm install` once, then `npm run dev` (play at http://localhost:5173/?map=test_movement; pass Vite options after `--`), `npm test` (Vitest: every app, package, and tool; the compile tests need ericw-tools and skip without it), `npm run typecheck` (includes the sim-only check), and `npm run build`.

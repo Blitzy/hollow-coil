@@ -3,11 +3,11 @@
 // brushes are matched by shape, and planes and sweep results to within float
 // precision.
 
-import type { Plane } from "@hollow-coil/sim/collision/plane";
-import { trace, type CollisionBrush } from "@hollow-coil/sim/collision/trace";
-import type { Level } from "@hollow-coil/sim/level";
-import { vec3, ZERO, type Vec3 } from "@hollow-coil/sim/math/vec3";
-import { nextRandom, seedRandom } from "@hollow-coil/sim/rng";
+import type { Plane } from "@mandreljs/sim/collision/plane";
+import { trace, type CollisionBrush } from "@mandreljs/sim/collision/trace";
+import type { Level } from "@mandreljs/sim/level";
+import { vec3, ZERO, type Vec3 } from "@mandreljs/sim/math/vec3";
+import { nextRandom, seedRandom } from "@mandreljs/sim/rng";
 
 export const NORMAL_TOLERANCE = 1e-5;
 export const DIST_TOLERANCE = 1e-3;

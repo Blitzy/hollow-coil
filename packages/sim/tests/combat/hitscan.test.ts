@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { loadEnemiesData, loadWeaponsData, readRepoFile } from "@hollow-coil/testing";
-import { aimAngles, aimVectors, eyePosition, fireHitscan, rayBoxFraction, type HitTarget, type PelletHit } from "@hollow-coil/sim/combat/hitscan";
-import { entityBox } from "@hollow-coil/sim/collision/box";
-import { DIST_EPSILON } from "@hollow-coil/sim/collision/trace";
-import { CONTENTS } from "@hollow-coil/sim/constants";
-import type { HitscanData } from "@hollow-coil/sim/data";
-import { degreesToUnits } from "@hollow-coil/sim/input";
-import { levelFromMap } from "@hollow-coil/sim/level";
-import { dot, vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
-import { nextRandom } from "@hollow-coil/sim/rng";
-import { box, world } from "@hollow-coil/sim/testing/worlds";
+import { loadEnemiesData, loadWeaponsData, readRepoFile } from "@mandreljs/testing";
+import { aimAngles, aimVectors, eyePosition, fireHitscan, rayBoxFraction, type HitTarget, type PelletHit } from "@mandreljs/sim/combat/hitscan";
+import { entityBox } from "@mandreljs/sim/collision/box";
+import { DIST_EPSILON } from "@mandreljs/sim/collision/trace";
+import { CONTENTS } from "@mandreljs/sim/constants";
+import type { HitscanData } from "@mandreljs/sim/data";
+import { degreesToUnits } from "@mandreljs/sim/input";
+import { levelFromMap } from "@mandreljs/sim/level";
+import { dot, vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
+import { nextRandom } from "@mandreljs/sim/rng";
+import { box, world } from "@mandreljs/sim/testing/worlds";
 
 const weapons = loadWeaponsData().weapons;
 const straight = (range = 1000): HitscanData => ({ pellets: 1, damage: 10, spread: { horizontal: 0, vertical: 0 }, range });

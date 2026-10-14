@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { readRepoBytes, readRepoFile } from "@hollow-coil/testing";
-import { CONTENTS } from "@hollow-coil/sim/constants";
-import { cross, dot, sub, vec3 } from "@hollow-coil/sim/math/vec3";
-import { BSP_LUMP_NAMES, BspError, faceNormal, lightmapExtents, modelBrushes, readBsp, type Bsp } from "@hollow-coil/sim/map/bsp";
-import { parseEntities, parseMap } from "@hollow-coil/sim/map/parse";
+import { readRepoBytes, readRepoFile } from "@mandreljs/testing";
+import { CONTENTS } from "@mandreljs/sim/constants";
+import { cross, dot, sub, vec3 } from "@mandreljs/sim/math/vec3";
+import { BSP_LUMP_NAMES, BspError, faceNormal, lightmapExtents, modelBrushes, readBsp, type Bsp } from "@mandreljs/sim/map/bsp";
+import { parseEntities, parseMap } from "@mandreljs/sim/map/parse";
 
 // Compiled by tests/fixtures/bsp/generate.ts; expected.json holds what that script reads from it with its own parser.
 const FIXTURE = "packages/sim/tests/fixtures/bsp";

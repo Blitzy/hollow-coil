@@ -8,13 +8,13 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadSimConfig, readRepoFile } from "@hollow-coil/testing";
-import { brushBounds, brushMismatches, compareSweeps, near } from "@hollow-coil/testing/level-parity";
-import { hullFromData } from "@hollow-coil/sim/data";
-import { levelFromBsp, levelFromMap, type Level } from "@hollow-coil/sim/level";
-import { lightmapExtents, readBsp, type Bsp } from "@hollow-coil/sim/map/bsp";
-import { PLAYER_MASK } from "@hollow-coil/sim/player/movement";
-import { runScenario, type Scenario } from "@hollow-coil/sim/scenario";
+import { loadSimConfig, readRepoFile } from "@mandreljs/testing";
+import { brushBounds, brushMismatches, compareSweeps, near } from "@mandreljs/testing/level-parity";
+import { hullFromData } from "@mandreljs/sim/data";
+import { levelFromBsp, levelFromMap, type Level } from "@mandreljs/sim/level";
+import { lightmapExtents, readBsp, type Bsp } from "@mandreljs/sim/map/bsp";
+import { PLAYER_MASK } from "@mandreljs/sim/player/movement";
+import { runScenario, type Scenario } from "@mandreljs/sim/scenario";
 import { compileMap, compileOk, findMaps } from "../src/compile.ts";
 import { repoPath } from "../src/repo.ts";
 import { toolsInstalled } from "../src/setup.ts";
@@ -33,7 +33,7 @@ describe.skipIf(!toolsInstalled())("compiled maps match their .map (needs ericw-
   let outDir = "";
 
   beforeAll(async () => {
-    outDir = mkdtempSync(join(tmpdir(), "hc-parity-"));
+    outDir = mkdtempSync(join(tmpdir(), "mandrel-parity-"));
     for (const name of MAPS) {
       const result = await compileMap(repoPath(`maps/${name}.map`), outDir);
       if (!compileOk(result)) throw new Error(`${name} failed to compile: ${result.problems.join("; ")}`);

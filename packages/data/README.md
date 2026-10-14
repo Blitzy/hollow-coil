@@ -1,4 +1,4 @@
-# @hollow-coil/data
+# @mandreljs/data
 
 Validation for the shared `/data` files and `/spec` scenarios. Browser-safe (no file access), so editors can check what they save the same way CI does. `npm run validate` (`tools/src/validate.ts`) runs it over the repo.
 

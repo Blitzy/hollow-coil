@@ -7,9 +7,9 @@
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { crossCheck, fgdClassnames, fgdStyleChoices, lightStyleCheck, scenarioCheck } from "@hollow-coil/data/checks";
-import type { DataFiles, LightStylesFile, ScenarioFile } from "@hollow-coil/data/checks";
-import { SchemaError, SchemaValidator } from "@hollow-coil/data/schema";
+import { crossCheck, fgdClassnames, fgdStyleChoices, lightStyleCheck, scenarioCheck } from "@mandreljs/data/checks";
+import type { DataFiles, LightStylesFile, ScenarioFile } from "@mandreljs/data/checks";
+import { SchemaError, SchemaValidator } from "@mandreljs/data/schema";
 import { isMain, repoPath } from "./repo.ts";
 
 const REQUIRED_DATA = ["player", "weapons", "enemies", "lightstyles"];
@@ -63,7 +63,7 @@ export function main(): number {
     return 1;
   }
 
-  const fgd = readFileSync(repoPath("maps", "trenchbroom", "hollowcoil.fgd"), "utf-8");
+  const fgd = readFileSync(repoPath("maps", "trenchbroom", "mandrel.fgd"), "utf-8");
   const files = Object.fromEntries(data.valid) as unknown as DataFiles & { lightstyles: LightStylesFile };
   const errors = [...crossCheck(files, fgdClassnames(fgd)), ...lightStyleCheck(files.lightstyles, fgdStyleChoices(fgd))];
   for (const [name, scenario] of spec.valid) errors.push(...scenarioCheck(name, scenario as ScenarioFile, files, readRepoMap));

@@ -2,6 +2,88 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-14: The engine is named Mandrel.js
+
+**Decision:** The engine is called Mandrel.js. Where a dot isn't allowed, it's `mandreljs`: the npm scope (`@mandreljs/sim`, `@mandreljs/render`, and so on) and a future GitHub organization. In conversation it's just "Mandrel".
+
+The rename covers the workspace packages, the docs that describe the engine, and the TrenchBroom setup: the FGD is `mandrel.fgd`. TrenchBroom's "game" is a game's content, not an engine, so the TrenchBroom game is the example game, "Mandrel.js Example" (see "The engine repo ships a free example game" below): every map starts with `// Game: Mandrel.js Example`, and `npm run install-trenchbroom` links it as `games/MandrelJSExample`. The installer also removes the link it made under an earlier name (`games/MandrelJS`) if it points at this repo, so TrenchBroom doesn't load the config twice. TrenchBroom keeps game paths by game name, so the path has to be set once more under the new name. The page title is "Mandrel.js Example" too.
+
+**Why:**
+
+- A mandrel is the core a coil is wound around and takes its shape from, which suits an engine that games are built on.
+- The ".js" follows Three.js and Babylon.js (which is written in TypeScript, as we are): it says "web engine" at a glance, and it sets the name apart from Red Hat's Mandrel (a GraalVM distribution) and the unrelated `mandrel` package on npm.
+- `mandreljs` and `mandrel.js` were free on npm, and no packages existed under `@mandreljs` when checked. No game engine by the name turned up.
+
+**Alternatives considered:** CoilEngine (plain and workable, but less distinctive); CoilKit (reads as a parts kit, and like Apple's frameworks); Lathe, Capstan, Winch, Shockframe, Slipstrike, and BoomShoot (fine, but with no story); names playing on "quake" (Tremor, Richter, Faultline, Aftershock, and Tecton are taken, several by other Quake-style projects); "Quake" itself or id's own terms (trademarks); FPS.js (descriptive, so unprotectable, and "fps" on npm means frame-rate meters). None of these were checked as trademarks; do that before announcing the name.
+
+## 2026-10-14: The engine is its own project, separate from any game made with it
+
+**Decision:** This repo is an engine: its code, tools, and a free example game to play and test it with. A game made with the engine, including any commercial game, keeps its own content (levels, art, audio, models, and final tuning) in a separate repo under its own license, as planned in "Keep a commercial option open" below. Until now the project and its planned game shared one name. The engine gets its own name, chosen in "The engine is named Mandrel.js" above.
+
+**Why:**
+
+- With one name for the engine and a game, it's unclear whether the free example content is the game, and whether the name means the GPL code anyone may use or a game whose content they may not.
+- The GPL doesn't cover names. A game name kept apart from the engine's can be protected as a trademark without affecting what people do with the engine.
+- It's how the era's engines are known today: id Tech and Quake, ioquake3 and Quake III Arena, Freedoom and Doom.
+
+**Alternatives considered:** One name for both (fine while the engine has no other users, but confusing once it has free example content and modders of its own).
+
+## 2026-10-14: Example content is CC BY 4.0
+
+**Decision:** The example content in this repo is licensed under Creative Commons Attribution 4.0 (CC BY 4.0) instead of the GPL: the maps (`maps/*.map`, including `greybox_01`), the textures (`textures/`), the gameplay data values (`data/player.json`, `data/weapons.json`, `data/enemies.json`), and future example audio and models. Everything else stays GPLv3 or later: code, tools, schemas, the TrenchBroom config and FGD, `data/lightstyles.json`, `/spec` scenarios, demos, and docs. `LICENSE-EXCEPTION.md` lists which is which. Art source files (layered images, project files) aren't included in the repo.
+
+**Why:**
+
+- The GPL is written for code. It's unclear what the "source" of a texture or sound is, and we don't want to ship art source files. Creative Commons licenses are made for this kind of work.
+- CC BY lets anyone use the example content for anything, including commercial games and mods, as long as they give credit. That suits content whose job is to be built on.
+- Maps take the same license as art so the whole example game has one license that's easy to state and follow.
+- The FSF lists CC BY 4.0 as compatible with GPLv3, so example data can be copied into GPL files, such as golden demos, which carry their own copy of `/data`.
+- `data/lightstyles.json` stays GPL: its patterns are Quake's, taken from GPL source, and it's engine vocabulary that the FGD must match, not tuning.
+- Ryan is the only contributor so far, so these files can be relicensed without anyone else's agreement.
+
+**Supersedes:** "until then, everything in the repo is under the GPL" in "License is GPLv3 or later" below, and the open question of the license for free content in "Keep a commercial option open" below. Whether to ask contributors to sign a CLA is still open.
+
+**Alternatives considered:** The GPL for everything (above); CC BY-SA 4.0 (keeps changed versions free, but it's unclear whether using an asset in a level or game counts as a changed version, which puts modders off); CC0 (no conditions, but contributors get no guaranteed credit); GPL maps with CC art (maps are text that compiles to `.bsp`, which suits the GPL, but two licenses for one example game is harder to follow).
+
+## 2026-10-14: The engine repo ships a free example game, built separately
+
+**Decision:** The example content (test maps, `greybox_01`, placeholder textures, and example weapons, enemies, and movement data) stays in this repo as a game directory, like Quake's `id1/`. In a later change it moves from the repo root into `example/`, and any other game made with the engine is a sibling game directory checked out from its own repo. From then on:
+
+- The engine build contains no content. Content is packed per game directory, and a release is the engine plus one game.
+- `npm run dev` plays the example game by default, and an option points it at another game directory.
+- Every engine behavior is used by at least one piece of example content, with tests. Nothing a game relies on goes untested, and modders always have a working example to copy. Tests never need content from outside this repo.
+- Each game directory has its own TrenchBroom game config and FGD, named after the game, like TrenchBroom's own Quake and Quake 2 configs. The engine's entities (`worldspawn`, `info_player_start`, `light`, `info_marker`, and so on) live in a shared `mandrel.fgd` that each game's FGD pulls in with `@include`; a game's FGD adds only its own entities, such as its monsters. The validator checks each game's enemy classnames against that game's FGD. A map's `// Game:` header names its game, and the page title follows the game being played. Another game's content repo ships its own config and FGD the same way.
+- The example game is plainly called "Mandrel.js Example", with no title of its own; it's a sample, not a product. That's its name in TrenchBroom, its maps' `// Game:` headers, and the page title.
+
+**Why:**
+
+- The example content is the engine's test fixture: `/spec` scenarios, golden demos, and compile tests all need maps, weapons, and enemies. A new engine behavior, the example content that uses it, and its scenario go in one commit. In a separate repo, every behavior would be a change across two repos.
+- It keeps this repo "buildable and playable on its own" ("Keep a commercial option open" below) without any private content.
+- Building the engine and the content separately means a game's release carries no example content it doesn't use, and an engine release carries no other game's content.
+
+**Trade-offs:** The move into `example/` touches the compile tool, the dev server, the TrenchBroom config and FGD (split into the shared engine FGD and the example game's), the validator, and the docs that assume the repo root is the game directory. It's mechanical, and cheapest while there's little content.
+
+**Alternatives considered:** A separate repo for the example game (Freedoom and LibreQuake are separate projects from the engines that run them; worth it once the example grows into a game with its own contributors and releases, and easy to split out then); no example content (the engine couldn't be tested or played without the private repo); a `base/` folder, like Quake 2's `baseq2/` (it suggests other games layer on top of it, as Quake mods do on `id1/`, but other games are separate games beside it, not mods of it); a title of its own for the example game, as Freedoom has (unneeded for a sample).
+
+## 2026-10-14: Mods add behavior through engine actions, not code
+
+**Decision:** Content never contains code, so the behavior of a monster or weapon is data: a table of states, each naming an engine action (such as chase, face the target, or fire a hitscan volley), how long it lasts, and the state that follows. This is the model of Doom's state tables, which DeHackEd patches and ZDoom's DECORATE later edited to make new monsters without code.
+
+- Actions are generic engine code under the GPL, named for what they do, never for a monster. A new behavior, even one only a single game's boss uses, is a new generic action, plus example content and tests that use it.
+- Mods that need new code are source mods: a fork of the GPL engine, as with Quake 2 and Quake 3 total conversions. Entity types stay registered by classname in one place, so a fork adds a module instead of patching the core.
+- `data/enemies.json` keeps its current shape (one attack, one pain reaction) until the second enemy type. That's when it becomes a state table.
+
+**Why:**
+
+- It keeps the content split sound: data loaded at runtime can have its own license, but code that runs in the engine is covered by the GPL ("Keep a commercial option open" below).
+- No untrusted code runs in the browser or Electron ("User-made levels are a design goal" below).
+- It fits the simulation rules: an entity's place in its table is a state index and a tick count, which is plain, serializable, deterministic data, checked by schemas and `npm run validate`.
+- Doom had no scripting, and mods built a huge range of monsters and weapons by rearranging its states and actions.
+
+**Trade-offs:** Mods can do only what the actions allow. ZDoom eventually added a scripting language (ZScript) under that pressure.
+
+**Alternatives considered:** Our own scripting language and VM, like QuakeC (a language to design, build, and maintain); embedded scripting such as Lua or sandboxed JavaScript (untrusted code, and deterministic, serializable state is hard to keep); sandboxed WebAssembly modules (deterministic and isolated, the way to revisit scripting if actions prove too limiting, but not needed now); behavior written per monster in engine code (every new monster would need an engine change, and its behavior would be named for one piece of content).
+
 ## 2026-10-14: Light bounces, but only steady light
 
 **Decision:** Maps compile with ericw-tools' bounce lighting on (its default for Quake 2 maps) but with `-bouncestyled 0`, so only steady light bounces. A light with a `style` (flickering, pulsing) lights only what it reaches directly.
@@ -83,7 +165,7 @@ Decisions and their reasons, newest first. Each entry records what was decided, 
 
 - `apps/` holds things you run. `apps/game` is the game; editors and tools (particles, models, sounds, demo inspector, and so on) will each be an app.
 - `packages/` holds shared libraries: `sim` (simulation and file formats), `render` (Three.js presentation), `dev-server` (the Vite plugin that serves game files and compiles stale maps), and `testing` (Node-only test helpers).
-- Packages export their TypeScript source directly (`@hollow-coil/sim/map/bsp`), so there is no build step between them. One root `package.json`, `tsconfig.json`, and `vitest.config.ts` cover everything, and root scripts are the single entry point for project commands, including the Python tools.
+- Packages export their TypeScript source directly (`@mandreljs/sim/map/bsp`), so there is no build step between them. One root `package.json`, `tsconfig.json`, and `vitest.config.ts` cover everything, and root scripts are the single entry point for project commands, including the Python tools.
 - The repo's files stay the source of truth. Editors read and write `data/`, `maps/`, and `textures/` (through the dev server in development), and what they save must pass `tools/validate.py`. Only `apps/game` ships to players.
 
 **Why:**
@@ -155,7 +237,7 @@ Decisions and their reasons, newest first. Each entry records what was decided, 
 
 ## 2026-10-12: Keep a commercial option open: public code, separable content
 
-**Decision:** This repo holds all code, tools, schemas, test maps, and placeholder content, all under the GPL, and is meant to be public when the project is ready (it's private for now). If Hollow Coil becomes a commercial product, its final content (maps, textures, audio, music, and final tuning data) will live in a separate private repo with its own license. Nothing changes yet, but new work must keep that split possible:
+**Decision:** This repo holds all code, tools, schemas, test maps, and placeholder content, all under the GPL, and is meant to be public when the project is ready (it's private for now). If a commercial game is made with the engine, its final content (maps, textures, audio, music, and final tuning data) will live in a separate private repo with its own license. Nothing changes yet, but new work must keep that split possible:
 
 - Engines and tools load content from a content directory (a game directory, like Quake's `id1/`) passed in or configured, with the repo root as the default. Don't hardcode the repo root as the only place content can come from.
 - Content is data only: maps, images, audio, and JSON. No code (scripts, GDScript attached to scenes, map scripting) goes into content; it belongs in this repo under the GPL.

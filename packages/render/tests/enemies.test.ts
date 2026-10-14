@@ -1,10 +1,10 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { toThree } from "@hollow-coil/render/coords";
-import { CORPSE_HEIGHT, EnemyFigures, MODE_COLORS } from "@hollow-coil/render/enemies";
-import type { EnemyState } from "@hollow-coil/sim/enemy/enemy";
-import { degreesToUnits } from "@hollow-coil/sim/input";
-import { vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
+import { toThree } from "@mandreljs/render/coords";
+import { CORPSE_HEIGHT, EnemyFigures, MODE_COLORS } from "@mandreljs/render/enemies";
+import type { EnemyState } from "@mandreljs/sim/enemy/enemy";
+import { degreesToUnits } from "@mandreljs/sim/input";
+import { vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
 
 const HULL = { mins: vec3(-16, -16, -24), maxs: vec3(16, 16, 32) };
 const looks = new Map([["shotgunner", { hull: HULL, eyeHeight: 22 }]]);

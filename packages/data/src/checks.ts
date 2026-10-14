@@ -14,7 +14,7 @@
 //   - scenario enemies are real enemy types, placed at a marker or a position (not
 //     both), and enemy checks name an enemy the scenario has
 
-import { parseMap } from "@hollow-coil/sim/map/parse";
+import { parseMap } from "@mandreljs/sim/map/parse";
 import { show } from "./schema.ts";
 
 // Loose shapes of the files, enough for these checks (the schemas guarantee the rest).

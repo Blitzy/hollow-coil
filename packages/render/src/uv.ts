@@ -3,8 +3,8 @@
 // face normal, then apply rotation. Adapted from ericw-tools qbsp/map.cc and
 // Quake's TextureAxisFromPlane (GPLv2 or later).
 
-import type { MapFace } from "@hollow-coil/sim/map/parse";
-import { dot, vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
+import type { MapFace } from "@mandreljs/sim/map/parse";
+import { dot, vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
 
 export interface TextureAxes {
   /** Texels per unit along each axis already include the face's scale. */
