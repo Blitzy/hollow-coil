@@ -1,4 +1,4 @@
-import { cross, dot, length, scale, sub, type Vec3 } from "../math/vec3.ts";
+import { cross, divide, dot, length, sub, type Vec3 } from "../math/vec3.ts";
 
 /** A plane with a unit normal pointing out of the brush. Points with dot(p, normal) - dist > 0 are in front (outside). */
 export interface Plane {
@@ -14,7 +14,7 @@ export function planeFromPoints(p0: Vec3, p1: Vec3, p2: Vec3): Plane | null {
   const n = cross(sub(p0, p1), sub(p2, p1));
   const len = length(n);
   if (len < 1e-6) return null; // the points are collinear
-  const normal = scale(n, 1 / len);
+  const normal = divide(n, len); // dividing keeps axial normals exact, as qbsp does
   return { normal, dist: dot(p1, normal) };
 }
 

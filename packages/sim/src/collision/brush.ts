@@ -3,7 +3,7 @@
 // See docs/MOVEMENT.md, "Brushes from a .map".
 
 import { CONTENTS } from "../constants.ts";
-import { axial, component, cross, length, scale, sub, vec3, dot, type Vec3 } from "../math/vec3.ts";
+import { axial, component, cross, divide, length, sub, vec3, dot, type Vec3 } from "../math/vec3.ts";
 import type { MapFace } from "../map/parse.ts";
 import { planeFromPoints, type Plane } from "./plane.ts";
 import { baseWinding, clipWindingBack, type Winding } from "./winding.ts";
@@ -104,7 +104,7 @@ export function buildBrush(mapFaces: readonly MapFace[]): Brush | null {
         const edge = sub(w[j]!, w[(j + 1) % w.length]!);
         const edgeLength = length(edge);
         if (edgeLength < MIN_EDGE_LENGTH) continue;
-        const vec = snapToAxis(scale(edge, 1 / edgeLength));
+        const vec = snapToAxis(divide(edge, edgeLength));
         if (isAxial(vec)) continue;
 
         for (let axis = 0; axis < 3; axis++) {
@@ -112,7 +112,7 @@ export function buildBrush(mapFaces: readonly MapFace[]): Brush | null {
             const n = cross(vec, axial(axis, dir));
             const nLength = length(n);
             if (nLength < NORMAL_EPSILON) continue; // edge nearly parallel to this axis
-            const normal = scale(n, 1 / nLength);
+            const normal = divide(n, nLength);
             const candidate: Plane = { normal, dist: dot(w[j]!, normal) };
 
             // A proper bevel is new and has every point of the brush behind it.

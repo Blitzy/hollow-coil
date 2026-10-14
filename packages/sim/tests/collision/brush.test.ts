@@ -41,6 +41,12 @@ describe("planeFromPoints", () => {
   it("rejects collinear points", () => {
     expect(planeFromPoints(vec3(0, 0, 0), vec3(1, 1, 1), vec3(2, 2, 2))).toBeNull();
   });
+
+  // From test_combat's floor. The cross product is (25088, 0, 0), and 25088 * (1 / 25088) is
+  // 0.9999999999999999, so normalizing by multiplying would leave the normal not quite axial.
+  it("gives an exactly axial normal for an axial face, however its points lie", () => {
+    expect(planeFromPoints(vec3(784, -784, 0), vec3(784, 784, -16), vec3(784, -784, -16))).toEqual({ normal: vec3(1, 0, 0), dist: 784 });
+  });
 });
 
 describe("buildBrush", () => {
@@ -52,6 +58,21 @@ describe("buildBrush", () => {
     expect(brush.maxs).toEqual(vec3(64, 32, 16));
     expect(brush.contents).toBe(CONTENTS.SOLID);
     for (const f of brush.faces) expect(f.winding).toHaveLength(4);
+  });
+
+  it("adds no bevels to a box whose face points run diagonally across each face", () => {
+    // test_combat's floor brush, as TrenchBroom wrote it. qbsp stores six planes for it.
+    const brush = buildBrush([
+      face([[-784, -784, -16], [-784, 784, -16], [-784, -784, 0]]),
+      face([[784, -784, 0], [784, 784, -16], [784, -784, -16]]),
+      face([[-784, -784, 0], [784, -784, -16], [-784, -784, -16]]),
+      face([[-784, 784, -16], [784, 784, -16], [-784, 784, 0]]),
+      face([[-784, -784, -16], [784, -784, -16], [-784, 784, -16]]),
+      face([[-784, 784, 0], [784, -784, 0], [-784, -784, 0]]),
+    ])!;
+    expect(brush.planes).toHaveLength(6);
+    expect(brush.mins).toEqual(vec3(-784, -784, -16));
+    expect(brush.maxs).toEqual(vec3(784, 784, 0));
   });
 
   it("takes contents from the faces", () => {

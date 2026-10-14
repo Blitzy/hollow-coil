@@ -134,7 +134,7 @@ Tests:
 
 ### M2: Compiled Maps and Lighting
 
-In progress. Done: the .bsp reader, lightmap atlas, lit rendering, brightness calibration (1.5), animated light styles, and levels (collision and entities) loaded from the .bsp, matching the .map on the test fixtures. Remaining: parity tests on the real maps, then the game running its sim from the .bsp.
+In progress. Done: the .bsp reader, lightmap atlas, lit rendering, brightness calibration (1.5), animated light styles, and levels (collision and entities) loaded from the .bsp, matching the .map on every map: the same entities and brushes, the same sweep results, and the same scenario runs, tick for tick. Remaining: the game running its sim from the .bsp.
 
 - .bsp loader: faces, entities, lightmap data
 - Pack face lightmaps into an atlas and render with a lightmap shader. Read each face's lightmap from its stored offset: ericw-tools pads each face's data to a multiple of 4 samples, so faces are not packed back to back. Lightmap size per face is computed from texture-space extents at 16 texels per luxel (see `lightmapExtents` in `packages/sim/src/map/bsp.ts`).

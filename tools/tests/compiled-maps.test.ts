@@ -1,0 +1,92 @@
+// Every map in maps/, compiled with the pinned ericw-tools, loads from its .bsp
+// as the same level it is as a .map: the same entities, the same brushes, the
+// same sweep results, and the same /spec scenario runs, tick for tick. The game
+// can then load either file. Skipped when the tools aren't installed (npm run
+// setup); CI installs them before testing.
+
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, join } from "node:path";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { loadPlayerData, readRepoFile } from "@hollow-coil/testing";
+import { brushBounds, brushMismatches, compareSweeps, near } from "@hollow-coil/testing/level-parity";
+import { hullFromData } from "@hollow-coil/sim/data";
+import { levelFromBsp, levelFromMap, type Level } from "@hollow-coil/sim/level";
+import { readBsp } from "@hollow-coil/sim/map/bsp";
+import { PLAYER_MASK } from "@hollow-coil/sim/player/movement";
+import { runScenario, type Scenario } from "@hollow-coil/sim/scenario";
+import { compileMap, compileOk, findMaps } from "../src/compile.ts";
+import { repoPath } from "../src/repo.ts";
+import { toolsInstalled } from "../src/setup.ts";
+
+const MAPS = findMaps([]).map((path) => basename(path, ".map"));
+const SCENARIOS = readdirSync(repoPath("spec"))
+  .filter((f) => f.endsWith(".json"))
+  .map((f) => [f, JSON.parse(readRepoFile(`spec/${f}`)) as Scenario] as const);
+const config = { player: loadPlayerData() };
+
+/** How far apart the player may be, tick for tick, in a scenario run on the .map and the .bsp. */
+const SCENARIO_TOLERANCE = 1e-3;
+
+describe.skipIf(!toolsInstalled())("compiled maps match their .map (needs ericw-tools)", () => {
+  const levels = new Map<string, { map: Level; bsp: Level }>();
+  let outDir = "";
+
+  beforeAll(async () => {
+    outDir = mkdtempSync(join(tmpdir(), "hc-parity-"));
+    for (const name of MAPS) {
+      const result = await compileMap(repoPath(`maps/${name}.map`), outDir);
+      if (!compileOk(result)) throw new Error(`${name} failed to compile: ${result.problems.join("; ")}`);
+      levels.set(name, {
+        map: levelFromMap(readRepoFile(`maps/${name}.map`)),
+        bsp: levelFromBsp(readBsp(readFileSync(join(outDir, `${name}.bsp`)))),
+      });
+    }
+  }, 60_000);
+  afterAll(() => rmSync(outDir, { recursive: true, force: true }));
+
+  describe.each(MAPS)("%s", (name) => {
+    it("has the same entities, markers, and player start", () => {
+      const { map, bsp } = levels.get(name)!;
+      expect(bsp.entities).toEqual(map.entities);
+      expect(bsp.markers).toEqual(map.markers);
+      expect(bsp.playerStart).toEqual(map.playerStart);
+    });
+
+    it("has the same brushes, bevels included", () => {
+      const { map, bsp } = levels.get(name)!;
+      expect(brushMismatches(map, bsp)).toEqual([]);
+    });
+
+    it("gives the same results for random sweeps", () => {
+      const { map, bsp } = levels.get(name)!;
+      const { hits, differences } = compareSweeps(map, bsp, {
+        hull: hullFromData(config.player.hull),
+        region: brushBounds(map),
+        reach: 512,
+        mask: PLAYER_MASK,
+        count: 5000,
+        seed: 1,
+      });
+      expect(differences).toEqual([]);
+      expect(hits).toBeGreaterThan(500);
+    });
+  });
+
+  describe.each(SCENARIOS)("spec/%s", (_, scenario) => {
+    it("runs the same on the .bsp as on the .map, tick for tick", () => {
+      const { map, bsp } = levels.get(scenario.map)!;
+      const a = runScenario(scenario, map, config);
+      const b = runScenario(scenario, bsp, config);
+      expect(b.passed).toBe(a.passed);
+      expect(b.states).toHaveLength(a.states.length);
+      a.states.forEach((sa, tick) => {
+        const pa = sa.player;
+        const pb = b.states[tick]!.player;
+        const where = `tick ${tick}: ${JSON.stringify(pa.origin)} vs ${JSON.stringify(pb.origin)}`;
+        expect(near(pa.origin, pb.origin, SCENARIO_TOLERANCE), where).toBe(true);
+        expect(pb.onGround, where).toBe(pa.onGround);
+      });
+    });
+  });
+});

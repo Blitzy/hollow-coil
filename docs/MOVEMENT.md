@@ -49,7 +49,7 @@ A model's brushes are the ones listed by the leafs of its node tree: start at th
 
 A brush's bounds come from its axial sides: a side with normal `+axis` gives `maxs[axis] = dist`, and `-axis` gives `mins[axis] = -dist`. qbsp gives every brush all six, as bevels if needed.
 
-qbsp writes brushes in its own order, not the .map's, and stores planes as 32-bit floats. The same map loaded either way gives the same brushes, matched by shape, with planes equal to within float precision (tested in `packages/sim/tests/level.test.ts`).
+qbsp writes brushes in its own order, not the .map's, and stores planes as 32-bit floats. The same map loaded either way gives the same brushes, matched by shape, with planes equal to within float precision (tested on the fixtures in `packages/sim/tests/level.test.ts`, and on every map in `maps/` in `tools/tests/compiled-maps.test.ts`, which also checks sweeps and runs every `/spec` scenario on both).
 
 ### Brushes from a .map
 
@@ -60,13 +60,15 @@ normal = normalize(cross(p0 - p1, p2 - p1))
 dist   = dot(p1, normal)
 ```
 
+Normalize by dividing each component by the length, as qbsp does, never by multiplying by `1 / length`. The two can differ in the last bit: for a cross product of `(25088, 0, 0)`, `25088 * (1 / 25088)` is `0.9999999999999999`, so the normal would no longer be exactly axial. The same rule applies to every normalize in brush building below.
+
 The face's contents field (the first of the three numbers after the texture scale in the Quake 2 Valve format) gives the brush contents; a brush whose faces all have contents 0 is `SOLID`.
 
 Then compute each face's **winding** (its polygon) and add **bevel planes**, as qbsp does, so .map and .bsp collision match:
 
 **Windings.** For each face, start from a very large square lying in the face's plane and clip it by every other plane of the brush, keeping the part behind each plane. Faces whose winding clips away entirely are redundant; drop them. The windings also give the brush's bounds (and the render geometry in M1).
 
-**Axial bevels.** For each axis (x, y, z) and direction (−1, +1): if no face has a normal whose component on that axis is exactly that direction, add a plane with that axial normal at the brush's bounds (`dist = bounds.max[axis]` for +1, `dist = -bounds.min[axis]` for −1). Axial faces built from integer points have exactly axial normals, so the exact comparison is safe.
+**Axial bevels.** For each axis (x, y, z) and direction (−1, +1): if no face has a normal whose component on that axis is exactly that direction, add a plane with that axial normal at the brush's bounds (`dist = bounds.max[axis]` for +1, `dist = -bounds.min[axis]` for −1). Axial faces built from integer points have exactly axial normals when normalized by division (above), so the exact comparison is safe.
 
 **Edge bevels.** Skip this step if the brush has exactly six faces after the axial step (a pure box). Otherwise, for each face that is not axial and has a winding, for each edge from winding point `j` to the next point `k`:
 

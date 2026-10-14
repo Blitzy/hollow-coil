@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { loadPlayerData, readRepoBytes, readRepoFile } from "@hollow-coil/testing";
+import { brushMismatches, compareSweeps } from "@hollow-coil/testing/level-parity";
 import type { Plane } from "@hollow-coil/sim/collision/plane";
-import { trace, type CollisionBrush } from "@hollow-coil/sim/collision/trace";
 import { hullFromData } from "@hollow-coil/sim/data";
 import { levelFromBsp, levelFromMap, LevelError, type Level } from "@hollow-coil/sim/level";
 import { readBsp, type Bsp } from "@hollow-coil/sim/map/bsp";
-import { vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
+import { vec3 } from "@hollow-coil/sim/math/vec3";
 import { PLAYER_MASK } from "@hollow-coil/sim/player/movement";
-import { nextRandom, seedRandom } from "@hollow-coil/sim/rng";
 
 const FIXTURES = "packages/sim/tests/fixtures";
 const fixture = (path: string): { map: Level; bsp: Level } => ({
@@ -30,27 +29,12 @@ describe("levelFromMap", () => {
   });
 });
 
-// .bsp planes are float32, so they match the .map's within float32 precision.
-const NORMAL_TOLERANCE = 1e-5;
-const DIST_TOLERANCE = 1e-3;
-const near = (a: Vec3, b: Vec3, tolerance: number): boolean =>
-  Math.abs(a.x - b.x) < tolerance && Math.abs(a.y - b.y) < tolerance && Math.abs(a.z - b.z) < tolerance;
-const samePlane = (a: Plane, b: Plane): boolean => near(a.normal, b.normal, NORMAL_TOLERANCE) && Math.abs(a.dist - b.dist) < DIST_TOLERANCE;
-const sameBrush = (a: CollisionBrush, b: CollisionBrush): boolean =>
-  a.contents === b.contents &&
-  a.planes.length === b.planes.length &&
-  a.planes.every((p) => b.planes.some((q) => samePlane(p, q))) &&
-  near(a.mins, b.mins, DIST_TOLERANCE) &&
-  near(a.maxs, b.maxs, DIST_TOLERANCE);
-
+// The real maps get the same comparisons in tools/tests/compiled-maps.test.ts, which compiles them.
 describe("levelFromBsp", () => {
   // qbsp reorders brushes, so each .map brush is matched by shape, not by position.
   it.each(["bevels/shapes", "bsp/lit_room"])("%s: has the same brushes as the .map, bevels included", (path) => {
     const { map, bsp } = fixture(path);
-    expect(bsp.world.brushes).toHaveLength(map.world.brushes.length);
-    for (const brush of map.world.brushes) {
-      expect(bsp.world.brushes.filter((b) => sameBrush(brush, b))).toHaveLength(1);
-    }
+    expect(brushMismatches(map, bsp)).toEqual([]);
   });
 
   it("reads the same entities, markers, and player start as the .map", () => {
@@ -63,25 +47,15 @@ describe("levelFromBsp", () => {
   // The bevel shapes are where .map and .bsp collision could most easily disagree.
   it("gives the same sweeps as the .map through the bevel test shapes", () => {
     const { map, bsp } = fixture("bevels/shapes");
-    const { mins, maxs } = hullFromData(loadPlayerData().hull);
-    let rng = seedRandom(7);
-    const random = (lo: number, hi: number): number => {
-      const r = nextRandom(rng);
-      rng = r.state;
-      return lo + r.value * (hi - lo);
-    };
-    const point = (): Vec3 => vec3(random(-112, 112), random(-112, 112), random(24, 96));
-    let hits = 0;
-    for (let i = 0; i < 2000; i++) {
-      const start = point();
-      const end = point();
-      const a = trace(map.world, start, end, mins, maxs, PLAYER_MASK);
-      const b = trace(bsp.world, start, end, mins, maxs, PLAYER_MASK);
-      expect({ startSolid: b.startSolid, allSolid: b.allSolid }).toEqual({ startSolid: a.startSolid, allSolid: a.allSolid });
-      expect(near(a.endpos, b.endpos, 1e-3), `sweep ${i}: ${JSON.stringify(a.endpos)} vs ${JSON.stringify(b.endpos)}`).toBe(true);
-      expect(near(a.normal, b.normal, NORMAL_TOLERANCE), `sweep ${i}: normals differ`).toBe(true);
-      if (a.fraction < 1 && !a.startSolid) hits++;
-    }
+    const { hits, differences } = compareSweeps(map, bsp, {
+      hull: hullFromData(loadPlayerData().hull),
+      region: { mins: vec3(-112, -112, 24), maxs: vec3(112, 112, 96) },
+      reach: 224,
+      mask: PLAYER_MASK,
+      count: 2000,
+      seed: 7,
+    });
+    expect(differences).toEqual([]);
     expect(hits).toBeGreaterThan(500); // most sweeps hit something, so the comparison means something
   });
 

@@ -16,6 +16,9 @@ export const sub = (a: Vec3, b: Vec3): Vec3 => vec3(a.x - b.x, a.y - b.y, a.z - 
 
 export const scale = (a: Vec3, s: number): Vec3 => vec3(a.x * s, a.y * s, a.z * s);
 
+/** a / s, dividing each component. Unlike scale(a, 1 / s), an axis-aligned a divided by its length is exactly a unit vector. */
+export const divide = (a: Vec3, s: number): Vec3 => vec3(a.x / s, a.y / s, a.z / s);
+
 /** a + b * s */
 export const addScaled = (a: Vec3, b: Vec3, s: number): Vec3 => vec3(a.x + b.x * s, a.y + b.y * s, a.z + b.z * s);
 
