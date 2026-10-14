@@ -12,7 +12,7 @@ import { loadSimConfig, readRepoFile } from "@hollow-coil/testing";
 import { brushBounds, brushMismatches, compareSweeps, near } from "@hollow-coil/testing/level-parity";
 import { hullFromData } from "@hollow-coil/sim/data";
 import { levelFromBsp, levelFromMap, type Level } from "@hollow-coil/sim/level";
-import { readBsp } from "@hollow-coil/sim/map/bsp";
+import { lightmapExtents, readBsp, type Bsp } from "@hollow-coil/sim/map/bsp";
 import { PLAYER_MASK } from "@hollow-coil/sim/player/movement";
 import { runScenario, type Scenario } from "@hollow-coil/sim/scenario";
 import { compileMap, compileOk, findMaps } from "../src/compile.ts";
@@ -29,7 +29,7 @@ const config = loadSimConfig();
 const SCENARIO_TOLERANCE = 1e-3;
 
 describe.skipIf(!toolsInstalled())("compiled maps match their .map (needs ericw-tools)", () => {
-  const levels = new Map<string, { map: Level; bsp: Level }>();
+  const levels = new Map<string, { map: Level; bsp: Level; compiled: Bsp }>();
   let outDir = "";
 
   beforeAll(async () => {
@@ -39,6 +39,7 @@ describe.skipIf(!toolsInstalled())("compiled maps match their .map (needs ericw-
       if (!compileOk(result)) throw new Error(`${name} failed to compile: ${result.problems.join("; ")}`);
       levels.set(name, {
         map: levelFromMap(readRepoFile(`maps/${name}.map`)),
+        compiled: readBsp(readFileSync(join(outDir, `${name}.bsp`))),
         bsp: levelFromBsp(readBsp(readFileSync(join(outDir, `${name}.bsp`)))),
       });
     }
@@ -46,6 +47,21 @@ describe.skipIf(!toolsInstalled())("compiled maps match their .map (needs ericw-
   afterAll(() => rmSync(outDir, { recursive: true, force: true }));
 
   describe.each(MAPS)("%s", (name) => {
+    // ericw-tools stores each lit face's styles back to back, padded to a multiple of 4 samples, so the
+    // gap to the next face's lightmap must be exactly the size we compute. A face sized wrong draws its light smeared.
+    it("sizes every lit face's lightmap exactly as ericw-tools laid it out", () => {
+      const { compiled } = levels.get(name)!;
+      const lit = compiled.faces.map((face, index) => ({ face, index })).filter(({ face }) => face.lightOffset >= 0);
+      lit.sort((a, b) => a.face.lightOffset - b.face.lightOffset);
+      const wrong = lit.flatMap(({ face, index }, i) => {
+        const { width, height } = lightmapExtents(compiled, face);
+        const gap = (lit[i + 1]?.face.lightOffset ?? compiled.lighting.byteLength) - face.lightOffset;
+        const want = Math.ceil((width * height * face.styles.length) / 4) * 4 * 3;
+        return gap === want ? [] : [`face ${index}: ${width} x ${height} x ${face.styles.length} styles is ${want} bytes, ericw-tools left ${gap}`];
+      });
+      expect(wrong).toEqual([]);
+    });
+
     it("has the same entities, markers, and player start", () => {
       const { map, bsp } = levels.get(name)!;
       expect(bsp.entities).toEqual(map.entities);

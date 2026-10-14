@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readRepoBytes, readRepoFile } from "@hollow-coil/testing";
 import { CONTENTS } from "@hollow-coil/sim/constants";
-import { cross, dot, sub } from "@hollow-coil/sim/math/vec3";
+import { cross, dot, sub, vec3 } from "@hollow-coil/sim/math/vec3";
 import { BSP_LUMP_NAMES, BspError, faceNormal, lightmapExtents, modelBrushes, readBsp, type Bsp } from "@hollow-coil/sim/map/bsp";
 import { parseEntities, parseMap } from "@hollow-coil/sim/map/parse";
 
@@ -77,6 +77,27 @@ describe("readBsp", () => {
       expect({ mins: [minS, minT], width, height }).toEqual({ mins: want.mins, width: want.width, height: want.height });
       expect([...bsp.lighting.subarray(face.lightOffset, face.lightOffset + 3)]).toEqual(want.first_luxel);
     });
+  });
+
+  // A face from a box tilted 15 degrees in greybox_01, exactly as compiled. Its texel
+  // coordinates come out a hair off luxel boundaries (-191.99999509 for -192). Rounded
+  // to 32-bit floats, as ericw-tools' light stores them, the lightmap is 5 x 6 (30
+  // samples, padded to ericw's 32); without the rounding it came out 6 x 6.
+  it("rounds texel coordinates to 32-bit floats, as ericw-tools does, before sizing a lightmap", () => {
+    const vertices = [
+      [-432, 256, 106.71532440185547], [-432, 256, 119.482666015625], [-432, 197.37258911132812, 135.19183349609375],
+      [-432, 180.80816650390625, 73.3725814819336], [-432, 242.62741088867188, 56.808162689208984],
+    ].map(([x, y, z]) => vec3(x!, y!, z!));
+    const tilted: Bsp = {
+      ...bsp,
+      texinfo: [{
+        s: { axis: vec3(0, -0.9659258127212524, 0.258819043636322), offset: -36.34294128417969 },
+        t: { axis: vec3(0, -0.258819043636322, -0.9659258127212524), offset: 53.6690673828125 },
+        flags: 0, value: 0, texture: "dev/grid_orange",
+      }],
+      faces: [{ plane: 0, back: false, vertices, texinfo: 0, styles: [0], lightOffset: 0 }],
+    };
+    expect(lightmapExtents(tilted, tilted.faces[0]!)).toEqual({ minS: -256, minT: -128, width: 5, height: 6 });
   });
 
   // ericw-tools stores each face's styles back to back and pads the face to a multiple of 4 samples.

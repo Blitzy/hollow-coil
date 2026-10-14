@@ -396,7 +396,10 @@ export function lightmapExtents(bsp: Bsp, face: BspFace): LightmapExtents {
   let minT = Infinity;
   let maxT = -Infinity;
   for (const v of face.vertices) {
-    const [s, t] = texelCoords(info, v);
+    // Rounded to 32-bit floats, as ericw-tools' light and Quake 2 store them. On a
+    // rotated face a coordinate can land a hair off a luxel boundary (-191.99999509
+    // for -192), and rounding decides whether that adds a whole row of luxels.
+    const [s, t] = texelCoords(info, v).map(Math.fround) as [number, number];
     minS = Math.min(minS, s);
     maxS = Math.max(maxS, s);
     minT = Math.min(minT, t);
