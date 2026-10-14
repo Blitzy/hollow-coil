@@ -76,8 +76,8 @@ describe("updateEnemy", () => {
   });
 
   it("while chasing, picks its heading only on think ticks but moves every tick", () => {
-    // The player is ahead and to the left, so it heads for the north-east diagonal.
-    let enemy: EnemyState = { ...enemyAt(0), mode: "chase", target: 1 };
+    // The player is ahead and to the left, so it heads for the north-east diagonal. Its attack is held off, so it only chases.
+    let enemy: EnemyState = { ...enemyAt(0), mode: "chase", target: 1, attackReadyAt: 1000 };
     const rows: { tick: number; heading: number; moving: boolean; x: number }[] = [];
     for (let tick = 1; tick <= 13; tick++) {
       enemy = updateEnemy(enemy, tick, shotgunner, around(eyeAt(600, 400)), 0).enemy;
@@ -93,6 +93,74 @@ describe("updateEnemy", () => {
   it("reports the sighting", () => {
     const update = updateEnemy(enemyAt(0), 1, shotgunner, around(eyeAt(500, 0)), 0);
     expect(update.events).toEqual([{ type: "sighted", entity: 2, target: 1 }]);
+  });
+});
+
+describe("attacking", () => {
+  const PLAYER_AT = vec3(300, 0, 24);
+  /** A chasing shotgunner at the origin (index 0: thinks on ticks 1, 7, 13, ...), hunting the player. */
+  const hunter = (overrides: Partial<EnemyState> = {}): EnemyState => ({ ...enemyAt(0), mode: "chase", target: 1, ...overrides });
+  /** Runs ticks 1..count; returns the enemy after each tick and the ticks it fired on. */
+  function run(enemy: EnemyState, count: number, s = surroundingsFor(OPEN, PLAYER_AT)) {
+    const states: EnemyState[] = [];
+    const shots: { tick: number; yaw: number; pitch: number }[] = [];
+    let state = enemy;
+    for (let tick = 1; tick <= count; tick++) {
+      const update = updateEnemy(state, tick, shotgunner, s, 0);
+      state = update.enemy;
+      states.push(state);
+      if (update.shot) shots.push({ tick, yaw: update.shot.yaw, pitch: update.shot.pitch });
+    }
+    return { states, shots };
+  }
+
+  it("starts an attack on a think once it may, stands through the 0.4 s wind-up, fires, then cools down for 1.5 s", () => {
+    const { states, shots } = run(hunter(), 200);
+    expect(states[0]).toMatchObject({ mode: "attack", fireAt: 1 + 24, moving: false });
+    expect(states.slice(0, 24).every((e) => e.mode === "attack" && e.origin.x === 0)).toBe(true);
+    // Fires on tick 25, then may attack again from tick 25 + 90 = 115: its next think is 115, so the next shot is on 139.
+    expect(shots.map((s) => s.tick)).toEqual([25, 139]);
+    expect(states[24]).toMatchObject({ mode: "chase", attackReadyAt: 25 + 90 });
+  });
+
+  it("holds its first attack until its reaction delay is up", () => {
+    const { shots, states } = run(hunter({ attackReadyAt: 37 }), 80);
+    expect(states.findIndex((e) => e.mode === "attack") + 1).toBe(37);
+    expect(shots[0]!.tick).toBe(37 + 24);
+  });
+
+  it("aims where the target was aim_lag (0.2 s) ago, from its eye", () => {
+    // Moving at 100 units/s along +y, the player was 20 units back along y 0.2 s ago.
+    const moving = surroundingsFor(OPEN, PLAYER_AT, vec3(0, 100, 0));
+    const shot = run(hunter(), 30, moving).shots[0]!;
+    const radians = (units: number): number => (units * 2 * Math.PI) / 65536;
+    expect(radians(shot.yaw - 65536)).toBeCloseTo(Math.atan2(-20, 300), 9);
+    expect(radians(shot.pitch)).toBeCloseTo(Math.atan2(24 - 46, Math.hypot(300, 20)), 9);
+  });
+
+  it("doesn't attack without a clear shot: through a wall, a window, or another entity", () => {
+    const wall = world(FLOOR, box([150, -64, 0], [182, 64, 128]));
+    expect(run(hunter(), 60, surroundingsFor(wall, PLAYER_AT)).shots).toEqual([]);
+    const window = world(FLOOR, box([150, -64, 0], [182, 64, 128], CONTENTS.WINDOW));
+    expect(run(hunter(), 60, surroundingsFor(window, PLAYER_AT)).shots).toEqual([]);
+    const crowded = surroundingsFor(OPEN, PLAYER_AT);
+    const between = { ...crowded, targets: [...crowded.targets, { id: 3, mins: vec3(134, -16, 0), maxs: vec3(166, 16, 56) }] };
+    expect(run(hunter(), 60, between).shots).toEqual([]);
+  });
+
+  it("turns to face its target while winding up", () => {
+    const behind = hunter({ yaw: degreesToUnits(90) }); // facing +y, the player is along +x
+    const { states } = run(behind, 24);
+    // Turning at 607 units a tick: a quarter turn (16384) takes 27 ticks, so the wind-up ends before it's all the way round.
+    expect(states.map((e) => e.yaw)).toEqual(Array.from({ length: 24 }, (_, i) => degreesToUnits(90) - 607 * (i + 1)));
+  });
+
+  it("goes back to the target it remembered when its target is gone, or stands if there's none", () => {
+    // Hunting entity 3, which no longer exists; remembers the player (1).
+    const back = run(hunter({ target: 3, oldTarget: 1, attackReadyAt: 1000 }), 1).states[0]!;
+    expect(back).toMatchObject({ mode: "chase", target: 1, oldTarget: 0, attackReadyAt: 1 + 36 });
+    const alone = run(hunter({ target: 3, oldTarget: 0 }), 1).states[0]!;
+    expect(alone).toMatchObject({ mode: "idle", target: 0 });
   });
 });
 

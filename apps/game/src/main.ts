@@ -181,7 +181,7 @@ async function main(): Promise<void> {
       `${world.file}  ${fps} fps  tick ${current.tick}`,
       `pos ${p.origin.x.toFixed(1)} ${p.origin.y.toFixed(1)} ${p.origin.z.toFixed(1)}`,
       `speed ${Math.hypot(p.velocity.x, p.velocity.y).toFixed(0)}  ${p.onGround ? "ground" : "air"}`,
-      `${weaponData[p.weapon.current]!.name}  ${p.weapon.phase}`,
+      p.health > 0 ? `health ${p.health}  ${weaponData[p.weapon.current]!.name}  ${p.weapon.phase}` : "dead  (reload the page to restart)",
       world.lit ? `lit  brightness ${world.lit.brightness.value.toFixed(1)}  ([ and ] adjust)` : world.note,
       input.locked
         ? `mouse ${input.rawInput ? "raw" : preferRawInput ? "accelerated (raw input unavailable)" : "accelerated (rawinput=off)"}`

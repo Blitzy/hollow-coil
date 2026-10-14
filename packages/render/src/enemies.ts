@@ -12,6 +12,7 @@ import { toThree } from "./coords.ts";
 export const MODE_COLORS: Readonly<Record<EnemyMode, number>> = {
   idle: 0x8c8c8c,
   chase: 0xe07020,
+  attack: 0xe02020,
   pain: 0xffffff,
   dead: 0x3a1c1c,
 };

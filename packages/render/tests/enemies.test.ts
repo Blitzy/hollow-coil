@@ -11,7 +11,7 @@ const looks = new Map([["shotgunner", { hull: HULL, eyeHeight: 22 }]]);
 
 const enemy = (overrides: Partial<EnemyState> = {}): EnemyState => ({
   id: 2, type: "shotgunner", origin: vec3(100, 0, 24), yaw: 0, idealYaw: 0, moving: false, health: 40, mode: "idle",
-  nextThink: 1, target: 0, attackReadyAt: 0, painUntil: 0, ...overrides,
+  nextThink: 1, target: 0, oldTarget: 0, attackReadyAt: 0, painUntil: 0, fireAt: 0, ...overrides,
 });
 
 /** The figure's body and facing block, after an update. */
@@ -69,7 +69,7 @@ describe("EnemyFigures", () => {
 
   it("colors the box by mode", () => {
     const figures = new EnemyFigures(looks);
-    for (const mode of ["idle", "chase", "pain"] as const) {
+    for (const mode of ["idle", "chase", "attack", "pain"] as const) {
       figures.update([], [enemy({ mode })], 0);
       expect((shown(figures).body.material as THREE.MeshBasicMaterial).color.getHex()).toBe(MODE_COLORS[mode]);
     }

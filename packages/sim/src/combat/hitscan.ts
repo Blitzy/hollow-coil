@@ -7,7 +7,7 @@
 import { CONTENTS } from "../constants.ts";
 import { trace, type CollisionWorld } from "../collision/trace.ts";
 import type { HitscanData } from "../data.ts";
-import { angleToRadians } from "../input.ts";
+import { angleToRadians, wrapYaw } from "../input.ts";
 import { addScaled, cross, normalize, sub, vec3, ZERO, type Vec3 } from "../math/vec3.ts";
 import { nextRandom } from "../rng.ts";
 
@@ -119,6 +119,13 @@ export function fireHitscan(
     pellets.push(firePellet(world, targets, eye, dir, attack.range));
   }
   return { pellets, rng: state };
+}
+
+/** The yaw and pitch (angle units, not rounded) that aim from one point at another; level if they're the same point. */
+export function aimAngles(from: Vec3, to: Vec3): { yaw: number; pitch: number } {
+  const d = sub(to, from);
+  const toUnits = (radians: number): number => (radians * 65536) / (2 * Math.PI);
+  return { yaw: wrapYaw(toUnits(Math.atan2(d.y, d.x))), pitch: toUnits(Math.atan2(d.z, Math.hypot(d.x, d.y))) };
 }
 
 /** The eye of a body standing at origin. */

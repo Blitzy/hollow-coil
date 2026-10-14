@@ -22,13 +22,16 @@
           "sight_range": { "description": "Furthest distance at which the player can be noticed.", "type": "number", "exclusiveMinimum": 0 },
           "field_of_view": { "description": "Full view cone width, in degrees.", "type": "number", "exclusiveMinimum": 0, "maximum": 360 },
           "reaction_delay": { "description": "Delay between first sighting the player and acting.", "$ref": "common.schema.json#/$defs/seconds" },
+          "fights_own_kind": { "description": "Whether it turns on another enemy of its own type that hurts it. Enemies of different types always do (Quake's infighting; Quake's grunts fight their own kind too).", "type": "boolean" },
           "attack": {
             "type": "object",
             "properties": {
-              "cooldown": { "$ref": "common.schema.json#/$defs/seconds" },
+              "windup": { "description": "Time from starting an attack to firing, standing and facing the target (Quake's grunt fires 0.4 s into its attack).", "$ref": "common.schema.json#/$defs/seconds" },
+              "cooldown": { "description": "Time from firing until it may attack again.", "$ref": "common.schema.json#/$defs/seconds" },
+              "aim_lag": { "description": "It aims where the target was this long ago (from the target's velocity), so moving targets are harder to hit (Quake's grunt: 0.2).", "$ref": "common.schema.json#/$defs/seconds" },
               "hitscan": { "$ref": "common.schema.json#/$defs/hitscan" }
             },
-            "required": ["cooldown", "hitscan"],
+            "required": ["windup", "cooldown", "aim_lag", "hitscan"],
             "additionalProperties": false
           },
           "pain": {
@@ -41,7 +44,7 @@
             "additionalProperties": false
           }
         },
-        "required": ["classname", "health", "hull", "eye_height", "think_interval", "run_speed", "turn_speed", "sight_range", "field_of_view", "reaction_delay", "attack", "pain"],
+        "required": ["classname", "health", "hull", "eye_height", "think_interval", "run_speed", "turn_speed", "sight_range", "field_of_view", "reaction_delay", "fights_own_kind", "attack", "pain"],
         "additionalProperties": false
       }
     }

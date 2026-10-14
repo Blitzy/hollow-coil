@@ -165,7 +165,7 @@ Tests:
 
 ### M4: Enemy
 
-In progress. Enemy AI follows Quake's, infighting included (see `docs/ENEMIES.md`). Done: spawning, the think cadence, noticing the player by sight, taking damage (pain, death, and enemies blocking the player), and chasing with Quake's movetogoal, with placeholder boxes in the game. Remaining: shooting back (with infighting), the rest of the game side, and golden demos.
+In progress. Enemy AI follows Quake's, infighting included (see `docs/ENEMIES.md`). Done: spawning, the think cadence, noticing the player by sight, taking damage (pain, death, and enemies blocking the player), chasing with Quake's movetogoal, and shooting back (with a wind-up, aim lag, and Quake's infighting), with placeholder boxes and the player's health in the game. Remaining: the rest of the game side (death and restart, hit feedback) and golden demos.
 
 - States: idle, chase, attack, pain, dead. The reaction delay holds the first attack, as in Quake, rather than being a separate alert state.
 - Infighting, as in Quake: an enemy hurt by another enemy turns on it, then returns to the player

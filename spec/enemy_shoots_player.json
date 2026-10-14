@@ -1,0 +1,45 @@
+{
+  "$schema": "./schemas/scenario.schema.json",
+  "description": "A shotgunner that sees the player at 512 units chases at once but holds its first attack for its reaction delay (0.6 s), stands and winds up (0.4 s), fires, and attacks again once its cooldown (1.5 s) is over. Damage is whatever its seeded pellets hit.",
+  "status": "verified",
+  "map": "test_combat",
+  "duration": 3.0,
+  "start": { "marker": "range_origin", "yaw": 0 },
+  "enemies": [
+    { "type": "shotgunner", "marker": "range_512", "yaw": 180 }
+  ],
+  "inputs": [
+    { "until": 3.0 }
+  ],
+  "expect": [
+    {
+      "at": 0.6,
+      "note": "Tick 36: it saw the player on tick 1 and is chasing, but may attack only from tick 37.",
+      "health": 100,
+      "enemy": { "index": 0, "mode": "chase" }
+    },
+    {
+      "at": 1.0,
+      "note": "Tick 60: its attack started on tick 37 (its think) and fires 24 ticks later, on tick 61.",
+      "health": 100,
+      "enemy": { "index": 0, "mode": "attack" }
+    },
+    {
+      "at": 1.05,
+      "note": "Tick 63: it fired; one of its five pellets hit (4 damage) at this range with seed 0.",
+      "health": 96,
+      "enemy": { "index": 0, "mode": "chase" }
+    },
+    {
+      "at": 2.9,
+      "note": "Tick 174: may attack again from tick 61 + 90 = 151, its think, so it fires on tick 175.",
+      "health": 96,
+      "enemy": { "index": 0, "mode": "attack" }
+    },
+    {
+      "at": 3.0,
+      "note": "Tick 180: the second blast landed two pellets.",
+      "health": 88
+    }
+  ]
+}

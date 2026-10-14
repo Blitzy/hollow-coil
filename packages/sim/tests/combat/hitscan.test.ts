@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { loadWeaponsData, readRepoFile } from "@hollow-coil/testing";
-import { aimVectors, eyePosition, fireHitscan, rayBoxFraction, type HitTarget, type PelletHit } from "@hollow-coil/sim/combat/hitscan";
+import { loadEnemiesData, loadWeaponsData, readRepoFile } from "@hollow-coil/testing";
+import { aimAngles, aimVectors, eyePosition, fireHitscan, rayBoxFraction, type HitTarget, type PelletHit } from "@hollow-coil/sim/combat/hitscan";
+import { entityBox } from "@hollow-coil/sim/collision/box";
 import { DIST_EPSILON } from "@hollow-coil/sim/collision/trace";
 import { CONTENTS } from "@hollow-coil/sim/constants";
 import type { HitscanData } from "@hollow-coil/sim/data";
@@ -128,5 +129,40 @@ describe("fireHitscan", () => {
     const eye = eyePosition(level.markers.get("range_origin")!, 22);
     const { pellets } = fireHitscan(level.world, [], eye, 0, 0, straight(4096), 0);
     expectWallHit(pellets[0], vec3(768 - DIST_EPSILON, -704, 46), vec3(-1, 0, 0));
+  });
+});
+
+describe("damage at known ranges", () => {
+  // The shotgunner fires at a player standing at each of test_combat's range markers. Averaged over many
+  // seeds, the damage should match what its data predicts: pellets x damage x the chance a pellet lands on
+  // the player's box. A pellet's offset where it reaches the box's front face is uniform within
+  // d tan(spread) on each axis, so that chance is the share of that square the box covers.
+  const attack = loadEnemiesData().enemies.shotgunner!.attack.hitscan;
+  const level = levelFromMap(readRepoFile("maps/test_combat.map"));
+  const eye = eyePosition(level.markers.get("range_origin")!, 22); // the shotgunner's eye height
+  const HULL = { mins: vec3(-16, -16, -24), maxs: vec3(16, 16, 32) };
+
+  it.each([128, 256, 512, 1024])("at %i units, matches the data on average", (range) => {
+    const at = level.markers.get(`range_${range}`)!;
+    const box = entityBox(at, HULL, CONTENTS.MONSTER);
+    const { yaw, pitch } = aimAngles(eye, at);
+    const SHOTS = 2000;
+    let total = 0;
+    for (let seed = 0; seed < SHOTS; seed++) {
+      const { pellets } = fireHitscan(level.world, [{ id: 1, mins: box.mins, maxs: box.maxs }], eye, yaw, pitch, attack, seed);
+      total += pellets.filter((p) => p?.kind === "entity").length * attack.damage;
+    }
+
+    const front = range - 16;
+    const reachH = front * Math.tan((attack.spread.horizontal * Math.PI) / 180);
+    const reachV = front * Math.tan((attack.spread.vertical * Math.PI) / 180);
+    const horizontal = Math.min(1, 16 / reachH);
+    const aimHeight = eye.z - ((eye.z - at.z) * front) / range; // the aim line's height at the front face
+    const below = Math.max(-1, (at.z - 24 - aimHeight) / reachV);
+    const above = Math.min(1, (at.z + 32 - aimHeight) / reachV);
+    const vertical = Math.max(0, above - below) / 2;
+    const expected = attack.pellets * attack.damage * horizontal * vertical;
+
+    expect(Math.abs(total / SHOTS - expected)).toBeLessThanOrEqual(Math.max(0.1 * expected, 0.1));
   });
 });

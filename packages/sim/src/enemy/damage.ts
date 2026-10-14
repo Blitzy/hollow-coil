@@ -2,6 +2,7 @@
 // and flinching. Follows Quake's T_Damage in combat.qc and the monsters'
 // pain_finished check (id Software, GPLv2 or later). See docs/ENEMIES.md, "Damage".
 
+import { PLAYER_ID } from "../constants.ts";
 import { nextRandom } from "../rng.ts";
 import { alive, type EnemyState, type EnemyType } from "./enemy.ts";
 
@@ -10,6 +11,12 @@ export type DamageEvent =
   | { readonly type: "died"; readonly entity: number; readonly attacker: number }
   | { readonly type: "pain"; readonly entity: number }
   | { readonly type: "sighted"; readonly entity: number; readonly target: number };
+
+/** Who did the damage: the player (type null) or an enemy of a type. */
+export interface Attacker {
+  readonly id: number;
+  readonly type: string | null;
+}
 
 export interface DamageResult {
   readonly enemy: EnemyState;
@@ -23,7 +30,8 @@ export interface DamageResult {
  * blast is one hit. The pain roll draws one value from the RNG, unless the
  * enemy dies or is still flinching.
  */
-export function damageEnemy(enemy: EnemyState, amount: number, attacker: number, tick: number, type: EnemyType, rng: number): DamageResult {
+export function damageEnemy(enemy: EnemyState, amount: number, by: Attacker, tick: number, type: EnemyType, rng: number): DamageResult {
+  const attacker = by.id;
   if (!alive(enemy)) return { enemy, rng, events: [] };
   const health = enemy.health - amount;
   const events: DamageEvent[] = [{ type: "damaged", entity: enemy.id, attacker, amount, health }];
@@ -33,9 +41,14 @@ export function damageEnemy(enemy: EnemyState, amount: number, attacker: number,
   }
 
   let next: EnemyState = { ...enemy, health };
-  // Turn on the attacker, as on first sighting (Quake's FoundTarget), unless already hunting it.
-  if (attacker !== enemy.target && attacker !== enemy.id) {
-    next = { ...next, target: attacker, attackReadyAt: tick + type.reactionTicks, mode: next.mode === "idle" ? "chase" : next.mode };
+  // Turn on the attacker, as on first sighting (Quake's FoundTarget), unless already hunting it, or it's
+  // an enemy of the same type and this type doesn't fight its own kind. Leaving the player for another
+  // enemy, remember the player to go back to (Quake's oldenemy). Turning cancels an attack in progress.
+  const ownKind = by.type !== null && by.type === enemy.type && !type.data.fights_own_kind;
+  if (attacker !== enemy.target && attacker !== enemy.id && !ownKind) {
+    const oldTarget = enemy.target === PLAYER_ID ? PLAYER_ID : enemy.oldTarget;
+    const mode = next.mode === "idle" || next.mode === "attack" ? "chase" : next.mode;
+    next = { ...next, target: attacker, oldTarget, attackReadyAt: tick + type.reactionTicks, mode };
     events.push({ type: "sighted", entity: enemy.id, target: attacker });
   }
 

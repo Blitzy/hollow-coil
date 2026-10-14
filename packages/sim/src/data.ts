@@ -69,7 +69,15 @@ export interface EnemyData {
   /** Full width of the view cone, in degrees. */
   readonly field_of_view: number;
   readonly reaction_delay: number;
-  readonly attack: { readonly cooldown: number; readonly hitscan: HitscanData };
+  /** Whether it turns on another enemy of its own type that hurts it. */
+  readonly fights_own_kind: boolean;
+  readonly attack: {
+    readonly windup: number;
+    readonly cooldown: number;
+    /** It aims where the target was this many seconds ago. */
+    readonly aim_lag: number;
+    readonly hitscan: HitscanData;
+  };
   readonly pain: { readonly chance: number; readonly stun: number };
 }
 

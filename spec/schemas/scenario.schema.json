@@ -86,6 +86,7 @@
         "velocity": { "description": "Expected velocity in units per second; null skips an axis. Needs a tolerance.", "$ref": "#/$defs/vec3_or_null" },
         "tolerance": { "description": "Allowed difference per checked axis of position, velocity, and last_hit.", "type": "number", "minimum": 0 },
         "on_ground": { "type": "boolean" },
+        "health": { "description": "The player's health (0 or less once dead).", "type": "number" },
         "near_marker": {
           "description": "The player origin is within this distance of a marker's origin.",
           "type": "object",
@@ -110,7 +111,7 @@
           "type": "object",
           "properties": {
             "index": { "description": "The enemy's place in spawn order, from 0: the map's enemies (with map_enemies), then the scenario's.", "type": "integer", "minimum": 0 },
-            "mode": { "enum": ["idle", "chase", "pain", "dead"] },
+            "mode": { "enum": ["idle", "chase", "attack", "pain", "dead"] },
             "health": { "type": "number" },
             "position": { "description": "Expected origin; null skips an axis. Needs a tolerance.", "$ref": "#/$defs/vec3_or_null" },
             "near_player": { "description": "The enemy's origin is within this distance of the player's.", "type": "number", "exclusiveMinimum": 0 }

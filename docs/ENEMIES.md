@@ -2,11 +2,11 @@
 
 The game implements enemies exactly as described here, and so must any future port, so that engine differences never become behavior differences. When the code and this document disagree, fix one of them; don't let them drift. The code is in `packages/sim/src/enemy/`: `enemy.ts` (state, data, spawning), `ai.ts` (thinking, sight, and chasing), `move.ts` (stepping, turning, and choosing a direction), and `damage.ts` (taking damage).
 
-M4 is building enemies in stages; this document covers what exists so far: spawning, the think cadence, noticing the player, taking damage, and chasing. Attacks will follow.
+M4 is building enemies in stages; this document covers what exists so far: spawning, the think cadence, noticing the player, taking damage (with infighting), chasing, and attacking.
 
 ## Sources
 
-Adapted from Quake's QuakeC (id Software, GPLv2 or later): `droptofloor` for spawning; `FindTarget`, `range`, `infront`, `visible`, and `HuntTarget` in `ai.qc` for sight and reacting; `T_Damage` in `combat.qc`, multi-damage in `weapons.qc`, and the monsters' `pain_finished` check for damage and pain; and `sv_move.c` (`SV_movestep`, `SV_CheckBottom`, `SV_StepDirection`, `SV_NewChaseDir`, `SV_CloseEnough`, `SV_MoveToGoal`) with `PF_changeyaw` for chasing. Sight passes through windows, following Quake 2's `MASK_OPAQUE`. See DECISIONS.md (2026-10-14, "Enemy AI follows Quake's") for why.
+Adapted from Quake's QuakeC (id Software, GPLv2 or later): `droptofloor` for spawning; `FindTarget`, `range`, `infront`, `visible`, and `HuntTarget` in `ai.qc` for sight and reacting; `T_Damage` in `combat.qc`, multi-damage in `weapons.qc`, and the monsters' `pain_finished` check for damage and pain; and `sv_move.c` (`SV_movestep`, `SV_CheckBottom`, `SV_StepDirection`, `SV_NewChaseDir`, `SV_CloseEnough`, `SV_MoveToGoal`) with `PF_changeyaw` for chasing; the grunt's `SoldierCheckAttack`, attack frames, and `army_fire` in `soldier.qc`, and `ai_face` in `ai.qc`, for attacking. Sight passes through windows, following Quake 2's `MASK_OPAQUE`. See DECISIONS.md (2026-10-14, "Enemy AI follows Quake's") for why.
 
 ## Conventions
 
@@ -40,7 +40,7 @@ A shot's pellets are all traced first (see `docs/WEAPONS.md`, Hitscan), against 
 
 1. Loses `amount` health and emits `{ type: "damaged", entity, attacker, amount, health }`.
 2. If its health is 0 or less, switches to mode `dead` and emits `{ type: "died", entity, attacker }`. Nothing else happens.
-3. If the attacker isn't its current target (and isn't itself), turns on it as on first sighting: target the attacker, allow its first attack only from `tick + reaction_ticks`, switch from `idle` to `chase`, and emit `sighted`. (Infighting rules for enemies hurting enemies come with enemy attacks.)
+3. If the attacker isn't its current target (and isn't itself), turns on it as on first sighting: target the attacker, allow its first attack only from `tick + reaction_ticks`, switch from `idle` or `attack` to `chase` (dropping an attack in progress), and emit `sighted`. If it was hunting the player, it remembers the player as `oldTarget`, to go back to later (Quake's `oldenemy`). This is Quake's infighting, with one exception: an enemy hurt by another of its own type ignores it, unless its type's `fights_own_kind` is set (Quake's grunts fight their own kind; the shotgunner does too).
 4. If the tick is at or after `painUntil`, draws one value from the RNG; if it's below `pain.chance`, switches to mode `pain` with `painUntil = tick + pain_ticks` and emits `{ type: "pain", entity }`. While still flinching, it neither rolls nor flinches again.
 
 Damage reactions happen when the damage lands, not on think ticks; only the AI's own decisions wait for a think. A flinching enemy does nothing until its first think at or after `painUntil`, when it goes back to `chase` (or `idle`, if it has no target).
@@ -84,9 +84,23 @@ Random values come from the sim's RNG, drawn only when the steps above reach the
 
 Quake's navigation is simple on purpose: with no pathfinding, an enemy can jitter against an obstacle and wander off. Levels are built with that in mind, as in the era.
 
+## Attacking
+
+Quake's grunt rolls a chance to attack on each think, by range; ours attacks whenever it can, with its `cooldown` setting the pace. Otherwise it follows the grunt.
+
+**A clear shot** (Quake's `SoldierCheckAttack`): its eye is within `attack.hitscan.range` of its quarry's eye, and a ray between them reaches the quarry's box before anything else: before any wall that stops shots (`SOLID | WINDOW`; windows block shots though not sight), and before any other living entity's box. So it won't shoot through a friend.
+
+**On a think,** a chasing enemy whose `attackReadyAt` has come and that has a clear shot starts an attack: mode `attack`, `fireAt = tick + windup_ticks`, and it stops moving. Otherwise it chooses a heading as in Chasing.
+
+**While attacking,** it stands, and each tick turns toward its quarry's origin, by at most its turn per tick (Quake's `ai_face`). On its first think at or after `fireAt`, it fires: from its eye, aimed at its quarry's origin minus the quarry's velocity times `aim_lag` (Quake's `army_fire` aims where the target was 0.2 s ago, so strafing helps). Then it goes back to `chase` with `attackReadyAt = tick + cooldown_ticks`. The shot is a hitscan attack with `attack.hitscan`, exactly as the player's (`docs/WEAPONS.md`, Hitscan), and can hit the player or any other enemy in the way; it emits `fired` (with the enemy's type as the weapon) and the usual hit events, and its damage lands at once.
+
+**When its quarry is gone** (dead, or never there), on its next think it goes after its `oldTarget` if that's alive, as on first sighting, and forgets it; otherwise it goes back to `idle` with no target (Quake's `ai_run`). Enemies only ever notice the living player, so once the player is dead, they stand.
+
+**The player** loses health from hits, emitting `damaged`; at 0 or less, `died`. A dead player doesn't move or fire (the view still follows the mouse), isn't hit, doesn't block, and can't be hunted.
+
 ## Order within a tick
 
-The player moves (blocked by living enemies) and fires first, and the shot's damage is applied. Then each enemy updates, in spawn order: a think if it's a think tick, then a tick of movement. Each sees the player where they ended up this tick, and the enemies before it where they've moved to.
+The player moves (blocked by living enemies) and fires first, and the shot's damage is applied; a dead player does neither. Then each enemy updates, in spawn order: a think if it's a think tick (firing, if that's when its wind-up ends, with the damage applied at once), then a tick of movement. Each sees the player where they ended up this tick, and the enemies before it as they've left things.
 
 ## State
 
@@ -97,10 +111,12 @@ The player moves (blocked by living enemies) and fires first, and the shot's dam
 | `idealYaw` | The heading it turns toward and steps along. |
 | `moving` | Whether it has a heading to step along until its next think. |
 | `health` | Starts at the type's `health`. |
-| `mode` | `idle`, `chase`, `pain`, or `dead` so far. |
+| `mode` | `idle`, `chase`, `attack`, `pain`, or `dead`. |
 | `nextThink` | The tick of its next decision. |
 | `target` | The entity it hunts, or 0. |
+| `oldTarget` | The player, remembered while it fights another enemy, or 0. |
 | `attackReadyAt` | The first tick it may attack. |
+| `fireAt` | While attacking, the tick its wind-up ends. |
 | `painUntil` | The tick its pain stun ends. |
 
 ## Required tests
@@ -111,6 +127,10 @@ The player moves (blocked by living enemies) and fires first, and the shot's dam
 - A shot's pellets add up into one hit; an enemy dies at zero health and stops acting; the dead can't be hit and don't block.
 - Pain follows its chance, stuns for its time, can't repeat while stunned, and ends on a think.
 - A living enemy blocks the player.
+- Attacks: held for the reaction delay, a wind-up standing and turning to face the quarry, a shot aimed where it was `aim_lag` ago, then the cooldown; no attack without a clear shot (walls, windows, or another entity in the way).
+- Average damage at test_combat's range markers matches the data within 10%.
+- Infighting: turning on an enemy attacker and remembering the player, the own-kind rule both ways, dropping an attack to turn, and going back to the remembered target, or standing.
+- The player dies at zero health, then neither moves nor shoots, and enemies stop hunting them.
 - Stepping climbs steps up to 18 and refuses higher ones, steps down, refuses walls and edges, and never leaves a corner over a drop of more than a step; turning goes the short way; a new heading follows the order above.
 - A chasing enemy picks its heading only on think ticks but moves every tick.
 - Scenarios: an enemy follows the player up `test_movement`'s 18-unit step and stops close, and one gets around `test_combat`'s low cover. On every tick of every scenario, no enemy is inside the world.

@@ -43,6 +43,7 @@ export interface Scenario {
     readonly velocity?: Vec3OrNull;
     readonly tolerance?: number;
     readonly on_ground?: boolean;
+    readonly health?: number;
     readonly near_marker?: { readonly name: string; readonly within: number };
     /** The weapon in hand (a key of weapons.json's weapons). */
     readonly weapon?: string;
@@ -151,6 +152,7 @@ export function runScenario(scenario: Scenario, level: Level, config: SimConfig)
     const tolerance = e.tolerance ?? 0;
     if (e.position) compare("position", e.position, p.origin, tolerance, failures);
     if (e.velocity) compare("velocity", e.velocity, p.velocity, tolerance, failures);
+    if (e.health !== undefined && p.health !== e.health) failures.push(`health: expected ${e.health}, got ${p.health}`);
     if (e.on_ground !== undefined && p.onGround !== e.on_ground) {
       failures.push(`on_ground: expected ${e.on_ground}, got ${p.onGround}`);
     }

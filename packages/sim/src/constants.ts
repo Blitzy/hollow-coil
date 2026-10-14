@@ -12,6 +12,9 @@ export const CONTENTS = {
   MONSTER: 0x2000000,
 } as const;
 
+/** The player's entity id. Enemies get ids after it. */
+export const PLAYER_ID = 1;
+
 /** Spawn origins are raised 1 unit so nothing starts touching the floor (docs/MOVEMENT.md, Spawning). */
 export const SPAWN_RAISE = 1;
 

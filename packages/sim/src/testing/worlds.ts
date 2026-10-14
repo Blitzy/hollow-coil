@@ -49,11 +49,15 @@ export function rampX(x0: number, x1: number, y0: number, y1: number, bottom: nu
 export const world = (...brushes: Brush[]): CollisionWorld => ({ brushes });
 
 /** An enemy's surroundings in a world with no other entities, the player standing at origin (Quake's player hull and eye). */
-export function surroundingsFor(level: CollisionWorld, playerOrigin: Vec3): Surroundings {
+export function surroundingsFor(level: CollisionWorld, playerOrigin: Vec3, playerVelocity: Vec3 = vec3(0, 0, 0)): Surroundings {
   const box = entityBox(playerOrigin, { mins: vec3(-16, -16, -24), maxs: vec3(16, 16, 32) }, CONTENTS.MONSTER);
+  const eye = vec3(playerOrigin.x, playerOrigin.y, playerOrigin.z + 22);
+  const player = { id: 1, origin: playerOrigin, velocity: playerVelocity, eye, mins: box.mins, maxs: box.maxs };
   return {
     world: level,
     blockers: { brushes: [...level.brushes, box] },
-    player: { id: 1, origin: playerOrigin, eye: vec3(playerOrigin.x, playerOrigin.y, playerOrigin.z + 22), mins: box.mins, maxs: box.maxs },
+    player,
+    quarry: (id) => (id === 1 ? player : null),
+    targets: [{ id: 1, mins: box.mins, maxs: box.maxs }],
   };
 }

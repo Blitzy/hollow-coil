@@ -15,11 +15,12 @@ export const ENEMY_MASK = CONTENTS.SOLID | CONTENTS.WINDOW | CONTENTS.MONSTERCLI
 
 /**
  * idle: waiting; looks for the player on each think.
- * chase: has seen the player and hunts them.
+ * chase: hunts its target.
+ * attack: standing, facing its target, winding up to fire.
  * pain: flinching from damage; does nothing until the stun ends.
  * dead: does nothing, and can't be hit or bumped into.
  */
-export type EnemyMode = "idle" | "chase" | "pain" | "dead";
+export type EnemyMode = "idle" | "chase" | "attack" | "pain" | "dead";
 
 export interface EnemyState {
   readonly id: number;
@@ -38,10 +39,14 @@ export interface EnemyState {
   readonly nextThink: number;
   /** The entity being hunted, or 0 for none. */
   readonly target: number;
+  /** The player, remembered while it fights another enemy, to go back to after (Quake's oldenemy); 0 for none. */
+  readonly oldTarget: number;
   /** The first tick an attack is allowed (the reaction delay after first sighting). */
   readonly attackReadyAt: number;
   /** The tick a pain stun ends; the enemy can't flinch again before it. */
   readonly painUntil: number;
+  /** While attacking, the tick its wind-up ends and it fires. */
+  readonly fireAt: number;
 }
 
 /** One enemy type's data, with durations in ticks. */
@@ -51,6 +56,8 @@ export interface EnemyType {
   readonly thinkTicks: number;
   readonly reactionTicks: number;
   readonly painTicks: number;
+  readonly windupTicks: number;
+  readonly cooldownTicks: number;
   /** How far it moves each tick while chasing. */
   readonly runStep: number;
   /** How far it moves in one think interval: the step it tests when choosing a direction. */
@@ -77,6 +84,8 @@ export function enemyContext(data: EnemiesData): EnemyContext {
       thinkTicks: Math.max(1, secondsToTicks(enemy.think_interval)),
       reactionTicks: secondsToTicks(enemy.reaction_delay),
       painTicks: secondsToTicks(enemy.pain.stun),
+      windupTicks: secondsToTicks(enemy.attack.windup),
+      cooldownTicks: secondsToTicks(enemy.attack.cooldown),
       runStep: enemy.run_speed / TICK_RATE,
       thinkStep: (enemy.run_speed * Math.max(1, secondsToTicks(enemy.think_interval))) / TICK_RATE,
       turnStep: Math.round((enemy.turn_speed * ANGLE_UNITS_PER_TURN) / 360 / TICK_RATE),
@@ -136,8 +145,10 @@ export function createEnemy(id: number, spawn: EnemySpawn, type: EnemyType, inde
     mode: "idle",
     nextThink: 1 + (index % type.thinkTicks),
     target: 0,
+    oldTarget: 0,
     attackReadyAt: 0,
     painUntil: 0,
+    fireAt: 0,
   };
 }
 

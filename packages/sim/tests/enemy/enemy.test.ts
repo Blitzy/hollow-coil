@@ -64,7 +64,7 @@ describe("createEnemy", () => {
   it("starts idle at full health, hunting nothing", () => {
     expect(createEnemy(5, spawn, shotgunner, 0)).toEqual({
       id: 5, type: "shotgunner", origin: vec3(0, 0, 24), yaw: 0, idealYaw: 0, moving: false, health: 40, mode: "idle",
-      nextThink: 1, target: 0, attackReadyAt: 0, painUntil: 0,
+      nextThink: 1, target: 0, oldTarget: 0, attackReadyAt: 0, painUntil: 0, fireAt: 0,
     });
   });
 
