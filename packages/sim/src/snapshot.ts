@@ -2,7 +2,7 @@
 // text (JSON round-trips every float64 exactly). The hash covers every value in
 // the state, in a fixed order, and is what golden demos compare tick by tick.
 
-import type { SimState } from "./sim";
+import type { SimState } from "./sim.ts";
 
 export const snapshot = (state: SimState): string => JSON.stringify(state);
 

@@ -2,10 +2,10 @@
 // the player start. Levels don't change during play, so they aren't part of the
 // sim state or its snapshots.
 
-import { buildBrush, type Brush } from "./collision/brush";
-import type { CollisionWorld } from "./collision/trace";
-import { vec3, type Vec3 } from "./math/vec3";
-import { parseMap, type MapEntity } from "./map/parse";
+import { buildBrush, type Brush } from "./collision/brush.ts";
+import type { CollisionWorld } from "./collision/trace.ts";
+import { vec3, type Vec3 } from "./math/vec3.ts";
+import { parseMap, type MapEntity } from "./map/parse.ts";
 
 export interface Level {
   readonly world: CollisionWorld;

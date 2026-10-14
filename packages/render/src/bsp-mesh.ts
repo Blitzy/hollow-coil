@@ -10,9 +10,9 @@
 import * as THREE from "three";
 import { SURF, texelCoords, type Bsp } from "@hollow-coil/sim/map/bsp";
 import { cross, length, sub } from "@hollow-coil/sim/math/vec3";
-import { toThree } from "./coords";
-import { LightStyleAnimator, type LightStyleData } from "./light-styles";
-import { lightmapUv, packLightmaps, type LightmapAtlas } from "./lightmap-atlas";
+import { toThree } from "./coords.ts";
+import { LightStyleAnimator, type LightStyleData } from "./light-styles.ts";
+import { lightmapUv, packLightmaps, type LightmapAtlas } from "./lightmap-atlas.ts";
 
 /** Faces that are never drawn as world surfaces. Sky gets its own pass later. */
 const HIDDEN = SURF.NODRAW | SURF.SKY;

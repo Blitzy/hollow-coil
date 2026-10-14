@@ -1,11 +1,11 @@
 // Runs the engine-neutral scenarios in /spec, following the conversion rules in
 // spec/README.md. The caller loads the scenario JSON, the level, and the data.
 
-import { TICK_RATE } from "./constants";
-import { BUTTON_ATTACK, BUTTON_JUMP, degreesToUnits, NEUTRAL_COMMAND, wrapYaw, type InputCommand } from "./input";
-import type { Level } from "./level";
-import { length, sub, type Vec3 } from "./math/vec3";
-import { createSim, movementContext, step, type SimConfig, type SimState } from "./sim";
+import { TICK_RATE } from "./constants.ts";
+import { BUTTON_ATTACK, BUTTON_JUMP, degreesToUnits, NEUTRAL_COMMAND, wrapYaw, type InputCommand } from "./input.ts";
+import type { Level } from "./level.ts";
+import { length, sub, type Vec3 } from "./math/vec3.ts";
+import { createSim, movementContext, step, type SimConfig, type SimState } from "./sim.ts";
 
 type Vec3OrNull = readonly [number | null, number | null, number | null];
 

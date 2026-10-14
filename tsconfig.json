@@ -1,6 +1,10 @@
 {
   // Type-checks every app and package, tests included. packages/sim/tsconfig.json
   // separately checks the sim with only the ES library, so it can't touch the DOM or Node.
+  //
+  // erasableSyntaxOnly and .ts import extensions keep every file runnable by Node
+  // directly (Node strips types but doesn't transform code or guess extensions),
+  // so the tools in tools/ run with plain `node`, no build step.
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -14,8 +18,19 @@
     "noUnusedParameters": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["apps/*/src", "apps/*/tests", "apps/*/vite.config.ts", "packages/*/src", "packages/*/tests", "vitest.config.ts"]
+  "include": [
+    "apps/*/src",
+    "apps/*/tests",
+    "apps/*/vite.config.ts",
+    "packages/*/src",
+    "packages/*/tests",
+    "tools/src",
+    "tools/tests",
+    "vitest.config.ts"
+  ]
 }

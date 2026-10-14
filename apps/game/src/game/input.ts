@@ -1,8 +1,8 @@
 // Keyboard and mouse input in the browser. Mouse look needs pointer lock, which
 // starts on a click on the canvas.
 
-import type { HeldInput } from "./command";
-import { MAX_PITCH } from "./command";
+import type { HeldInput } from "./command.ts";
+import { MAX_PITCH } from "./command.ts";
 
 const KEYS = {
   forward: ["KeyW", "ArrowUp"],
@@ -49,11 +49,11 @@ export class BrowserInput {
   /** Whether the current pointer lock uses raw mouse input. */
   rawInput = false;
 
+  private readonly element: HTMLElement;
+
   /** preferRawInput: ask for raw mouse input when locking (see lockPointer). */
-  constructor(
-    private readonly element: HTMLElement,
-    preferRawInput = true,
-  ) {
+  constructor(element: HTMLElement, preferRawInput = true) {
+    this.element = element;
     element.addEventListener("click", () => {
       if (this.locked) return;
       lockPointer(element, preferRawInput).then(

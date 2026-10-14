@@ -4,7 +4,7 @@
 // Quake 2 contents, surface flags, and value fields. The same key/value entity
 // text appears in a .bsp's entity lump, which parseEntities() reads.
 
-import { vec3, type Vec3 } from "../math/vec3";
+import { vec3, type Vec3 } from "../math/vec3.ts";
 
 export type TextureProjection =
   | { readonly kind: "valve"; readonly u: readonly [number, number, number, number]; readonly v: readonly [number, number, number, number] }
@@ -28,17 +28,23 @@ export interface MapEntity {
 }
 
 export class MapParseError extends Error {
-  constructor(message: string, readonly line: number) {
+  readonly line: number;
+
+  constructor(message: string, line: number) {
     super(`line ${line}: ${message}`);
     this.name = "MapParseError";
+    this.line = line;
   }
 }
 
 class Cursor {
   private pos = 0;
   private line = 1;
+  private readonly text: string;
 
-  constructor(private readonly text: string) {}
+  constructor(text: string) {
+    this.text = text;
+  }
 
   /** Skips whitespace and // comments; returns the next character without consuming it, or "" at the end. */
   peek(): string {

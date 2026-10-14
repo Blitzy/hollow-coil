@@ -1,13 +1,13 @@
 // The simulation: plain, serializable state advanced one fixed tick at a time by
 // input commands. It reads nothing else: no clock, devices, or renderer.
 
-import type { PlayerData } from "./data";
-import { hullFromData } from "./data";
-import type { InputCommand } from "./input";
-import type { Level } from "./level";
-import { add, vec3, ZERO, type Vec3 } from "./math/vec3";
-import { playerMove, type MovementContext } from "./player/movement";
-import { seedRandom } from "./rng";
+import type { PlayerData } from "./data.ts";
+import { hullFromData } from "./data.ts";
+import type { InputCommand } from "./input.ts";
+import type { Level } from "./level.ts";
+import { add, vec3, ZERO, type Vec3 } from "./math/vec3.ts";
+import { playerMove, type MovementContext } from "./player/movement.ts";
+import { seedRandom } from "./rng.ts";
 
 export const PLAYER_ID = 1;
 

@@ -9,7 +9,7 @@
 import { TICK_RATE } from "@hollow-coil/sim/constants";
 import type { Bsp } from "@hollow-coil/sim/map/bsp";
 import { secondsToTicks } from "@hollow-coil/sim/scenario";
-import { composeLightmaps, type LightmapAtlas } from "./lightmap-atlas";
+import { composeLightmaps, type LightmapAtlas } from "./lightmap-atlas.ts";
 
 /** data/lightstyles.json */
 export interface LightStyleData {
@@ -46,15 +46,19 @@ export class LightStyleAnimator {
   /** Per animated face, the styles that actually put light on it. */
   private readonly faceStyles: ReadonlyMap<number, readonly number[]>;
   private values: Float64Array;
+  private readonly bsp: Bsp;
+  private readonly atlas: LightmapAtlas;
+  private readonly data: LightStyleData;
+  private readonly image: Uint8Array;
+  private readonly tickRate: number;
 
   /** Composes every face's lightmap into image at tick 0. */
-  constructor(
-    private readonly bsp: Bsp,
-    private readonly atlas: LightmapAtlas,
-    private readonly data: LightStyleData,
-    private readonly image: Uint8Array,
-    private readonly tickRate = TICK_RATE,
-  ) {
+  constructor(bsp: Bsp, atlas: LightmapAtlas, data: LightStyleData, image: Uint8Array, tickRate = TICK_RATE) {
+    this.bsp = bsp;
+    this.atlas = atlas;
+    this.data = data;
+    this.image = image;
+    this.tickRate = tickRate;
     const faceStyles = new Map<number, number[]>();
     for (const index of atlas.blocks.keys()) {
       const lit = litStyles(bsp, atlas, index);

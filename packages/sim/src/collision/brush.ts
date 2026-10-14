@@ -2,11 +2,11 @@
 // the bevel planes qbsp adds, so .map collision matches .bsp collision.
 // See docs/MOVEMENT.md, "Brushes from a .map".
 
-import { CONTENTS } from "../constants";
-import { axial, component, cross, length, scale, sub, vec3, dot, type Vec3 } from "../math/vec3";
-import type { MapFace } from "../map/parse";
-import { planeFromPoints, type Plane } from "./plane";
-import { baseWinding, clipWindingBack, type Winding } from "./winding";
+import { CONTENTS } from "../constants.ts";
+import { axial, component, cross, length, scale, sub, vec3, dot, type Vec3 } from "../math/vec3.ts";
+import type { MapFace } from "../map/parse.ts";
+import { planeFromPoints, type Plane } from "./plane.ts";
+import { baseWinding, clipWindingBack, type Winding } from "./winding.ts";
 
 export interface BrushFace {
   readonly plane: Plane;

@@ -1,8 +1,8 @@
 // Windings: the convex polygon a brush face occupies on its plane.
 // Adapted from Quake's BaseWindingForPlane and ClipWinding (id Software, GPLv2 or later).
 
-import { add, addScaled, component, cross, dot, normalize, scale, sub, vec3, type Vec3 } from "../math/vec3";
-import { distanceTo, type Plane } from "./plane";
+import { add, addScaled, component, cross, dot, normalize, scale, sub, vec3, type Vec3 } from "../math/vec3.ts";
+import { distanceTo, type Plane } from "./plane.ts";
 
 export type Winding = readonly Vec3[];
 

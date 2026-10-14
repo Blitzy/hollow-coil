@@ -3,11 +3,11 @@
 // edge friction from Quake WinQuake/sv_user.c SV_UserFriction and the slide
 // move's same-plane nudge from Quake 3 code/game/bg_slidemove.c (both GPLv2 or later).
 
-import { CONTENTS, TICK_RATE } from "../constants";
-import { add, addScaled, cross, dot, length, scale, sub, vec3, ZERO, type Vec3 } from "../math/vec3";
-import { trace, type CollisionWorld, type TraceResult } from "../collision/trace";
-import type { Hull, PlayerData } from "../data";
-import { angleToRadians, BUTTON_JUMP, type InputCommand } from "../input";
+import { CONTENTS, TICK_RATE } from "../constants.ts";
+import { add, addScaled, cross, dot, length, scale, sub, vec3, ZERO, type Vec3 } from "../math/vec3.ts";
+import { trace, type CollisionWorld, type TraceResult } from "../collision/trace.ts";
+import type { Hull, PlayerData } from "../data.ts";
+import { angleToRadians, BUTTON_JUMP, type InputCommand } from "../input.ts";
 
 export const PLAYER_MASK = CONTENTS.SOLID | CONTENTS.WINDOW | CONTENTS.PLAYERCLIP;
 

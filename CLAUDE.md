@@ -73,12 +73,13 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 - `python tools/bspdump.py build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON.
 - `python -m unittest discover -s tools/tests`: test the tools (needs ericw-tools installed).
 - `python tools/validate.py`: validate `data/*.json` and the `spec/*.json` scenarios against their schemas, plus cross-file checks (runs in CI).
-- `python tools/check_files.py`: fail if any tracked file is over 2 MB (runs in CI).
+- `npm run check-files`: fail if any tracked file is over 2 MB (runs in CI).
 - `python tools/install_trenchbroom.py`: link `maps/trenchbroom` into TrenchBroom's games folder as "Hollow Coil". `--uninstall` removes the link.
 - `python tools/make_placeholder_textures.py`: regenerate the placeholder PNGs in `textures/dev/`.
 
 TypeScript (run from the repo root): `npm install`, then `npm run dev` (play at http://localhost:5173/?map=test_movement; pass Vite options after `--`), `npm test` (Vitest, every app and package), `npm run typecheck` (includes the sim-only check), and `npm run build`. `npm run setup`, `npm run compile`, and `npm run validate` run the Python tools above.
 ## Tools
 
-- Scripts in `/tools` are Python 3.11+, standard library only unless a dependency is clearly worth it.
+- Tools in `/tools` are being ported from Python to TypeScript. New and ported tools live in `tools/src/` (tests in `tools/tests/`) and run with plain `node`, which strips TypeScript types itself. That's why the tsconfig sets `erasableSyntaxOnly` (no enums, namespaces, or constructor parameter properties) and relative imports end in `.ts`. Use Node's standard library and our packages; ask before adding a dependency.
+- The remaining Python scripts need Python 3.11+, standard library only.
 - Third-party tool versions are pinned in `tools/versions.json`. Bump versions there, never by hand-installing a different build.

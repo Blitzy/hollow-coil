@@ -1,0 +1,9 @@
+{
+  "name": "@hollow-coil/tools",
+  "private": true,
+  "type": "module",
+  "description": "Command-line tools: map compiling, data validation, .bsp inspection, and setup. Run with plain node; see the root package.json scripts.",
+  "dependencies": {
+    "@hollow-coil/sim": "*"
+  }
+}

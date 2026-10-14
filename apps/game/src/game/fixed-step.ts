@@ -4,13 +4,18 @@
 
 export class FixedStep {
   private accumulator = 0;
+  private readonly tickRate: number;
+  private readonly maxFrameSeconds: number;
 
   /**
    * @param tickRate ticks per second (the sim's TICK_RATE)
    * @param maxFrameSeconds longest frame to catch up on, so a stall (a hidden tab,
    *   a breakpoint) doesn't trigger a burst of ticks
    */
-  constructor(private readonly tickRate: number, private readonly maxFrameSeconds = 0.25) {}
+  constructor(tickRate: number, maxFrameSeconds = 0.25) {
+    this.tickRate = tickRate;
+    this.maxFrameSeconds = maxFrameSeconds;
+  }
 
   /** Adds elapsed real time and returns how many ticks to run now. */
   advance(seconds: number): number {

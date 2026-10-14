@@ -2,7 +2,7 @@
 // loads and parses the JSON (validated by tools/validate.py) and passes it in;
 // the sim never reads files itself.
 
-import { vec3, type Vec3 } from "./math/vec3";
+import { vec3, type Vec3 } from "./math/vec3.ts";
 
 export interface HullData {
   readonly mins: readonly number[];

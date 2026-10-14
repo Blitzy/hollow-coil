@@ -7,9 +7,9 @@
 // The sim always loads its collision and entities from the .map.
 
 import * as THREE from "three";
-import { buildCommand } from "./game/command";
-import { FixedStep } from "./game/fixed-step";
-import { BrowserInput } from "./game/input";
+import { buildCommand } from "./game/command.ts";
+import { FixedStep } from "./game/fixed-step.ts";
+import { BrowserInput } from "./game/input.ts";
 import { buildBspMeshes, bspTextureNames, DEFAULT_BRIGHTNESS, type LitWorld } from "@hollow-coil/render/bsp-mesh";
 import { cameraRotation, toThree, verticalFov } from "@hollow-coil/render/coords";
 import type { LightStyleData } from "@hollow-coil/render/light-styles";

@@ -1,9 +1,9 @@
 // Small worlds built from boxes and ramps, for tests.
 
-import { buildBrush, type Brush } from "../collision/brush";
-import type { CollisionWorld } from "../collision/trace";
-import { cross, dot, sub, vec3, type Vec3 } from "../math/vec3";
-import type { MapFace } from "../map/parse";
+import { buildBrush, type Brush } from "../collision/brush.ts";
+import type { CollisionWorld } from "../collision/trace.ts";
+import { cross, dot, sub, vec3, type Vec3 } from "../math/vec3.ts";
+import type { MapFace } from "../map/parse.ts";
 
 function face(points: readonly [Vec3, Vec3, Vec3], center: Vec3, contents: number): MapFace {
   let [p0, p1, p2] = points;

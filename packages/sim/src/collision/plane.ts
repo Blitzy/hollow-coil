@@ -1,4 +1,4 @@
-import { cross, dot, length, scale, sub, type Vec3 } from "../math/vec3";
+import { cross, dot, length, scale, sub, type Vec3 } from "../math/vec3.ts";
 
 /** A plane with a unit normal pointing out of the brush. Points with dot(p, normal) - dist > 0 are in front (outside). */
 export interface Plane {

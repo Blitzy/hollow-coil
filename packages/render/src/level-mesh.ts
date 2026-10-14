@@ -5,8 +5,8 @@
 import * as THREE from "three";
 import type { Level } from "@hollow-coil/sim/level";
 import { cross, dot, sub, type Vec3 } from "@hollow-coil/sim/math/vec3";
-import { toThree } from "./coords";
-import { texelCoords, textureAxes } from "./uv";
+import { toThree } from "./coords.ts";
+import { texelCoords, textureAxes } from "./uv.ts";
 
 /** Brightness by face direction: floors brightest, ceilings darkest, walls in between. */
 export const faceShade = (n: Vec3): number => 0.7 + 0.2 * n.z + 0.08 * Math.abs(n.x);

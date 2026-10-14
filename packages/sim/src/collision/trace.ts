@@ -2,8 +2,8 @@
 // Adapted from Quake 2 qcommon/cmodel.c CM_ClipBoxToBrush, CM_TestBoxInBrush,
 // and CM_BoxTrace (id Software, GPLv2 or later).
 
-import { addScaled, dot, equals, sub, vec3, ZERO, type Vec3 } from "../math/vec3";
-import type { Plane } from "./plane";
+import { addScaled, dot, equals, sub, vec3, ZERO, type Vec3 } from "../math/vec3.ts";
+import type { Plane } from "./plane.ts";
 
 /** Anything with planes, contents, and bounds can be collided with: .map brushes now, .bsp brushes later. */
 export interface CollisionBrush {

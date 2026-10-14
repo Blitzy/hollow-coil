@@ -6,7 +6,7 @@
 // Layouts follow Quake 2's qfiles.h. Lightmap extents follow CalcSurfaceExtents
 // in Quake 2's gl_model.c (GPLv2 or later, id Software).
 
-import { vec3, type Vec3 } from "../math/vec3";
+import { vec3, type Vec3 } from "../math/vec3.ts";
 
 /** Lightmap samples are one per 16 texels in Quake 2. */
 export const LUXEL_SIZE = 16;
@@ -100,9 +100,11 @@ function ascii(bytes: Uint8Array): string {
 }
 
 class Lumps {
+  readonly bytes: Uint8Array;
   private readonly view: DataView;
 
-  constructor(readonly bytes: Uint8Array) {
+  constructor(bytes: Uint8Array) {
+    this.bytes = bytes;
     this.view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     if (bytes.byteLength < 8 + HEADER_LUMPS * 8) throw new BspError("file too small to be a .bsp");
     const magic = ascii(bytes.subarray(0, 4));
