@@ -45,6 +45,12 @@ Contents use the Quake 2 bit values (they are what the .bsp and the .map face fl
 
 Read the `brushes` and `brush_sides` lumps (see `packages/sim/src/map/bsp.ts` for the file layout). Each brush side references a plane in the `planes` lump. These sides **already include bevel planes** added by qbsp, so use them as they are. Only use brushes belonging to the world model (model 0) for now.
 
+A model's brushes are the ones listed by the leafs of its node tree: start at the model's `headnode` and visit every node and leaf below it (a negative child `c` is leaf `-(c + 1)`), collecting each leaf's brushes from the `leaf_brushes` lump. Brush entities have their own trees, so their brushes never mix into the world's.
+
+A brush's bounds come from its axial sides: a side with normal `+axis` gives `maxs[axis] = dist`, and `-axis` gives `mins[axis] = -dist`. qbsp gives every brush all six, as bevels if needed.
+
+qbsp writes brushes in its own order, not the .map's, and stores planes as 32-bit floats. The same map loaded either way gives the same brushes, matched by shape, with planes equal to within float precision (tested in `packages/sim/tests/level.test.ts`).
+
 ### Brushes from a .map
 
 Each brush face line gives three points `p0 p1 p2`. Then:

@@ -1,17 +1,19 @@
-// Regenerates the bevel test fixture: shapes.map and expected.json.
+// Regenerates the bevel test fixture: shapes.map, shapes.bsp, and expected.json.
 //
 // Writes a sealed room containing test brushes (a box, a ramp, a cut cube, a
 // pyramid, a diagonal ramp, and a tetrahedron), compiles it with the pinned
-// qbsp, and records the planes qbsp stored for each test brush, bevels
-// included. The game's brush builder must produce the same planes from
-// shapes.map. qbsp is the oracle, so the planes are read straight from the
-// .bsp's bytes here, not through the game's code.
+// qbsp, keeps the .bsp, and records the planes qbsp stored for each test brush,
+// bevels included. The game's brush builder must produce the same planes from
+// shapes.map, and the game's .bsp reader must find them in shapes.bsp. qbsp is
+// the oracle, so the planes are read straight from the .bsp's bytes here, not
+// through the game's code. qbsp's output is byte-for-byte repeatable (no light
+// pass), so rerunning this with the same version leaves shapes.bsp unchanged.
 //
 // Run after changing the shapes or bumping ericw-tools:
 //   node packages/sim/tests/fixtures/bevels/generate.ts
 
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { REPO_ROOT } from "@hollow-coil/tools/repo";
@@ -111,9 +113,11 @@ const centroids = writeMap(mapPath);
 const tmp = mkdtempSync(join(tmpdir(), "hc-bevels-"));
 let brushes: number[][][];
 try {
+  // Compiled in a temporary folder, since qbsp writes side files next to its output.
   const bsp = join(tmp, "shapes.bsp");
   execFileSync(ericwTool("qbsp"), ["-q2bsp", "-noverbose", "-basedir", REPO_ROOT, "-gamedir", REPO_ROOT, mapPath, bsp], { stdio: "pipe" });
   brushes = bspBrushes(new Uint8Array(readFileSync(bsp)));
+  copyFileSync(bsp, join(HERE, "shapes.bsp"));
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }

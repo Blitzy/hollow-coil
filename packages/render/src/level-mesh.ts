@@ -3,7 +3,7 @@
 // faces get a flat shade by direction so shapes read clearly.
 
 import * as THREE from "three";
-import type { Level } from "@hollow-coil/sim/level";
+import type { MapLevel } from "@hollow-coil/sim/level";
 import { cross, dot, sub, type Vec3 } from "@hollow-coil/sim/math/vec3";
 import { toThree } from "./coords.ts";
 import { texelCoords, textureAxes } from "./uv.ts";
@@ -11,7 +11,7 @@ import { texelCoords, textureAxes } from "./uv.ts";
 /** Brightness by face direction: floors brightest, ceilings darkest, walls in between. */
 export const faceShade = (n: Vec3): number => 0.7 + 0.2 * n.z + 0.08 * Math.abs(n.x);
 
-export function textureNames(level: Level): string[] {
+export function textureNames(level: MapLevel): string[] {
   return [...new Set(level.brushes.flatMap((b) => b.faces.map((f) => f.source.texture)))].sort();
 }
 
@@ -25,7 +25,7 @@ export function missingTexture(): THREE.Texture {
   return tex;
 }
 
-export function buildLevelMeshes(level: Level, textures: ReadonlyMap<string, THREE.Texture>): THREE.Group {
+export function buildLevelMeshes(level: MapLevel, textures: ReadonlyMap<string, THREE.Texture>): THREE.Group {
   const group = new THREE.Group();
   const byTexture = new Map<string, { positions: number[]; uvs: number[]; colors: number[] }>();
 

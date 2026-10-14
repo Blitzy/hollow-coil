@@ -1,7 +1,8 @@
 // Reader for Quake 2 .bsp files (IBSP version 38), as written by ericw-tools'
-// qbsp -q2bsp and light. Reads what rendering and entities need: planes, faces
-// with their vertices, texture info, models, the lightmap lump, and the entity
-// text (parse it with parseEntities()). Brushes for collision come later.
+// qbsp -q2bsp and light. Reads what rendering, collision, and entities need:
+// planes, faces with their vertices, texture info, models, the lightmap lump,
+// brushes with their sides, the node tree that says which brushes belong to
+// which model, and the entity text (parse it with parseEntities()).
 //
 // Layouts follow Quake 2's qfiles.h. Lightmap extents follow CalcSurfaceExtents
 // in Quake 2's gl_model.c (GPLv2 or later, id Software).
@@ -33,7 +34,10 @@ export const BSP_LUMP_NAMES = [
   "areas", "area_portals",
 ] as const;
 const HEADER_LUMPS = BSP_LUMP_NAMES.length;
-const LUMP = { entities: 0, planes: 1, vertices: 2, texinfo: 5, faces: 6, lighting: 7, edges: 11, surfaceEdges: 12, models: 13 } as const;
+const LUMP = {
+  entities: 0, planes: 1, vertices: 2, nodes: 4, texinfo: 5, faces: 6, lighting: 7, leafs: 8, leafBrushes: 10,
+  edges: 11, surfaceEdges: 12, models: 13, brushes: 14, brushSides: 15,
+} as const;
 
 /** Where a lump's bytes are in the file. */
 export interface BspLump {
@@ -73,8 +77,36 @@ export interface BspModel {
   readonly mins: Vec3;
   readonly maxs: Vec3;
   readonly origin: Vec3;
+  /** Root of the model's node tree, as a child reference (see BspNode). */
+  readonly headNode: number;
   readonly firstFace: number;
   readonly numFaces: number;
+}
+
+/** A node of the BSP tree. A child of 0 or more is a node index; a negative child c is leaf -(c + 1). */
+export interface BspNode {
+  readonly plane: number;
+  readonly children: readonly [number, number];
+}
+
+export interface BspLeaf {
+  readonly contents: number;
+  /** Indices of the brushes that touch this leaf. */
+  readonly brushes: readonly number[];
+}
+
+/** One side of a brush. qbsp's bevel planes are sides too. */
+export interface BspBrushSide {
+  /** The side's plane, facing out of the brush. */
+  readonly plane: number;
+  /** The side's texinfo, or -1 if it has none. */
+  readonly texinfo: number;
+}
+
+/** A convex brush as qbsp compiled it: its sides, bevels included, and its Quake 2 contents bits. */
+export interface BspBrush {
+  readonly sides: readonly BspBrushSide[];
+  readonly contents: number;
 }
 
 export interface Bsp {
@@ -85,6 +117,10 @@ export interface Bsp {
   readonly faces: readonly BspFace[];
   /** Model 0 is the world; the rest are brush entities. */
   readonly models: readonly BspModel[];
+  readonly nodes: readonly BspNode[];
+  readonly leafs: readonly BspLeaf[];
+  /** Every model's brushes. modelBrushes() says which belong to a model. */
+  readonly brushes: readonly BspBrush[];
   /** RGB lightmap samples, three bytes each. */
   readonly lighting: Uint8Array;
   /** The header's lump table, in BSP_LUMP_NAMES order. Every lump is checked to lie inside the file. */
@@ -233,11 +269,67 @@ export function readBsp(data: ArrayBuffer | Uint8Array): Bsp {
         mins: readVec3(view, at),
         maxs: readVec3(view, at + 12),
         origin: readVec3(view, at + 24),
+        headNode: view.getInt32(at + 36, true),
         firstFace: view.getInt32(at + 40, true),
         numFaces: view.getInt32(at + 44, true),
       });
     }
   }
+
+  const brushes: BspBrush[] = [];
+  {
+    const sides = lumps.lump(LUMP.brushSides, 4);
+    const { view, offset, count } = lumps.lump(LUMP.brushes, 12);
+    for (let i = 0; i < count; i++) {
+      const at = offset + i * 12;
+      const firstSide = view.getInt32(at, true);
+      const numSides = view.getInt32(at + 4, true);
+      if (firstSide < 0 || numSides < 0 || firstSide + numSides > sides.count) throw new BspError(`brush ${i} has out-of-range sides`);
+      const brushSides: BspBrushSide[] = [];
+      for (let s = firstSide; s < firstSide + numSides; s++) {
+        const plane = sides.view.getUint16(sides.offset + s * 4, true);
+        const info = sides.view.getInt16(sides.offset + s * 4 + 2, true);
+        if (plane >= planes.length || info < -1 || info >= texinfo.length) throw new BspError(`brush ${i} has a side with an out-of-range plane or texinfo`);
+        brushSides.push({ plane, texinfo: info });
+      }
+      brushes.push({ sides: brushSides, contents: view.getInt32(at + 8, true) });
+    }
+  }
+
+  const leafs: BspLeaf[] = [];
+  {
+    const leafBrushes = lumps.lump(LUMP.leafBrushes, 2);
+    const { view, offset, count } = lumps.lump(LUMP.leafs, 28);
+    for (let i = 0; i < count; i++) {
+      const at = offset + i * 28;
+      const first = view.getUint16(at + 24, true);
+      const num = view.getUint16(at + 26, true);
+      if (first + num > leafBrushes.count) throw new BspError(`leaf ${i} has out-of-range brushes`);
+      const leafBrushIndices: number[] = [];
+      for (let b = first; b < first + num; b++) {
+        const brush = leafBrushes.view.getUint16(leafBrushes.offset + b * 2, true);
+        if (brush >= brushes.length) throw new BspError(`leaf ${i} uses missing brush ${brush}`);
+        leafBrushIndices.push(brush);
+      }
+      leafs.push({ contents: view.getInt32(at, true), brushes: leafBrushIndices });
+    }
+  }
+
+  const nodes: BspNode[] = [];
+  {
+    const { view, offset, count } = lumps.lump(LUMP.nodes, 28);
+    for (let i = 0; i < count; i++) {
+      const at = offset + i * 28;
+      nodes.push({ plane: view.getInt32(at, true), children: [view.getInt32(at + 4, true), view.getInt32(at + 8, true)] });
+    }
+  }
+  const validChild = (c: number): boolean => (c >= 0 ? c < nodes.length : -(c + 1) < leafs.length);
+  nodes.forEach((node, i) => {
+    if (node.plane < 0 || node.plane >= planes.length || !node.children.every(validChild)) throw new BspError(`node ${i} has an out-of-range plane or child`);
+  });
+  models.forEach((model, i) => {
+    if (!validChild(model.headNode)) throw new BspError(`model ${i} has an out-of-range head node`);
+  });
 
   const lumpTable: BspLump[] = [];
   for (let i = 0; i < HEADER_LUMPS; i++) {
@@ -245,7 +337,9 @@ export function readBsp(data: ArrayBuffer | Uint8Array): Bsp {
     lumpTable.push({ offset, length: count });
   }
 
-  const bsp: Bsp = { entities: ascii(lumps.raw(LUMP.entities)), planes, texinfo, faces, models, lighting, lumps: lumpTable };
+  const bsp: Bsp = {
+    entities: ascii(lumps.raw(LUMP.entities)), planes, texinfo, faces, models, nodes, leafs, brushes, lighting, lumps: lumpTable,
+  };
   faces.forEach((face, i) => {
     if (face.lightOffset < 0) return;
     const { width, height } = lightmapExtents(bsp, face);
@@ -254,6 +348,28 @@ export function readBsp(data: ArrayBuffer | Uint8Array): Bsp {
     }
   });
   return bsp;
+}
+
+/**
+ * Indices of the brushes in a model, in file order: every brush in a leaf of
+ * the model's node tree. Model 0 gives the world's brushes.
+ */
+export function modelBrushes(bsp: Bsp, model: number): number[] {
+  const head = bsp.models[model]?.headNode;
+  if (head === undefined) throw new BspError(`no model ${model}`);
+  const found = new Set<number>();
+  const visited = new Set<number>(); // guards against a malformed tree that loops
+  const stack = [head];
+  while (stack.length > 0) {
+    const child = stack.pop()!;
+    if (child < 0) {
+      for (const brush of bsp.leafs[-(child + 1)]!.brushes) found.add(brush);
+    } else if (!visited.has(child)) {
+      visited.add(child);
+      stack.push(...bsp.nodes[child]!.children);
+    }
+  }
+  return [...found].sort((a, b) => a - b);
 }
 
 /** The face's normal, pointing out of its front side. */

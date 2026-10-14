@@ -5,7 +5,7 @@
 import { addScaled, dot, equals, sub, vec3, ZERO, type Vec3 } from "../math/vec3.ts";
 import type { Plane } from "./plane.ts";
 
-/** Anything with planes, contents, and bounds can be collided with: .map brushes now, .bsp brushes later. */
+/** Anything with planes, contents, and bounds can be collided with: brushes from a .map or a .bsp. */
 export interface CollisionBrush {
   readonly planes: readonly Plane[];
   readonly contents: number;

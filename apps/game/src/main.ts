@@ -17,7 +17,7 @@ import { buildLevelMeshes, loadTextures, textureNames } from "@hollow-coil/rende
 import { TICK_RATE } from "@hollow-coil/sim/constants";
 import type { PlayerData } from "@hollow-coil/sim/data";
 import { angleToRadians, degreesToUnits, wrapYaw } from "@hollow-coil/sim/input";
-import { levelFromMap, type Level } from "@hollow-coil/sim/level";
+import { levelFromMap, type MapLevel } from "@hollow-coil/sim/level";
 import { readBsp } from "@hollow-coil/sim/map/bsp";
 import { vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
 import { createSim, movementContext, step, type SimState } from "@hollow-coil/sim/sim";
@@ -40,7 +40,7 @@ const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => vec3(a.x + (b.x - a.x) * t, 
  */
 async function loadWorld(
   mapName: string,
-  level: Level,
+  level: MapLevel,
   lightStyles: LightStyleData,
   lighting: boolean,
   brightness: number,
