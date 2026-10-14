@@ -1,0 +1,11 @@
+{
+  // The sim must not touch the DOM, Node, or Three.js. Checking it with only the
+  // ES library (no DOM, no Node types) makes any such use a type error.
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts"]
+}

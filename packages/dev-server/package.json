@@ -1,0 +1,9 @@
+{
+  "name": "@hollow-coil/dev-server",
+  "private": true,
+  "type": "module",
+  "description": "Vite plugin for development: serves the repo's game files and compiles stale maps. Shared by every app.",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

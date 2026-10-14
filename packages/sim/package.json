@@ -1,0 +1,9 @@
+{
+  "name": "@hollow-coil/sim",
+  "private": true,
+  "type": "module",
+  "description": "The deterministic simulation and the .map and .bsp file formats. No Three.js, DOM, or Node.",
+  "exports": {
+    "./*": "./src/*.ts"
+  }
+}

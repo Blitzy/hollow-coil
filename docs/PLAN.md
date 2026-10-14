@@ -9,6 +9,7 @@ The slice started as a two-engine comparison: the same slice built on the web an
 Design goals beyond the slice:
 
 - User-made levels: the TrenchBroom config, FGD, and compile tools double as a modding kit, with data-only level packages (see DECISIONS.md, 2026-10-13).
+- Editor and tool apps in `apps/`, sharing the game's sim and renderer (see DECISIONS.md, 2026-10-13). Ideas so far, none scheduled: particle editor, model viewer and animation tester, sfxr-style sound designer, demo inspector (scrub ticks, find the first divergent hash), map inspector (collision, bevels, lightmaps, test traces), scenario visualizer, live tuning panel for `data/` values, light style editor, palette and look tool for the Software preset, and a mod packager.
 
 ## Slice Scope
 
@@ -56,7 +57,8 @@ Out of scope for the spike:
 /tools       compile script, bsp dump tool, schema validation
 /build       Compiled .bsp output (gitignored)
 /demos       Golden demo recordings for regression tests
-/web         TypeScript + Three.js implementation
+/apps        Things you run: game/ (the game), and future editors and tools
+/packages    Shared TypeScript libraries: sim/, render/, dev-server/, testing/
 /docs        PLAN.md, DECISIONS.md, MOVEMENT.md
 ```
 
@@ -209,4 +211,3 @@ The sim's only input is one command per tick, in an engine-neutral format used b
 
 - Enemy navigation: Quake-style `movetogoal` (step toward the goal, try other directions when blocked) versus something smarter. Start with the Quake approach.
 - Cross-browser determinism (custom trig or lookup tables), deferred until demos need to play across browsers. Desktop builds sidestep it, since Electron bundles one browser engine.
-- Single entry point for project scripts (an `npm install` / `npm run` equivalent). It was deferred until the engine decision, which is now made.

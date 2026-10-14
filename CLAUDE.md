@@ -6,7 +6,9 @@ Hollow Coil is an open-source first-person shooter in the spirit of mid-90s shoo
 
 The current work plan lives in `docs/PLAN.md`. Decisions and their reasons go in `docs/DECISIONS.md`. Player movement and world collision must follow `docs/MOVEMENT.md`.
 
-The game is built for the web (TypeScript + Three.js, in `web/`); desktop builds will wrap it in Electron. A Godot version was built through M1 for comparison and then dropped (see DECISIONS.md).
+The game is built for the web (TypeScript + Three.js); desktop builds will wrap it in Electron. A Godot version was built through M1 for comparison and then dropped (see DECISIONS.md).
+
+The TypeScript code is an npm workspace. `apps/` holds things you run (`apps/game` is the game; editors and tools will join it). `packages/` holds shared libraries: `sim` (simulation and file formats), `render` (Three.js presentation), `dev-server` (the development Vite plugin), and `testing` (Node-only test helpers). Apps import packages by module path (`@hollow-coil/sim/map/bsp`), straight from TypeScript source. Shared code goes in a package, never imported from another app. Only `apps/game` ships to players.
 
 ## Design Principles
 
@@ -33,7 +35,7 @@ The simulation is strictly separated from presentation. These rules are not opti
 - All randomness comes from a seeded RNG stored in sim state. Never use `Math.random` in sim code.
 - All sim state is plain, serializable data with stable entity IDs.
 - The sim emits events (fired, hit, damaged, died). Rendering and audio consume events. The sim never calls presentation code.
-- On the web, sim code must not import Three.js or any DOM API.
+- Sim code (`packages/sim`) must not import Three.js, any DOM API, or Node APIs, or depend on another package.
 
 ## Testing Rules
 
@@ -52,7 +54,7 @@ The simulation is strictly separated from presentation. These rules are not opti
 Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`, with the summary in the imperative and lowercase, no trailing period.
 
 - Types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`, `ci`, `build`, `style`, `revert`.
-- Scope is optional. Use the area touched: `web`, `sim`, `maps`, `data`, `spec`, `demos`, `tools`, `ci`.
+- Scope is optional. Use the area touched: an app or package (`game`, `sim`, `render`, `dev-server`, `testing`, and future app names), or `maps`, `data`, `spec`, `demos`, `tools`, `ci`, `repo` (workspace-wide setup).
 - Breaking changes to data formats, scenario formats, or demo compatibility get a `!` after the type (`feat(data)!: ...`) and a `BREAKING CHANGE:` footer.
 - Examples: `feat(sim): add air acceleration`, `fix(sim): stop step-up through ceilings`, `test(spec): add 20-unit step scenario`, `chore: update gitignore`.
 
@@ -74,7 +76,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 - `python tools/install_trenchbroom.py`: link `maps/trenchbroom` into TrenchBroom's games folder as "Hollow Coil". `--uninstall` removes the link.
 - `python tools/make_placeholder_textures.py`: regenerate the placeholder PNGs in `textures/dev/`.
 
-Web (run in `web/`): `npm install`, then `npm run dev` (play at http://localhost:5173/?map=test_movement), `npm test` (Vitest), and `npm run typecheck` (includes the sim-only check).
+TypeScript (run from the repo root): `npm install`, then `npm run dev` (play at http://localhost:5173/?map=test_movement; pass Vite options after `--`), `npm test` (Vitest, every app and package), `npm run typecheck` (includes the sim-only check), and `npm run build`. `npm run setup`, `npm run compile`, and `npm run validate` run the Python tools above.
 ## Tools
 
 - Scripts in `/tools` are Python 3.11+, standard library only unless a dependency is clearly worth it.

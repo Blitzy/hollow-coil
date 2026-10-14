@@ -1,0 +1,12 @@
+{
+  "name": "@hollow-coil/testing",
+  "private": true,
+  "type": "module",
+  "description": "Node-only helpers for tests: repo paths and loading the shared /data files.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@hollow-coil/sim": "*"
+  }
+}

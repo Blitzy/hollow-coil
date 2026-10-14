@@ -1,0 +1,21 @@
+{
+  // Type-checks every app and package, tests included. packages/sim/tsconfig.json
+  // separately checks the sim with only the ES library, so it can't touch the DOM or Node.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node", "vite/client"],
+    "strict": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["apps/*/src", "apps/*/vite.config.ts", "packages/*/src", "packages/*/tests", "vitest.config.ts"]
+}

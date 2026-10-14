@@ -8,7 +8,7 @@ TrenchBroom maps and the editor config. The repo root is the game root, holding 
 
 ## Lighting
 
-Light entities use ericw-tools' default linear falloff: a light's `light` value is roughly its reach in units, brightest next to the light and fading to nothing that far away. A 220 light lights about a 220-unit radius. The engine's lightmap brightness is fixed (1.5 on the web: a lightmap value of 170 shows a texture at its true colors), so the same light values look the same in every map. If an area is too dark, add lights or raise their values there; don't change the global brightness. The web build draws maps lit, so the fastest preview is `npm run dev` in `web/` and reloading the page after saving.
+Light entities use ericw-tools' default linear falloff: a light's `light` value is roughly its reach in units, brightest next to the light and fading to nothing that far away. A 220 light lights about a 220-unit radius. The engine's lightmap brightness is fixed (1.5 on the web: a lightmap value of 170 shows a texture at its true colors), so the same light values look the same in every map. If an area is too dark, add lights or raise their values there; don't change the global brightness. The web build draws maps lit, so the fastest preview is `npm run dev` from the repo root and reloading the page after saving.
 
 ## Previewing lighting without the game
 

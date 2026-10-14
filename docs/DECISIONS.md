@@ -2,6 +2,24 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-13: One repo of apps and packages (npm workspaces)
+
+**Decision:** The TypeScript code is an npm workspace, set up now, before there is a second app:
+
+- `apps/` holds things you run. `apps/game` is the game; editors and tools (particles, models, sounds, demo inspector, and so on) will each be an app.
+- `packages/` holds shared libraries: `sim` (simulation and file formats), `render` (Three.js presentation), `dev-server` (the Vite plugin that serves game files and compiles stale maps), and `testing` (Node-only test helpers).
+- Packages export their TypeScript source directly (`@hollow-coil/sim/map/bsp`), so there is no build step between them. One root `package.json`, `tsconfig.json`, and `vitest.config.ts` cover everything, and root scripts are the single entry point for project commands, including the Python tools.
+- The repo's files stay the source of truth. Editors read and write `data/`, `maps/`, and `textures/` (through the dev server in development), and what they save must pass `tools/validate.py`. Only `apps/game` ships to players.
+
+**Why:**
+
+- Editors should show exactly what the game shows. Sharing `render` and `sim` as packages makes that the default.
+- The sim's isolation becomes structural: `packages/sim` depends on nothing, and its own tsconfig still checks it with only the ES library.
+- npm workspaces are built into npm: no new dependency or tool to learn.
+- Moving now, while the code is small, is cheaper than moving later. The move changed no code behavior: the production bundle came out byte-identical, and the lockfile kept every third-party version.
+
+**Alternatives considered:** One Vite app with several HTML pages (simpler, but package boundaries would be convention only); monorepo tools like Turborepo or Nx (caching and task graphs we don't need at this size); waiting until the first editor (cheap either way, but Ryan preferred to be ready).
+
 ## 2026-10-13: User-made levels are a design goal
 
 **Decision:** Players should be able to make and play their own levels, as with 90s shooters. The pieces we build for ourselves double as the modding kit: the TrenchBroom game config and FGD, the base textures, and `tools/compile.py` with pinned ericw-tools. Later milestones should keep this working:

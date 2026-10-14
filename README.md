@@ -37,14 +37,16 @@ To edit maps, link the Hollow Coil game config into TrenchBroom, then in TrenchB
 python tools/install_trenchbroom.py
 ```
 
-To play, you'll also need Node.js 24 or newer. Then, in `web/`:
+To play, you'll also need Node.js 24 or newer. Then, from the repo root:
 
 ```
 npm install
 npm run dev
 ```
 
-and open http://localhost:5173/?map=greybox_01. See [web/README.md](web/README.md) for tests, URL options, and how the dev server compiles maps as you edit them.
+and open http://localhost:5173/?map=greybox_01. See [apps/game/README.md](apps/game/README.md) for URL options and how the dev server compiles maps as you edit them.
+
+Other root commands: `npm test` (every app and package), `npm run typecheck`, `npm run build`, and shortcuts for the Python tools: `npm run setup`, `npm run compile`, `npm run validate`.
 
 ## Repository Layout
 
@@ -56,8 +58,11 @@ and open http://localhost:5173/?map=greybox_01. See [web/README.md](web/README.m
 | `spec/` | Engine-neutral test scenarios |
 | `demos/` | Golden demo recordings |
 | `tools/` | Setup, map compiling, and validation scripts (Python) |
-| `web/` | The game: TypeScript + Three.js |
+| `apps/` | Things you run: `game/` (the game), and future editors and tools |
+| `packages/` | Shared TypeScript libraries: `sim/` (simulation and file formats), `render/` (Three.js presentation), `dev-server/` (serves game files in development), `testing/` (test helpers) |
 | `docs/` | Plan, decision log, and the movement reference |
+
+The TypeScript side is one [npm workspace](https://docs.npmjs.com/cli/using-npm/workspaces): install once at the root, and apps import packages as `@hollow-coil/<name>/<module>`, straight from source with no build step.
 
 ## Contributing
 

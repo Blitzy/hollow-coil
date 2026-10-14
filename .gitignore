@@ -16,7 +16,7 @@
 *.texinfo.json
 *.content.json
 # ...except test fixtures, which are compiled once and committed
-!/web/tests/fixtures/**/*.bsp
+!/packages/*/tests/fixtures/**/*.bsp
 
 # TrenchBroom autosaves
 autosave/
