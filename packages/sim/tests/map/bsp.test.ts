@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readRepoBytes, readRepoFile } from "@hollow-coil/testing";
 import { cross, dot, sub } from "@hollow-coil/sim/math/vec3";
-import { BspError, faceNormal, lightmapExtents, readBsp } from "@hollow-coil/sim/map/bsp";
+import { BSP_LUMP_NAMES, BspError, faceNormal, lightmapExtents, readBsp } from "@hollow-coil/sim/map/bsp";
 import { parseEntities, parseMap } from "@hollow-coil/sim/map/parse";
 
 // Compiled by tests/fixtures/bsp/generate.py; expected.json holds what tools/bspdump.py reads from it.
@@ -88,6 +88,13 @@ describe("readBsp", () => {
       const end = lit[i + 1]?.lightOffset ?? bsp.lighting.byteLength;
       expect(end - face.lightOffset).toBe(Math.ceil(samples / 4) * 4 * 3);
     });
+  });
+
+  it("exposes the header's lump table", () => {
+    expect(bsp.lumps).toHaveLength(BSP_LUMP_NAMES.length);
+    const lighting = bsp.lumps[BSP_LUMP_NAMES.indexOf("lighting")]!;
+    expect(lighting.length).toBe(expected.lighting_bytes);
+    expect(bytes.subarray(lighting.offset, lighting.offset + lighting.length)).toEqual(bsp.lighting);
   });
 
   it("rejects files that are not Quake 2 .bsp files", () => {

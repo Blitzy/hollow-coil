@@ -43,7 +43,7 @@ Contents use the Quake 2 bit values (they are what the .bsp and the .map face fl
 
 ### Brushes from a .bsp
 
-Read the `brushes` and `brush_sides` lumps (see `tools/bspdump.py` for the layout). Each brush side references a plane in the `planes` lump. These sides **already include bevel planes** added by qbsp, so use them as they are. Only use brushes belonging to the world model (model 0) for now.
+Read the `brushes` and `brush_sides` lumps (see `packages/sim/src/map/bsp.ts` for the file layout). Each brush side references a plane in the `planes` lump. These sides **already include bevel planes** added by qbsp, so use them as they are. Only use brushes belonging to the world model (model 0) for now.
 
 ### Brushes from a .map
 

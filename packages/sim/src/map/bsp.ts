@@ -26,8 +26,20 @@ export const SURF = {
 const NO_STYLE = 255;
 const MAX_STYLES = 4;
 
-const HEADER_LUMPS = 19;
+/** The 19 lumps of a Quake 2 .bsp, in header order (qfiles.h). */
+export const BSP_LUMP_NAMES = [
+  "entities", "planes", "vertices", "visibility", "nodes", "texinfo", "faces", "lighting", "leafs",
+  "leaf_faces", "leaf_brushes", "edges", "surface_edges", "models", "brushes", "brush_sides", "pop",
+  "areas", "area_portals",
+] as const;
+const HEADER_LUMPS = BSP_LUMP_NAMES.length;
 const LUMP = { entities: 0, planes: 1, vertices: 2, texinfo: 5, faces: 6, lighting: 7, edges: 11, surfaceEdges: 12, models: 13 } as const;
+
+/** Where a lump's bytes are in the file. */
+export interface BspLump {
+  readonly offset: number;
+  readonly length: number;
+}
 
 export interface BspPlane {
   readonly normal: Vec3;
@@ -75,6 +87,8 @@ export interface Bsp {
   readonly models: readonly BspModel[];
   /** RGB lightmap samples, three bytes each. */
   readonly lighting: Uint8Array;
+  /** The header's lump table, in BSP_LUMP_NAMES order. Every lump is checked to lie inside the file. */
+  readonly lumps: readonly BspLump[];
 }
 
 /** A face's lightmap in luxels, with the texel coordinates of its first luxel. */
@@ -225,7 +239,13 @@ export function readBsp(data: ArrayBuffer | Uint8Array): Bsp {
     }
   }
 
-  const bsp: Bsp = { entities: ascii(lumps.raw(LUMP.entities)), planes, texinfo, faces, models, lighting };
+  const lumpTable: BspLump[] = [];
+  for (let i = 0; i < HEADER_LUMPS; i++) {
+    const { offset, count } = lumps.lump(i);
+    lumpTable.push({ offset, length: count });
+  }
+
+  const bsp: Bsp = { entities: ascii(lumps.raw(LUMP.entities)), planes, texinfo, faces, models, lighting, lumps: lumpTable };
   faces.forEach((face, i) => {
     if (face.lightOffset < 0) return;
     const { width, height } = lightmapExtents(bsp, face);

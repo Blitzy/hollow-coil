@@ -70,7 +70,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 
 - `python tools/setup.py [tool ...]`: install pinned third-party tools (ericw-tools) into `.tools/`. Name tools to install only those. `--check` verifies without changing anything; `--force` reinstalls.
 - `python tools/compile.py [map ...] [--mode check|release]`: compile maps to `build/<name>.bsp`. Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
-- `python tools/bspdump.py build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON.
+- `npm run bspdump -- build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON, read with the game's own `.bsp` reader.
 - `python -m unittest discover -s tools/tests`: test the tools (needs ericw-tools installed).
 - `npm run validate`: validate `data/*.json` and the `spec/*.json` scenarios against their schemas, plus cross-file checks (runs in CI). The checks themselves live in `packages/data`, so editors can use them too.
 - `npm run check-files`: fail if any tracked file is over 2 MB (runs in CI).

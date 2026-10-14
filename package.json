@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "check-files": "node tools/src/check-files.ts",
     "validate": "node tools/src/validate.ts",
+    "bspdump": "node tools/src/bspdump.ts",
     "compile": "python tools/compile.py",
     "setup": "python tools/setup.py"
   },
