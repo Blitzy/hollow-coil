@@ -29,6 +29,32 @@ export interface PlayerData {
   };
 }
 
+export interface SpreadData {
+  /** Maximum angle off the aim direction, in degrees. */
+  readonly horizontal: number;
+  readonly vertical: number;
+}
+
+export interface HitscanData {
+  readonly pellets: number;
+  readonly damage: number;
+  readonly spread: SpreadData;
+  readonly range: number;
+}
+
+export interface WeaponData {
+  readonly name: string;
+  readonly slot: number;
+  readonly fire_interval: number;
+  readonly hitscan: HitscanData;
+}
+
+/** data/weapons.json. */
+export interface WeaponsData {
+  readonly switching: { readonly lower_time: number; readonly raise_time: number };
+  readonly weapons: Readonly<Record<string, WeaponData>>;
+}
+
 export interface Hull {
   readonly mins: Vec3;
   readonly maxs: Vec3;

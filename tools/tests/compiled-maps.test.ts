@@ -8,7 +8,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadPlayerData, readRepoFile } from "@hollow-coil/testing";
+import { loadSimConfig, readRepoFile } from "@hollow-coil/testing";
 import { brushBounds, brushMismatches, compareSweeps, near } from "@hollow-coil/testing/level-parity";
 import { hullFromData } from "@hollow-coil/sim/data";
 import { levelFromBsp, levelFromMap, type Level } from "@hollow-coil/sim/level";
@@ -23,7 +23,7 @@ const MAPS = findMaps([]).map((path) => basename(path, ".map"));
 const SCENARIOS = readdirSync(repoPath("spec"))
   .filter((f) => f.endsWith(".json"))
   .map((f) => [f, JSON.parse(readRepoFile(`spec/${f}`)) as Scenario] as const);
-const config = { player: loadPlayerData() };
+const config = loadSimConfig();
 
 /** How far apart the player may be, tick for tick, in a scenario run on the .map and the .bsp. */
 const SCENARIO_TOLERANCE = 1e-3;

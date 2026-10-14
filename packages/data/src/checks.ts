@@ -10,7 +10,7 @@
 //     that map (marker names must be unique within a map)
 //   - scenario input segments are in order and fit the duration; checks happen
 //     within the duration; position and velocity checks have a tolerance
-//   - scenario weapon selections are real weapon slots
+//   - scenario weapon selections are real weapon slots, and weapon checks name real weapons
 
 import { parseMap } from "@hollow-coil/sim/map/parse";
 import { show } from "./schema.ts";
@@ -33,7 +33,7 @@ export interface ScenarioFile {
   duration: number;
   start: { marker: string };
   inputs: { until: number; weapon?: number }[];
-  expect: { at: number; position?: unknown; velocity?: unknown; tolerance?: number; near_marker?: { name: string } }[];
+  expect: { at: number; position?: unknown; velocity?: unknown; tolerance?: number; near_marker?: { name: string }; weapon?: string }[];
 }
 
 /** Entity classnames the FGD defines. */
@@ -120,13 +120,19 @@ export function mapMarkers(text: string, fileName: string): { markers: Map<strin
  * Checks on one scenario that its schema can't express. readMap returns
  * maps/<name>.map's text, or null if there's no such map.
  */
-export function scenarioCheck(name: string, scenario: ScenarioFile, weaponSlots: ReadonlySet<number>, readMap: (map: string) => string | null): string[] {
+export function scenarioCheck(
+  name: string,
+  scenario: ScenarioFile,
+  weapons: DataFiles["weapons"]["weapons"],
+  readMap: (map: string) => string | null,
+): string[] {
   const label = `spec/${name}.json`;
   const mapFile = `${scenario.map}.map`;
   const text = readMap(scenario.map);
   if (text === null) return [`${label}: map ${show(scenario.map)} not found (${mapFile})`];
   const { markers, problems } = mapMarkers(text, mapFile);
   const errors = [...problems];
+  const weaponSlots = new Set(Object.values(weapons).map((w) => w.slot));
 
   const named = [scenario.start.marker, ...scenario.expect.flatMap((e) => (e.near_marker ? [e.near_marker.name] : []))];
   for (const marker of named) {
@@ -148,6 +154,9 @@ export function scenarioCheck(name: string, scenario: ScenarioFile, weaponSlots:
     if (expectation.at > duration) errors.push(`${label}: expect[${i}].at (${expectation.at}) is past the duration ${duration}`);
     if ((expectation.position !== undefined || expectation.velocity !== undefined) && expectation.tolerance === undefined) {
       errors.push(`${label}: expect[${i}] checks position or velocity but has no tolerance`);
+    }
+    if (expectation.weapon !== undefined && !Object.hasOwn(weapons, expectation.weapon)) {
+      errors.push(`${label}: expect[${i}].weapon ${show(expectation.weapon)} is not defined in weapons.json`);
     }
   });
   return errors;

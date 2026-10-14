@@ -8,7 +8,7 @@
 
 import { TICK_RATE } from "@hollow-coil/sim/constants";
 import type { Bsp } from "@hollow-coil/sim/map/bsp";
-import { secondsToTicks } from "@hollow-coil/sim/scenario";
+import { secondsToTicks } from "@hollow-coil/sim/constants";
 import { composeLightmaps, type LightmapAtlas } from "./lightmap-atlas.ts";
 
 /** data/lightstyles.json */

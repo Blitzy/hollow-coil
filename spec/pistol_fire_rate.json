@@ -1,0 +1,34 @@
+{
+  "$schema": "./schemas/scenario.schema.json",
+  "description": "Holding attack with the pistol fires at once, then every fire_interval (0.35 s, 21 ticks at 60 Hz) for as long as attack is held.",
+  "status": "verified",
+  "map": "test_combat",
+  "duration": 3.0,
+  "start": { "marker": "range_origin", "yaw": 0 },
+  "inputs": [
+    { "until": 3.0, "attack": true }
+  ],
+  "expect": [
+    {
+      "at": 0.05,
+      "note": "The starting weapon is ready at spawn, so the first shot is on the first tick.",
+      "weapon": "pistol",
+      "shots": 1
+    },
+    {
+      "at": 0.35,
+      "note": "Tick 21: the cooldown from the first shot hasn't run out; the second shot is on tick 22.",
+      "shots": 1
+    },
+    {
+      "at": 0.4,
+      "shots": 2
+    },
+    {
+      "at": 3.0,
+      "note": "Shots on ticks 1, 22, 43, ... 169; the tenth would be on tick 190, after 3 s.",
+      "weapon": "pistol",
+      "shots": 9
+    }
+  ]
+}

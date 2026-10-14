@@ -1,23 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { loadPlayerData, readRepoFile } from "@hollow-coil/testing";
+import { loadSimConfig, readRepoFile } from "@hollow-coil/testing";
 import { DIST_EPSILON } from "@hollow-coil/sim/collision/trace";
-import { BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "@hollow-coil/sim/input";
+import { BUTTON_ATTACK, BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "@hollow-coil/sim/input";
 import { levelFromMap } from "@hollow-coil/sim/level";
 import { vec3 } from "@hollow-coil/sim/math/vec3";
-import { createSim, movementContext, PLAYER_ID, SPAWN_RAISE, step, type SimState } from "@hollow-coil/sim/sim";
+import { createSim, PLAYER_ID, simContext, SPAWN_RAISE, step, type SimState } from "@hollow-coil/sim/sim";
 import { hashState, restore, snapshot } from "@hollow-coil/sim/snapshot";
 
-const config = { player: loadPlayerData() };
+const config = loadSimConfig();
 const level = levelFromMap(readRepoFile("maps/test_movement.map"));
-const ctx = movementContext(level, config);
+const ctx = simContext(level, config);
 
-// Inputs that exercise running, turning, strafing, and jumping.
+// Inputs that exercise running, turning, strafing, jumping, firing, and switching weapons.
 const script = (tick: number): InputCommand => ({
   ...NEUTRAL_COMMAND,
   yaw: (tick * 97) % 65536,
   forward: 127,
   side: tick % 120 < 60 ? 64 : -64,
-  buttons: tick % 90 < 3 ? BUTTON_JUMP : 0,
+  buttons: (tick % 90 < 3 ? BUTTON_JUMP : 0) | (tick % 50 < 30 ? BUTTON_ATTACK : 0),
+  weapon: tick % 200 === 100 ? 2 : tick % 200 === 0 ? 1 : 0,
 });
 
 function simulate(start: SimState, fromTick: number, toTick: number): { state: SimState; hashes: string[] } {
@@ -46,6 +47,20 @@ describe("spawning", () => {
   it("keeps the latest command's view angles", () => {
     const after = step(spawnAtCourseStart(), { ...NEUTRAL_COMMAND, yaw: 16384, pitch: -2000 }, ctx).state;
     expect([after.player.yaw, after.player.pitch]).toEqual([16384, -2000]);
+  });
+});
+
+describe("weapons", () => {
+  it("spawns holding the starting weapon, ready", () => {
+    expect(spawnAtCourseStart().player.weapon).toEqual({ current: "pistol", desired: "pistol", phase: "ready", time: 0 });
+  });
+
+  it("reports each shot as a fired event", () => {
+    const cmd = { ...NEUTRAL_COMMAND, buttons: BUTTON_ATTACK };
+    const first = step(spawnAtCourseStart(), cmd, ctx);
+    expect(first.events).toEqual([{ type: "fired", entity: PLAYER_ID, weapon: "pistol" }]);
+    expect(first.state.player.weapon).toMatchObject({ phase: "firing", time: 21 });
+    expect(step(first.state, cmd, ctx).events).toEqual([]); // cooling down
   });
 });
 

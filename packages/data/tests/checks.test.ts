@@ -87,7 +87,7 @@ describe("lightStyleCheck", () => {
 });
 
 describe("scenarios", () => {
-  const SLOTS = new Set([1, 2]);
+  const WEAPONS = realData().weapons.weapons;
   const readMap = (name: string): string | null => {
     try {
       return readRepoFile(`maps/${name}.map`);
@@ -96,14 +96,14 @@ describe("scenarios", () => {
     }
   };
   const scenario = (name: string): ScenarioFile & Record<string, any> => loadJson(`spec/${name}.json`);
-  const check = (s: ScenarioFile): string[] => scenarioCheck("test", s, SLOTS, readMap);
+  const check = (s: ScenarioFile): string[] => scenarioCheck("test", s, WEAPONS, readMap);
   const specValidator = new SchemaValidator((name) => loadJson(`spec/schemas/${name}`));
 
   it("passes every real scenario, schema and checks", () => {
     for (const file of readdirSync(join(REPO_ROOT, "spec")).filter((f) => f.endsWith(".json"))) {
       const s = scenario(file.replace(/\.json$/, ""));
       expect(specValidator.validate(s, "scenario.schema.json"), file).toEqual([]);
-      expect(scenarioCheck(file, s, SLOTS, readMap), file).toEqual([]);
+      expect(scenarioCheck(file, s, WEAPONS, readMap), file).toEqual([]);
     }
   });
 
@@ -154,6 +154,12 @@ describe("scenarios", () => {
     const s = scenario("step_18_succeeds");
     s.inputs[0]!.weapon = 7;
     expect(check(s)).toEqual(["spec/test.json: inputs[0].weapon 7 is not a weapon slot in weapons.json"]);
+  });
+
+  it("requires weapon checks to name real weapons", () => {
+    const s = scenario("step_18_succeeds");
+    s.expect[0]!.weapon = "railgun";
+    expect(check(s)).toEqual(["spec/test.json: expect[0].weapon 'railgun' is not defined in weapons.json"]);
   });
 });
 

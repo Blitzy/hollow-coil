@@ -16,12 +16,12 @@ import { cameraRotation, toThree, verticalFov } from "@hollow-coil/render/coords
 import type { LightStyleData } from "@hollow-coil/render/light-styles";
 import { buildLevelMeshes, loadTextures, textureNames } from "@hollow-coil/render/level-mesh";
 import { TICK_RATE } from "@hollow-coil/sim/constants";
-import type { PlayerData } from "@hollow-coil/sim/data";
+import type { PlayerData, WeaponsData } from "@hollow-coil/sim/data";
 import { angleToRadians, degreesToUnits, wrapYaw } from "@hollow-coil/sim/input";
 import { levelFromBsp, levelFromMap, type Level } from "@hollow-coil/sim/level";
 import { readBsp } from "@hollow-coil/sim/map/bsp";
 import { vec3, type Vec3 } from "@hollow-coil/sim/math/vec3";
-import { createSim, movementContext, step, type SimState } from "@hollow-coil/sim/sim";
+import { createSim, simContext, step, type SimConfig, type SimState } from "@hollow-coil/sim/sim";
 
 const GAME = "/game"; // served from the repo root by vite.config.ts
 const HORIZONTAL_FOV = 90;
@@ -80,13 +80,17 @@ async function main(): Promise<void> {
   const overlay = document.getElementById("overlay")!;
   overlay.textContent = `loading ${mapName}...`;
 
-  const [playerText, lightStylesText] = await Promise.all([fetchText(`${GAME}/data/player.json`), fetchText(`${GAME}/data/lightstyles.json`)]);
-  const config = { player: JSON.parse(playerText) as PlayerData };
+  const [playerText, weaponsText, lightStylesText] = await Promise.all([
+    fetchText(`${GAME}/data/player.json`),
+    fetchText(`${GAME}/data/weapons.json`),
+    fetchText(`${GAME}/data/lightstyles.json`),
+  ]);
+  const config: SimConfig = { player: JSON.parse(playerText) as PlayerData, weapons: JSON.parse(weaponsText) as WeaponsData };
   const lightStyles = JSON.parse(lightStylesText) as LightStyleData;
   const brightness = Number(params.get("brightness") ?? DEFAULT_BRIGHTNESS);
   const world = await loadLevel(mapName, lightStyles, params.get("lighting") !== "off", Number.isFinite(brightness) ? brightness : DEFAULT_BRIGHTNESS);
   const level = world.level;
-  const ctx = movementContext(level, config);
+  const ctx = simContext(level, config);
 
   const renderer = new THREE.WebGLRenderer({ antialias: false });
   renderer.setPixelRatio(window.devicePixelRatio);

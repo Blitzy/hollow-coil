@@ -1,0 +1,42 @@
+{
+  "$schema": "./schemas/scenario.schema.json",
+  "description": "Switching from the pistol to the shotgun lowers the pistol (lower_time 0.2 s), then raises the shotgun (raise_time 0.25 s), with no firing until it is up. Then holding attack fires the shotgun every fire_interval (0.9 s).",
+  "status": "verified",
+  "map": "test_combat",
+  "duration": 3.0,
+  "start": { "marker": "range_origin", "yaw": 0 },
+  "inputs": [
+    { "until": 0.05, "weapon": 2, "attack": true },
+    { "until": 3.0, "attack": true }
+  ],
+  "expect": [
+    {
+      "at": 0.2,
+      "note": "Tick 12: still lowering the pistol, which started on tick 1 and takes 12 ticks. Attack is held, but nothing fires.",
+      "weapon": "pistol",
+      "shots": 0
+    },
+    {
+      "at": 0.25,
+      "note": "Raising the shotgun, from tick 13.",
+      "weapon": "shotgun",
+      "shots": 0
+    },
+    {
+      "at": 0.45,
+      "note": "Tick 27: raising takes 15 ticks, so the shotgun isn't up until tick 28.",
+      "shots": 0
+    },
+    {
+      "at": 0.5,
+      "note": "The first shotgun shot is on tick 28, lower_time + raise_time (27 ticks) after the key was pressed.",
+      "weapon": "shotgun",
+      "shots": 1
+    },
+    {
+      "at": 3.0,
+      "note": "Shotgun shots on ticks 28, 82, and 136 (54 ticks apart); the fourth would be on tick 190, after 3 s.",
+      "shots": 3
+    }
+  ]
+}

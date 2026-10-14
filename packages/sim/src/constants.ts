@@ -9,3 +9,6 @@ export const CONTENTS = {
   PLAYERCLIP: 0x10000,
   MONSTERCLIP: 0x20000,
 } as const;
+
+/** Seconds to whole ticks, rounding to the nearest tick (spec/README.md, Conversion rules). */
+export const secondsToTicks = (seconds: number, tickRate = TICK_RATE): number => Math.floor(seconds * tickRate + 0.5);

@@ -74,6 +74,15 @@
           },
           "required": ["name", "within"],
           "additionalProperties": false
+        },
+        "weapon": {
+          "description": "The weapon in hand, by its id in data/weapons.json. During a switch, the old weapon until it is fully lowered, then the new one while it raises.",
+          "type": "string"
+        },
+        "shots": {
+          "description": "How many times the player has fired since the start, through this tick (a shotgun blast is one shot).",
+          "type": "integer",
+          "minimum": 0
         }
       },
       "required": ["at"],

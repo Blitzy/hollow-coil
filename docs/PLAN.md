@@ -149,7 +149,9 @@ Tests:
 
 ### M3: Weapons
 
-- Weapon state machine: raising, idle, firing, cooldown, lowering
+In progress. Done: the weapon state machine (switching and firing, following Quake 3; see `docs/WEAPONS.md`), with fired events and scenarios. Remaining: hitscan, then switching and hit marks in the game.
+
+- Weapon state machine: ready, firing (with its cooldown), lowering, raising
 - Pistol and shotgun from data, hitscan against world and entities
 - Switching via number keys and scroll wheel
 - Events emitted for presentation (fired, hit wall, hit entity)

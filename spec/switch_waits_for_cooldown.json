@@ -1,0 +1,30 @@
+{
+  "$schema": "./schemas/scenario.schema.json",
+  "description": "A weapon key pressed during the fire cooldown is remembered, and the switch starts only when the cooldown ends (Quake 3's rule), so switching can't skip a weapon's recovery.",
+  "status": "verified",
+  "map": "test_combat",
+  "duration": 1.0,
+  "start": { "marker": "range_origin", "yaw": 0 },
+  "inputs": [
+    { "until": 0.05, "attack": true },
+    { "until": 0.1, "weapon": 2 }
+  ],
+  "expect": [
+    {
+      "at": 0.35,
+      "note": "Tick 21: the pistol fired on tick 1 and its 21-tick cooldown is still running, so the shotgun key (pressed on ticks 4 to 6) is waiting.",
+      "weapon": "pistol",
+      "shots": 1
+    },
+    {
+      "at": 0.55,
+      "note": "Tick 33: lowering started on tick 22 when the cooldown ended, and takes 12 ticks, so the shotgun is in hand from tick 34. The switch can't cut the pistol's recovery short.",
+      "weapon": "pistol"
+    },
+    {
+      "at": 0.6,
+      "weapon": "shotgun",
+      "shots": 1
+    }
+  ]
+}

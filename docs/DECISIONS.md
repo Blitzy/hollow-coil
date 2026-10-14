@@ -2,6 +2,18 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-13: Weapon switching follows Quake 3
+
+**Decision:** Weapon switching and firing follow Quake 3's `PM_Weapon` (rules in `docs/WEAPONS.md`). A weapon key pressed during the fire cooldown waits for the cooldown to end; then the weapon lowers (`lower_time`) and the new one raises (`raise_time`), with no firing in between. A key pressed while lowering changes which weapon comes up; one pressed while raising starts lowering again. The one change: a raised weapon can fire on the same tick, so a switch takes exactly `lower_time + raise_time`.
+
+**Why:**
+
+- Quake, Quake 2, Quake 3, and Doom all make a switch wait for the fire cooldown, so switching can't skip a weapon's recovery (no shotgun-then-quick-switch tricks). Half-Life switches immediately; it's the outlier, and its quick-switch habits come with it.
+- Our data's switch times (lower 0.2 s, raise 0.25 s) are already Quake 3's (200 ms and 250 ms), and Quake 3's rules have lower and raise phases like ours. Quake 1 swaps instantly, and Quake 2 ties switching to animation frames.
+- Quake 3 loses a frame after the raise. At 60 Hz that would make a switch a tick longer than the data says, so we fire on that tick instead.
+
+**Alternatives considered:** Half-Life's immediate switch (faster weapon juggling, but lets switching cancel a cooldown); Quake 1's instant swap (no lower and raise, which the data and the slice plan call for).
+
 ## 2026-10-13: CI is one job
 
 **Decision:** CI is a single workflow (`ci.yml`) with a single job: install, then install the pinned ericw-tools, check file sizes, validate, type-check, run every test, and compile every map in check mode. It runs on pushes to main and on pull requests, skipping changes that touch only docs (`docs/**`, `**/*.md`). The separate maps and web workflows, their per-folder path filters, and the manual release-build artifact are gone; full-quality builds run locally (`npm run compile -- --mode release`). This supersedes "CI compiles maps in check mode, only when maps change" (below).

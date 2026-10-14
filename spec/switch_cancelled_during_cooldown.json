@@ -1,0 +1,23 @@
+{
+  "$schema": "./schemas/scenario.schema.json",
+  "description": "Pressing another weapon's key during the fire cooldown, then the current weapon's key, cancels the switch: nothing is lowered, and the weapon fires again as soon as its cooldown ends.",
+  "status": "verified",
+  "map": "test_combat",
+  "duration": 1.0,
+  "start": { "marker": "range_origin", "yaw": 0 },
+  "inputs": [
+    { "until": 0.05, "attack": true },
+    { "until": 0.1, "weapon": 2 },
+    { "until": 0.15, "weapon": 1 },
+    { "until": 0.4 },
+    { "until": 1.0, "attack": true }
+  ],
+  "expect": [
+    {
+      "at": 0.45,
+      "note": "The pistol fired on tick 1; the shotgun key (ticks 4 to 6) and the pistol key (ticks 7 to 9) both came during its cooldown, so no switch started. Attack from tick 25 fires at once. Had the shotgun key started lowering, the pistol would be lowered and raised again, and couldn't fire until tick 49.",
+      "weapon": "pistol",
+      "shots": 2
+    }
+  ]
+}

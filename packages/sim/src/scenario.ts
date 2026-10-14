@@ -1,11 +1,11 @@
 // Runs the engine-neutral scenarios in /spec, following the conversion rules in
 // spec/README.md. The caller loads the scenario JSON, the level, and the data.
 
-import { TICK_RATE } from "./constants.ts";
+import { secondsToTicks, TICK_RATE } from "./constants.ts";
 import { BUTTON_ATTACK, BUTTON_JUMP, degreesToUnits, NEUTRAL_COMMAND, wrapYaw, type InputCommand } from "./input.ts";
 import type { Level } from "./level.ts";
 import { length, sub, type Vec3 } from "./math/vec3.ts";
-import { createSim, movementContext, step, type SimConfig, type SimState } from "./sim.ts";
+import { createSim, simContext, step, type SimConfig, type SimState } from "./sim.ts";
 
 type Vec3OrNull = readonly [number | null, number | null, number | null];
 
@@ -34,6 +34,10 @@ export interface Scenario {
     readonly tolerance?: number;
     readonly on_ground?: boolean;
     readonly near_marker?: { readonly name: string; readonly within: number };
+    /** The weapon in hand (a key of weapons.json's weapons). */
+    readonly weapon?: string;
+    /** Shots the player has fired since the start, through this tick. */
+    readonly shots?: number;
   }[];
 }
 
@@ -51,9 +55,9 @@ export interface ScenarioResult {
   readonly checks: readonly CheckResult[];
   /** State after every tick, starting with the spawn state (index = tick). */
   readonly states: readonly SimState[];
+  /** Shots fired since the start, after every tick (index = tick). */
+  readonly shots: readonly number[];
 }
-
-export const secondsToTicks = (seconds: number, tickRate = TICK_RATE): number => Math.floor(seconds * tickRate + 0.5);
 
 const yawUnits = (degrees: number): number => wrapYaw(degreesToUnits(degrees));
 
@@ -98,11 +102,16 @@ export function runScenario(scenario: Scenario, level: Level, config: SimConfig)
   if (!marker) throw new Error(`marker "${scenario.start.marker}" not found in ${scenario.map}`);
 
   const commands = scenarioCommands(scenario);
-  const ctx = movementContext(level, config);
+  const ctx = simContext(level, config);
   const states: SimState[] = [
     createSim(config, { origin: marker, yaw: yawUnits(scenario.start.yaw), pitch: degreesToUnits(scenario.start.pitch ?? 0) }, scenario.seed ?? 0),
   ];
-  for (const cmd of commands) states.push(step(states.at(-1)!, cmd, ctx).state);
+  const shots = [0];
+  for (const cmd of commands) {
+    const { state, events } = step(states.at(-1)!, cmd, ctx);
+    states.push(state);
+    shots.push(shots.at(-1)! + events.filter((e) => e.type === "fired" && e.entity === state.player.id).length);
+  }
 
   const checks = scenario.expect.map((e): CheckResult => {
     const tick = secondsToTicks(e.at);
@@ -122,7 +131,11 @@ export function runScenario(scenario: Scenario, level: Level, config: SimConfig)
         failures.push(`near_marker ${e.near_marker.name}: expected within ${e.near_marker.within}, got ${distance.toFixed(1)}`);
       }
     }
+    if (e.weapon !== undefined && p.weapon.current !== e.weapon) {
+      failures.push(`weapon: expected ${e.weapon}, got ${p.weapon.current} (${p.weapon.phase})`);
+    }
+    if (e.shots !== undefined && shots[tick] !== e.shots) failures.push(`shots: expected ${e.shots}, got ${shots[tick]}`);
     return { at: e.at, tick, note: e.note, passed: failures.length === 0, failures };
   });
-  return { passed: checks.every((c) => c.passed), checks, states };
+  return { passed: checks.every((c) => c.passed), checks, states, shots };
 }
