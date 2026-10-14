@@ -24,18 +24,17 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
 
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
+      - name: Install
+        run: npm ci
 
       - name: Check file sizes
-        run: node tools/src/check-files.ts
+        run: npm run check-files
 
-      - name: Validate data
-        run: python tools/validate.py
+      - name: Validate data and scenarios
+        run: npm run validate
 
-      - name: Test data validator
-        run: python -m unittest discover -s tools/tests -p "test_validate.py" -v
-
-  # Map compiles run in maps.yml, and the web build's tests in web.yml, each only when relevant files change.
+  # Map compiles run in maps.yml, and the TypeScript tests (the validator's included) in web.yml,
+  # each only when relevant files change.

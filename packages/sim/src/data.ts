@@ -1,5 +1,5 @@
 // Shapes of the shared gameplay data in /data, as the sim uses them. The caller
-// loads and parses the JSON (validated by tools/validate.py) and passes it in;
+// loads and parses the JSON (validated by tools/src/validate.ts) and passes it in;
 // the sim never reads files itself.
 
 import { vec3, type Vec3 } from "./math/vec3.ts";

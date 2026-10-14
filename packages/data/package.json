@@ -1,0 +1,12 @@
+{
+  "name": "@hollow-coil/data",
+  "private": true,
+  "type": "module",
+  "description": "Validation for /data and /spec files: our JSON Schema subset and the cross-file checks. Browser-safe, so editors can check what they save.",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@hollow-coil/sim": "*"
+  }
+}

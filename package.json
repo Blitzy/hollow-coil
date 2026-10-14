@@ -17,7 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check-files": "node tools/src/check-files.ts",
-    "validate": "python tools/validate.py",
+    "validate": "node tools/src/validate.ts",
     "compile": "python tools/compile.py",
     "setup": "python tools/setup.py"
   },

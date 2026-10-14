@@ -72,7 +72,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 - `python tools/compile.py [map ...] [--mode check|release]`: compile maps to `build/<name>.bsp`. Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
 - `python tools/bspdump.py build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON.
 - `python -m unittest discover -s tools/tests`: test the tools (needs ericw-tools installed).
-- `python tools/validate.py`: validate `data/*.json` and the `spec/*.json` scenarios against their schemas, plus cross-file checks (runs in CI).
+- `npm run validate`: validate `data/*.json` and the `spec/*.json` scenarios against their schemas, plus cross-file checks (runs in CI). The checks themselves live in `packages/data`, so editors can use them too.
 - `npm run check-files`: fail if any tracked file is over 2 MB (runs in CI).
 - `python tools/install_trenchbroom.py`: link `maps/trenchbroom` into TrenchBroom's games folder as "Hollow Coil". `--uninstall` removes the link.
 - `python tools/make_placeholder_textures.py`: regenerate the placeholder PNGs in `textures/dev/`.
