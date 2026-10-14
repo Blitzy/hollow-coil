@@ -1,11 +1,13 @@
-// Links the Hollow Coil game config into TrenchBroom.
+// Links the Mandrel.js game config into TrenchBroom.
 //
-// Creates <TrenchBroom user dir>/games/HollowCoil pointing at maps/trenchbroom,
+// Creates <TrenchBroom user dir>/games/MandrelJS pointing at maps/trenchbroom,
 // so TrenchBroom always reads the repo's current config and FGD. On Windows
 // this is a directory junction (no admin rights needed); elsewhere a symlink.
+// It also removes the link from before the engine was renamed (games/HollowCoil)
+// if it points at the same folder, so TrenchBroom doesn't load the config twice.
 //
 // After installing, set the game path in TrenchBroom under
-// Preferences > Games > Hollow Coil to the repo root (the folder holding maps/ and textures/).
+// Preferences > Games > Mandrel.js to the repo root (the folder holding maps/ and textures/).
 //
 // Usage: node tools/src/install-trenchbroom.ts [--uninstall]   (or npm run install-trenchbroom)
 //   --uninstall   remove the link (the repo files are untouched)
@@ -17,7 +19,9 @@ import { parseArgs } from "node:util";
 import { isMain, REPO_ROOT, repoPath } from "./repo.ts";
 
 export const CONFIG_DIR = repoPath("maps", "trenchbroom");
-const LINK_NAME = "HollowCoil";
+const LINK_NAME = "MandrelJS";
+/** Link names used by earlier versions of this tool. */
+const OLD_LINK_NAMES = ["HollowCoil"];
 
 export class InstallError extends Error {
   override name = "InstallError";
@@ -69,16 +73,31 @@ export function uninstall(link: string): string {
   return `removed: ${link}`;
 }
 
+/**
+ * Removes a link left by an earlier version of this tool, but only if it points at target;
+ * anything else is someone else's and stays. Returns the message to print, or null if nothing was removed.
+ */
+export function removeOldLink(link: string, target: string = CONFIG_DIR): string | null {
+  const current = linkTarget(link);
+  if (current === null || normalize(current) !== normalize(target)) return null;
+  return `${uninstall(link)} (the old name for this config)`;
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
   const { values } = parseArgs({ args: argv, options: { uninstall: { type: "boolean" } } });
-  const link = join(trenchbroomUserDir(), "games", LINK_NAME);
+  const games = join(trenchbroomUserDir(), "games");
+  const link = join(games, LINK_NAME);
   try {
+    for (const name of OLD_LINK_NAMES) {
+      const message = removeOldLink(join(games, name));
+      if (message !== null) console.log(message);
+    }
     if (values.uninstall) {
       console.log(uninstall(link));
     } else {
       const message = install(link);
       console.log(message);
-      if (message.startsWith("installed")) console.log(`Next, in TrenchBroom: Preferences > Games > Hollow Coil, set the game path to ${REPO_ROOT}`);
+      if (message.startsWith("installed")) console.log(`Next, in TrenchBroom: Preferences > Games > Mandrel.js, set the game path to ${REPO_ROOT}`);
     }
   } catch (error) {
     if (!(error instanceof Error)) throw error;

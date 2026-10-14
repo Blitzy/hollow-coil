@@ -9,7 +9,7 @@ import {
 import { SchemaValidator } from "@mandreljs/data/schema";
 
 const loadJson = (path: string): any => JSON.parse(readRepoFile(path));
-const fgd = readRepoFile("maps/trenchbroom/hollowcoil.fgd");
+const fgd = readRepoFile("maps/trenchbroom/mandrel.fgd");
 const realData = (): DataFiles => ({ player: loadJson("data/player.json"), weapons: loadJson("data/weapons.json"), enemies: loadJson("data/enemies.json") });
 
 describe("crossCheck", () => {

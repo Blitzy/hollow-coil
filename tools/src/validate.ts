@@ -63,7 +63,7 @@ export function main(): number {
     return 1;
   }
 
-  const fgd = readFileSync(repoPath("maps", "trenchbroom", "hollowcoil.fgd"), "utf-8");
+  const fgd = readFileSync(repoPath("maps", "trenchbroom", "mandrel.fgd"), "utf-8");
   const files = Object.fromEntries(data.valid) as unknown as DataFiles & { lightstyles: LightStylesFile };
   const errors = [...crossCheck(files, fgdClassnames(fgd)), ...lightStyleCheck(files.lightstyles, fgdStyleChoices(fgd))];
   for (const [name, scenario] of spec.valid) errors.push(...scenarioCheck(name, scenario as ScenarioFile, files, readRepoMap));

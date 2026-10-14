@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { install, InstallError, trenchbroomUserDir, uninstall } from "../src/install-trenchbroom.ts";
+import { install, InstallError, removeOldLink, trenchbroomUserDir, uninstall } from "../src/install-trenchbroom.ts";
 
 describe("install-trenchbroom", () => {
   const dirs: string[] = [];
@@ -17,7 +17,7 @@ describe("install-trenchbroom", () => {
     mkdirSync(target);
     mkdirSync(other);
     writeFileSync(join(target, "GameConfig.cfg"), "config");
-    return { target, other, link: join(dir, "TrenchBroom", "games", "HollowCoil") };
+    return { target, other, link: join(dir, "TrenchBroom", "games", "MandrelJS") };
   };
   afterEach(() => {
     for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
@@ -47,6 +47,24 @@ describe("install-trenchbroom", () => {
     expect(existsSync(link)).toBe(false);
     expect(readFileSync(join(target, "GameConfig.cfg"), "utf-8")).toBe("config");
     expect(uninstall(link)).toMatch(/^not installed: /);
+  });
+
+  it("removes an old-name link to the config, and nothing else", () => {
+    const { target, other, link } = setup();
+    const old = join(link, "..", "HollowCoil");
+    install(old, target);
+    expect(removeOldLink(old, target)).toMatch(/^removed: /);
+    expect(existsSync(old)).toBe(false);
+    expect(readFileSync(join(target, "GameConfig.cfg"), "utf-8")).toBe("config");
+    expect(removeOldLink(old, target)).toBeNull();
+
+    install(old, other);
+    expect(removeOldLink(old, target)).toBeNull();
+    expect(existsSync(old)).toBe(true);
+    uninstall(old);
+    mkdirSync(old);
+    expect(removeOldLink(old, target)).toBeNull();
+    expect(existsSync(old)).toBe(true);
   });
 
   it("knows where TrenchBroom keeps its games", () => {

@@ -77,7 +77,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 - `npm run bspdump -- build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON, read with the game's own `.bsp` reader.
 - `npm run validate`: validate `data/*.json` and the `spec/*.json` scenarios against their schemas, plus cross-file checks (runs in CI). The checks themselves live in `packages/data`, so editors can use them too.
 - `npm run check-files`: fail if any tracked file is over 2 MB (runs in CI).
-- `npm run install-trenchbroom`: link `maps/trenchbroom` into TrenchBroom's games folder as "Hollow Coil". `-- --uninstall` removes the link.
+- `npm run install-trenchbroom`: link `maps/trenchbroom` into TrenchBroom's games folder as "Mandrel.js" (and remove the link from before the rename). `-- --uninstall` removes the link.
 - `npm run make-placeholder-textures`: regenerate the placeholder PNGs in `textures/dev/`.
 
 Everything runs from the repo root: `npm install` once, then `npm run dev` (play at http://localhost:5173/?map=test_movement; pass Vite options after `--`), `npm test` (Vitest: every app, package, and tool; the compile tests need ericw-tools and skip without it), `npm run typecheck` (includes the sim-only check), and `npm run build`.

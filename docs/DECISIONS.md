@@ -6,7 +6,7 @@ Decisions and their reasons, newest first. Each entry records what was decided, 
 
 **Decision:** The engine is called Mandrel.js. Where a dot isn't allowed, it's `mandreljs`: the npm scope (`@mandreljs/sim`, `@mandreljs/render`, and so on) and a future GitHub organization. In conversation it's just "Mandrel". The game Hollow Coil keeps its name.
 
-The rename covers the workspace packages and the docs that describe the engine. The game identity the tools still carry (the "Hollow Coil" TrenchBroom game, the `// Game: Hollow Coil` header in every map, the page title) moves with the `base/` restructure, when each game directory gets its own name; renaming it now would mean relinking TrenchBroom and resetting its game path for no gain.
+The rename covers the workspace packages, the docs that describe the engine, and the TrenchBroom setup: the game config is named "Mandrel.js" (it's the engine's config, with the engine's entities, shared by every game made with it), the FGD is `mandrel.fgd`, every map starts with `// Game: Mandrel.js`, and `npm run install-trenchbroom` links it as `games/MandrelJS`. The installer also removes the old `games/HollowCoil` link if it points at this repo, so TrenchBroom doesn't load the config twice. TrenchBroom keeps game paths by game name, so the path has to be set once more under the new name. The page title stays "Hollow Coil" until the `base/` restructure, when each game directory gets its own name.
 
 **Why:**
 
