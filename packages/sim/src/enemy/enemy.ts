@@ -1,21 +1,25 @@
 // Enemies: their state, what the AI needs from the data, and spawning them
-// from a level's monster entities. The AI itself is in ai.ts. See docs/ENEMIES.md.
+// from a level's monster entities. The AI is in ai.ts, and taking damage in
+// damage.ts. See docs/ENEMIES.md.
 
 import { CONTENTS, secondsToTicks, SPAWN_RAISE } from "../constants.ts";
-import { trace } from "../collision/trace.ts";
+import { entityBox } from "../collision/box.ts";
+import { trace, type CollisionBrush } from "../collision/trace.ts";
 import { hullFromData, type EnemiesData, type EnemyData, type Hull } from "../data.ts";
 import { degreesToUnits, wrapYaw } from "../input.ts";
 import { entityOrigin, type Level } from "../level.ts";
 import { add, sub, vec3, type Vec3 } from "../math/vec3.ts";
 
-/** What blocks an enemy's movement: solid and window brushes, and monster clip. */
-export const ENEMY_MASK = CONTENTS.SOLID | CONTENTS.WINDOW | CONTENTS.MONSTERCLIP;
+/** What blocks an enemy's movement: solid and window brushes, monster clip, and other enemies. */
+export const ENEMY_MASK = CONTENTS.SOLID | CONTENTS.WINDOW | CONTENTS.MONSTERCLIP | CONTENTS.MONSTER;
 
 /**
  * idle: waiting; looks for the player on each think.
  * chase: has seen the player and hunts them.
+ * pain: flinching from damage; does nothing until the stun ends.
+ * dead: does nothing, and can't be hit or bumped into.
  */
-export type EnemyMode = "idle" | "chase";
+export type EnemyMode = "idle" | "chase" | "pain" | "dead";
 
 export interface EnemyState {
   readonly id: number;
@@ -32,6 +36,8 @@ export interface EnemyState {
   readonly target: number;
   /** The first tick an attack is allowed (the reaction delay after first sighting). */
   readonly attackReadyAt: number;
+  /** The tick a pain stun ends; the enemy can't flinch again before it. */
+  readonly painUntil: number;
 }
 
 /** One enemy type's data, with durations in ticks. */
@@ -40,6 +46,7 @@ export interface EnemyType {
   readonly hull: Hull;
   readonly thinkTicks: number;
   readonly reactionTicks: number;
+  readonly painTicks: number;
   /** Cosine of half the field of view: the player is in view when cos(angle off facing) is at least this. */
   readonly viewCos: number;
 }
@@ -59,6 +66,7 @@ export function enemyContext(data: EnemiesData): EnemyContext {
       hull: hullFromData(enemy.hull),
       thinkTicks: Math.max(1, secondsToTicks(enemy.think_interval)),
       reactionTicks: secondsToTicks(enemy.reaction_delay),
+      painTicks: secondsToTicks(enemy.pain.stun),
       viewCos: Math.cos((enemy.field_of_view * Math.PI) / 360),
     });
     byClassname.set(enemy.classname, id);
@@ -111,5 +119,12 @@ export function createEnemy(id: number, spawn: EnemySpawn, type: EnemyType, inde
     nextThink: 1 + (index % type.thinkTicks),
     target: 0,
     attackReadyAt: 0,
+    painUntil: 0,
   };
 }
+
+/** True for an enemy that can act, be hit, and block movement. */
+export const alive = (enemy: EnemyState): boolean => enemy.mode !== "dead";
+
+/** A living enemy's box, for movement traces. */
+export const enemyBrush = (enemy: EnemyState, type: EnemyType): CollisionBrush => entityBox(enemy.origin, type.hull, CONTENTS.MONSTER);

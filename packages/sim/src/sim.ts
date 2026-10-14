@@ -1,7 +1,8 @@
 // The simulation: plain, serializable state advanced one fixed tick at a time by
 // input commands. It reads nothing else: no clock, devices, or renderer.
 
-import { eyePosition, fireHitscan, type PelletHit } from "./combat/hitscan.ts";
+import { eyePosition, fireHitscan, type HitTarget, type PelletHit } from "./combat/hitscan.ts";
+import { withBrushes } from "./collision/box.ts";
 import type { EnemiesData, PlayerData, WeaponsData } from "./data.ts";
 import { hullFromData } from "./data.ts";
 import type { InputCommand } from "./input.ts";
@@ -12,7 +13,8 @@ import { startingWeapon, weaponContext, weaponFrame, type WeaponContext, type We
 import { seedRandom } from "./rng.ts";
 import { SPAWN_RAISE } from "./constants.ts";
 import { updateEnemy, type EnemyEvent } from "./enemy/ai.ts";
-import { createEnemy, enemyContext, type EnemyContext, type EnemySpawn, type EnemyState } from "./enemy/enemy.ts";
+import { damageEnemy, type DamageEvent } from "./enemy/damage.ts";
+import { alive, createEnemy, enemyBrush, enemyContext, type EnemyContext, type EnemySpawn, type EnemyState } from "./enemy/enemy.ts";
 
 export const PLAYER_ID = 1;
 
@@ -46,7 +48,8 @@ export type SimEvent =
   /** A pellet hit the world, stopping just short of the surface. */
   | { readonly type: "hitWall"; readonly entity: number; readonly point: Vec3; readonly normal: Vec3 }
   | { readonly type: "hitEntity"; readonly entity: number; readonly target: number; readonly point: Vec3; readonly damage: number }
-  | EnemyEvent;
+  | EnemyEvent
+  | DamageEvent;
 
 export interface StepResult {
   readonly state: SimState;
@@ -114,27 +117,54 @@ function hitEvent(shooter: number, hit: PelletHit, damage: number): SimEvent {
     : { type: "hitEntity", entity: shooter, target: hit.entity, point: hit.point, damage };
 }
 
+/** Each living enemy's box, for shots to hit. */
+function enemyTargets(enemies: readonly EnemyState[], ctx: SimContext): HitTarget[] {
+  return enemies.filter(alive).map((e) => {
+    const brush = enemyBrush(e, ctx.enemies.types.get(e.type)!);
+    return { id: e.id, mins: brush.mins, maxs: brush.maxs };
+  });
+}
+
 /**
- * Advances the sim by one tick: the player moves, then uses their weapon (as in
- * Quake), from where they ended up; then each enemy, in spawn order.
+ * Advances the sim by one tick: the player moves (blocked by living enemies),
+ * then uses their weapon (as in Quake), from where they ended up. A shot's
+ * damage is applied after all its pellets are traced. Then each enemy thinks,
+ * in spawn order.
  */
 export function step(state: SimState, cmd: InputCommand, ctx: SimContext): StepResult {
+  const tick = state.tick + 1;
   const p = state.player;
-  const moved = playerMove(p, cmd, ctx.movement);
+  const blockers = state.enemies.filter(alive).map((e) => enemyBrush(e, ctx.enemies.types.get(e.type)!));
+  const moved = playerMove(p, cmd, { ...ctx.movement, world: withBrushes(ctx.movement.world, blockers) });
   const { weapon, fired } = weaponFrame(p.weapon, cmd, ctx.weapons);
   const events: SimEvent[] = [];
   let rng = state.rng;
+  let enemies = state.enemies;
   if (fired) {
     events.push({ type: "fired", entity: p.id, weapon: weapon.current });
     const attack = ctx.weapons.attacks.get(weapon.current)!;
-    // No entities to hit until enemies arrive (M4).
-    const shot = fireHitscan(ctx.movement.world, [], eyePosition(moved.origin, ctx.eyeHeight), cmd.yaw, cmd.pitch, attack, rng);
+    const eye = eyePosition(moved.origin, ctx.eyeHeight);
+    const shot = fireHitscan(ctx.movement.world, enemyTargets(enemies, ctx), eye, cmd.yaw, cmd.pitch, attack, rng);
     rng = shot.rng;
-    for (const hit of shot.pellets) if (hit) events.push(hitEvent(p.id, hit, attack.damage));
+    // Add up each enemy's pellets, in the order each was first hit (Quake's multi-damage).
+    const damage = new Map<number, number>();
+    for (const hit of shot.pellets) {
+      if (!hit) continue;
+      events.push(hitEvent(p.id, hit, attack.damage));
+      if (hit.kind === "entity") damage.set(hit.entity, (damage.get(hit.entity) ?? 0) + attack.damage);
+    }
+    for (const [id, amount] of damage) {
+      enemies = enemies.map((enemy) => {
+        if (enemy.id !== id) return enemy;
+        const result = damageEnemy(enemy, amount, p.id, tick, ctx.enemies.types.get(enemy.type)!, rng);
+        rng = result.rng;
+        events.push(...result.events);
+        return result.enemy;
+      });
+    }
   }
-  const tick = state.tick + 1;
   const player = { id: p.id, eye: eyePosition(moved.origin, ctx.eyeHeight) };
-  const enemies = state.enemies.map((enemy) => {
+  enemies = enemies.map((enemy) => {
     const update = updateEnemy(enemy, tick, ctx.enemies.types.get(enemy.type)!, ctx.movement.world, player);
     events.push(...update.events);
     return update.enemy;

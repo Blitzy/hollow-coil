@@ -2,12 +2,14 @@
 // seconds and are converted to ticks from this constant.
 export const TICK_RATE = 60;
 
-// Brush contents bits, using Quake 2's values (they are what .map faces and .bsp brushes store).
+// Contents bits, using Quake 2's values (they are what .map faces and .bsp brushes store).
 export const CONTENTS = {
   SOLID: 1,
   WINDOW: 2,
   PLAYERCLIP: 0x10000,
   MONSTERCLIP: 0x20000,
+  /** A living enemy's box (never a brush). */
+  MONSTER: 0x2000000,
 } as const;
 
 /** Spawn origins are raised 1 unit so nothing starts touching the floor (docs/MOVEMENT.md, Spawning). */

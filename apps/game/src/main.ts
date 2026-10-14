@@ -14,6 +14,7 @@ import { BrowserInput } from "./game/input.ts";
 import { cycleSlot } from "./game/weapon-select.ts";
 import { buildBspMeshes, bspTextureNames, DEFAULT_BRIGHTNESS, type LitWorld } from "@hollow-coil/render/bsp-mesh";
 import { cameraRotation, toThree, verticalFov } from "@hollow-coil/render/coords";
+import { EnemyFigures } from "@hollow-coil/render/enemies";
 import { ImpactMarks } from "@hollow-coil/render/impacts";
 import type { LightStyleData } from "@hollow-coil/render/light-styles";
 import { buildLevelMeshes, loadTextures, textureNames } from "@hollow-coil/render/level-mesh";
@@ -108,6 +109,9 @@ async function main(): Promise<void> {
   scene.add(world.group);
   const impacts = new ImpactMarks();
   scene.add(impacts.group);
+  const looks = new Map([...ctx.enemies.types].map(([id, type]) => [id, { hull: type.hull, eyeHeight: type.data.eye_height }]));
+  const enemyFigures = new EnemyFigures(looks);
+  scene.add(enemyFigures.group);
   // Brightness keys, for calibrating lightmaps by eye.
   window.addEventListener("keydown", (e) => {
     if (!world.lit || (e.code !== "BracketLeft" && e.code !== "BracketRight")) return;
@@ -163,6 +167,7 @@ async function main(): Promise<void> {
     camera.rotation.set(rot.x, rot.y, 0);
     world.lit?.animate(current.tick);
     impacts.update(now / 1000);
+    enemyFigures.update(previous.enemies, current.enemies, stepper.alpha);
     renderer.render(scene, camera);
 
     frames++;

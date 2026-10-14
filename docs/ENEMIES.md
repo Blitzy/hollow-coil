@@ -1,17 +1,17 @@
 # Enemies Reference
 
-The game implements enemies exactly as described here, and so must any future port, so that engine differences never become behavior differences. When the code and this document disagree, fix one of them; don't let them drift. The code is in `packages/sim/src/enemy/`: `enemy.ts` (state, data, spawning) and `ai.ts` (thinking and sight).
+The game implements enemies exactly as described here, and so must any future port, so that engine differences never become behavior differences. When the code and this document disagree, fix one of them; don't let them drift. The code is in `packages/sim/src/enemy/`: `enemy.ts` (state, data, spawning), `ai.ts` (thinking and sight), and `damage.ts` (taking damage).
 
-M4 is building enemies in stages; this document covers what exists so far: spawning, the think cadence, and noticing the player. Damage, chasing, and attacks will follow.
+M4 is building enemies in stages; this document covers what exists so far: spawning, the think cadence, noticing the player, and taking damage. Chasing and attacks will follow.
 
 ## Sources
 
-Adapted from Quake's QuakeC (id Software, GPLv2 or later): `droptofloor` for spawning; `FindTarget`, `range`, `infront`, `visible`, and `HuntTarget` in `ai.qc` for sight and reacting. Sight passes through windows, following Quake 2's `MASK_OPAQUE`. See DECISIONS.md (2026-10-14, "Enemy AI follows Quake's") for why.
+Adapted from Quake's QuakeC (id Software, GPLv2 or later): `droptofloor` for spawning; `FindTarget`, `range`, `infront`, `visible`, and `HuntTarget` in `ai.qc` for sight and reacting; `T_Damage` in `combat.qc`, multi-damage in `weapons.qc`, and the monsters' `pain_finished` check for damage and pain. Sight passes through windows, following Quake 2's `MASK_OPAQUE`. See DECISIONS.md (2026-10-14, "Enemy AI follows Quake's") for why.
 
 ## Conventions
 
 - **Data:** `data/enemies.json`, one entry per enemy type. Every duration converts to ticks with `ticks(t) = floor(t * TICK_RATE + 0.5)`: at 60 Hz the shotgunner thinks every 6 ticks and has a reaction delay of 36.
-- **Masks:** an enemy's movement is blocked by `SOLID | WINDOW | MONSTERCLIP`; its sight only by `SOLID`.
+- **Masks:** an enemy's movement is blocked by `SOLID | WINDOW | MONSTERCLIP | MONSTER`; its sight only by `SOLID`.
 - **Eyes:** an enemy's eye is `origin + (0, 0, eye_height)`, and the player's is `origin + (0, 0, player.eye_height)`.
 
 ## Spawning
@@ -34,9 +34,22 @@ On a think tick, an `idle` enemy looks for the player. It sees the player's eye 
 
 When it does, it switches to mode `chase`, sets its target to the player, and allows its first attack only from `tick + reaction_ticks` (Quake's `HuntTarget` delays the first attack, not the chase). It emits `{ type: "sighted", entity, target }`.
 
+## Damage
+
+A shot's pellets are all traced first (see `docs/WEAPONS.md`, Hitscan), against the living enemies' boxes. Then each enemy hit takes the total damage of the pellets that hit it, once, in the order each was first hit (Quake's multi-damage). So a shotgun blast is one hit. Taking damage, an enemy:
+
+1. Loses `amount` health and emits `{ type: "damaged", entity, attacker, amount, health }`.
+2. If its health is 0 or less, switches to mode `dead` and emits `{ type: "died", entity, attacker }`. Nothing else happens.
+3. If the attacker isn't its current target (and isn't itself), turns on it as on first sighting: target the attacker, allow its first attack only from `tick + reaction_ticks`, switch from `idle` to `chase`, and emit `sighted`. (Infighting rules for enemies hurting enemies come with enemy attacks.)
+4. If the tick is at or after `painUntil`, draws one value from the RNG; if it's below `pain.chance`, switches to mode `pain` with `painUntil = tick + pain_ticks` and emits `{ type: "pain", entity }`. While still flinching, it neither rolls nor flinches again.
+
+Damage reactions happen when the damage lands, not on think ticks; only the AI's own decisions wait for a think. A flinching enemy does nothing until its first think at or after `painUntil`, when it goes back to `chase` (or `idle`, if it has no target).
+
+The dead never think, can't be hit, and don't block movement.
+
 ## Order within a tick
 
-The player moves and fires first. Then each enemy updates, in spawn order, seeing the player where they ended up this tick.
+The player moves (blocked by living enemies) and fires first, and the shot's damage is applied. Then each enemy updates, in spawn order, seeing the player where they ended up this tick.
 
 ## State
 
@@ -45,13 +58,17 @@ The player moves and fires first. Then each enemy updates, in spawn order, seein
 | `id`, `type` | Entity id and enemy type. |
 | `origin`, `yaw` | Position and facing (angle units). |
 | `health` | Starts at the type's `health`. |
-| `mode` | `idle` or `chase` so far. |
+| `mode` | `idle`, `chase`, `pain`, or `dead` so far. |
 | `nextThink` | The tick of its next decision. |
 | `target` | The entity it hunts, or 0. |
 | `attackReadyAt` | The first tick it may attack. |
+| `painUntil` | The tick its pain stun ends. |
 
 ## Required tests
 
 - Spawning: standing on the floor, dropping from the air, staying put with no floor in reach, and the real maps' enemies where they were placed.
 - Decisions happen only on an enemy's think ticks, and enemies with different offsets think on different ticks.
 - Sight respects range, the view cone, and walls (not windows), including that `test_combat`'s east shotgunner can't see the player at `west` through the center wall.
+- A shot's pellets add up into one hit; an enemy dies at zero health and stops acting; the dead can't be hit and don't block.
+- Pain follows its chance, stuns for its time, can't repeat while stunned, and ends on a think.
+- A living enemy blocks the player.

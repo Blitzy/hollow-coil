@@ -8,7 +8,7 @@ import { eyePosition } from "../combat/hitscan.ts";
 import { trace, type CollisionWorld } from "../collision/trace.ts";
 import { angleToRadians } from "../input.ts";
 import { dot, length, sub, vec3, ZERO, type Vec3 } from "../math/vec3.ts";
-import type { EnemyState, EnemyType } from "./enemy.ts";
+import { alive, type EnemyState, type EnemyType } from "./enemy.ts";
 
 /** What blocks sight: solid brushes. Windows don't. */
 export const SIGHT_MASK = CONTENTS.SOLID;
@@ -44,6 +44,10 @@ export interface EnemyUpdate {
 
 /** One AI decision. */
 function think(enemy: EnemyState, tick: number, type: EnemyType, world: CollisionWorld, player: ThinkPlayer): EnemyUpdate {
+  if (enemy.mode === "pain") {
+    // Stunned until the stun ends; then back to hunting its target, or to waiting if it has none.
+    return { enemy: tick < enemy.painUntil ? enemy : { ...enemy, mode: enemy.target !== 0 ? "chase" : "idle" }, events: [] };
+  }
   if (enemy.mode === "idle" && canSee(enemy, type, world, player.eye)) {
     // Quake's HuntTarget: chase at once, but hold the first attack for the reaction delay.
     return {
@@ -54,9 +58,9 @@ function think(enemy: EnemyState, tick: number, type: EnemyType, world: Collisio
   return { enemy, events: [] };
 }
 
-/** Advances an enemy to the given tick (the one being simulated). It decides only on its think ticks. */
+/** Advances an enemy to the given tick (the one being simulated). It decides only on its think ticks; the dead don't. */
 export function updateEnemy(enemy: EnemyState, tick: number, type: EnemyType, world: CollisionWorld, player: ThinkPlayer): EnemyUpdate {
-  if (tick < enemy.nextThink) return { enemy, events: [] };
+  if (!alive(enemy) || tick < enemy.nextThink) return { enemy, events: [] };
   const { enemy: thought, events } = think(enemy, tick, type, world, player);
   return { enemy: { ...thought, nextThink: enemy.nextThink + type.thinkTicks }, events };
 }

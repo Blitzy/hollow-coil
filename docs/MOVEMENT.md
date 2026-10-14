@@ -36,10 +36,15 @@ Contents use the Quake 2 bit values (they are what the .bsp and the .map face fl
 | `WINDOW` | `2` | everyone |
 | `PLAYERCLIP` | `0x10000` | the player |
 | `MONSTERCLIP` | `0x20000` | enemies |
+| `MONSTER` | `0x2000000` | everyone (a living enemy's box, never a brush) |
 
-- Player trace mask: `SOLID | WINDOW | PLAYERCLIP`.
-- Enemy trace mask: `SOLID | WINDOW | MONSTERCLIP`.
+- Player trace mask: `SOLID | WINDOW | PLAYERCLIP | MONSTER`.
+- Enemy trace mask: `SOLID | WINDOW | MONSTERCLIP | MONSTER`.
 - A brush is tested only if `brush.contents & mask` is nonzero. Liquids, detail, and other contents are ignored for collision during the spike.
+
+### Entity boxes
+
+Each living enemy is a box in the collision world while the player moves: a brush with six axial planes at its hull's bounds (`origin + mins` to `origin + maxs`) and contents `MONSTER`. Boxes need no bevels. The dead have no box. Shots don't use these brushes; they test enemy boxes separately (see `docs/WEAPONS.md`, Hitscan).
 
 ### Brushes from a .bsp
 

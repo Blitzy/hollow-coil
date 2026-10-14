@@ -9,7 +9,7 @@ import { trace, type CollisionWorld, type TraceResult } from "../collision/trace
 import type { Hull, PlayerData } from "../data.ts";
 import { angleToRadians, BUTTON_JUMP, type InputCommand } from "../input.ts";
 
-export const PLAYER_MASK = CONTENTS.SOLID | CONTENTS.WINDOW | CONTENTS.PLAYERCLIP;
+export const PLAYER_MASK = CONTENTS.SOLID | CONTENTS.WINDOW | CONTENTS.PLAYERCLIP | CONTENTS.MONSTER;
 
 // Fixed parts of the algorithm (docs/MOVEMENT.md, "Constants"). Tunable values come from data.
 export const STOP_EPSILON = 0.1;
