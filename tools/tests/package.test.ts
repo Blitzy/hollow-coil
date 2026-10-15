@@ -1,5 +1,5 @@
 // The mandreljs package's pieces that can drift without the packed-install test noticing until CI.
-// (That test, which packs the package and runs it in a game folder, is S6 in docs/PLAN.md.)
+// (That test, which packs the package and runs it in a game folder, is tools/src/test-package.ts.)
 
 import { describe, expect, it } from "vitest";
 import * as packaged from "../src/engine-files.package.ts";
@@ -22,9 +22,9 @@ describe("engine files", () => {
 });
 
 describe("package.json", () => {
-  it("provides the mandrel command, needs Node 24, and has no dependencies", () => {
+  it("provides the mandreljs command, needs Node 24, and has no dependencies", () => {
     const pkg = packageJson("1.2.3");
-    expect(pkg).toMatchObject({ name: "mandreljs", version: "1.2.3", bin: { mandrel: "bin/mandrel.js" }, engines: { node: ">=24" }, type: "module" });
+    expect(pkg).toMatchObject({ name: "mandreljs", version: "1.2.3", bin: { mandreljs: "bin/mandreljs.js" }, engines: { node: ">=24" }, type: "module" });
     expect(pkg).not.toHaveProperty("dependencies");
     expect(packageJson("1.2.3", { type: "git", url: "git+https://github.com/mandreljs/mandrel.js.git" }).repository).toEqual({ type: "git", url: "git+https://github.com/mandreljs/mandrel.js.git" });
   });

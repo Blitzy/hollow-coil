@@ -11,7 +11,7 @@ describe("install-trenchbroom", () => {
   const dirs: string[] = [];
   /** A temp folder with a target folder holding one file, and a link path under games/. */
   const setup = (): { target: string; other: string; link: string } => {
-    const dir = mkdtempSync(join(tmpdir(), "mandrel-tb-"));
+    const dir = mkdtempSync(join(tmpdir(), "mandreljs-tb-"));
     dirs.push(dir);
     const target = join(dir, "config");
     const other = join(dir, "other");

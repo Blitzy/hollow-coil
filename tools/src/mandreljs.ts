@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// The mandrel command: one entry point for the tools that work on a game.
+// The mandreljs command: one entry point for the tools that work on a game.
 // Run in a game directory (a folder holding data/game.json), or pass --game;
 // inside this repo the example game is the default. Each command is a tool in
 // this folder, loaded only when it's run.
 //
-// Usage: mandrel <command> [options]   (mandrel help lists the commands)
+// Usage: mandreljs <command> [options]   (mandreljs help lists the commands)
 
 import { styleText } from "node:util";
 import { isMain, runsAsBundle } from "./cli.ts";
@@ -57,23 +57,23 @@ const COMMANDS: Record<string, Command> = {
 
 const HELP_FLAGS = new Set(["help", "--help", "-h"]);
 
-/** The list of commands, for mandrel help. */
+/** The list of commands, for mandreljs help. */
 export function helpText(): string {
   const width = Math.max(...Object.keys(COMMANDS).map((name) => name.length));
   return [
-    "Usage: mandrel <command> [options]",
+    "Usage: mandreljs <command> [options]",
     "",
     "Run in a game directory (a folder holding data/game.json), or pass --game <dir>.",
     "",
     "Commands:",
     ...Object.entries(COMMANDS).map(([name, command]) => `  ${styleText("bold", name.padEnd(width))}  ${command.summary}`),
     "",
-    "mandrel <command> --help shows a command's options.",
+    "mandreljs <command> --help shows a command's options.",
   ].join("\n");
 }
 
-/** One command's usage line, for mandrel <command> --help and option errors. */
-export const usageLine = (name: string): string => `Usage: mandrel ${name} ${COMMANDS[name]!.usage}`;
+/** One command's usage line, for mandreljs <command> --help and option errors. */
+export const usageLine = (name: string): string => `Usage: mandreljs ${name} ${COMMANDS[name]!.usage}`;
 
 /** Node's errors for options a command doesn't take, or values it's missing. */
 const isOptionError = (error: unknown): error is Error => {
@@ -89,7 +89,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   }
   const command = Object.hasOwn(COMMANDS, name) ? COMMANDS[name]! : undefined;
   if (command === undefined) {
-    console.error(`mandrel: unknown command '${name}'\n\n${helpText()}`);
+    console.error(`mandreljs: unknown command '${name}'\n\n${helpText()}`);
     return 2;
   }
   if (rest.some((arg) => arg === "--help" || arg === "-h")) {
@@ -101,16 +101,16 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     return await command.run(rest);
   } catch (error) {
     if (error instanceof GameNotFoundError) {
-      console.error(`mandrel ${name}: ${error.message}`);
+      console.error(`mandreljs ${name}: ${error.message}`);
       return 1;
     }
     if (!isOptionError(error)) throw error;
     // Node's message goes on to explain '--'; the first sentence is the useful part.
     const problem = error.message.split(/\.\s/)[0]!.replace(/^\w/, (c) => c.toLowerCase());
-    console.error(`mandrel ${name}: ${problem}\n${usageLine(name)}`);
+    console.error(`mandreljs ${name}: ${problem}\n${usageLine(name)}`);
     return 2;
   }
 }
 
-// From source, run when it's the file node runs; in the package's bundle, mandrel is the command.
+// From source, run when it's the file node runs; in the package's bundle, mandreljs is the command.
 if (isMain(import.meta.url) || runsAsBundle()) process.exitCode = await main();

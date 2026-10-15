@@ -1,8 +1,8 @@
 // Where the engine's own files are in the installed mandreljs package; the
 // package's bundle uses this in place of engine-files.ts (see package.ts).
 //
-//   mandreljs/bin/mandrel.js    the bundled command, so ENGINE_ROOT is one folder up
-//   mandreljs/defs/             schemas, light styles, and trenchbroom/mandrel.fgd
+//   mandreljs/bin/mandreljs.js    the bundled command, so ENGINE_ROOT is one folder up
+//   mandreljs/defs/             schemas, light styles, and trenchbroom/mandreljs.fgd
 //   mandreljs/client/           the built client
 //   mandreljs/versions.json     pinned third-party tool versions
 
@@ -20,5 +20,5 @@ export const VERSIONS_FILE = join(ENGINE_ROOT, "versions.json");
 export const CLIENT_SOURCE: string | null = null;
 /** The built client: index.html and its assets. */
 export const CLIENT_BUILD = join(ENGINE_ROOT, "client");
-/** True in the package's bundle, where every tool shares one file: only the mandrel command runs as a command. */
+/** True in the package's bundle, where every tool shares one file: only the mandreljs command runs as a command. */
 export const BUNDLED = true;

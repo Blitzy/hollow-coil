@@ -8,7 +8,7 @@
 // serves the built client with plain Node instead (see dev-server.ts).
 //
 // Usage: node tools/src/dev.ts [--game dir] [--built] [--port n] [--host name] [vite options]
-//        (or mandrel dev, npm run dev)
+//        (or mandreljs dev, npm run dev)
 
 import { spawn } from "node:child_process";
 import { parseArgs, styleText } from "node:util";
@@ -19,7 +19,7 @@ import { displayPath, findGame } from "./layout.ts";
 
 const DEFAULT_PORT = 5173;
 
-/** Splits mandrel's own options (--game, --built) from the rest, which go to Vite or the plain server. */
+/** Splits the command's own options (--game, --built) from the rest, which go to Vite or the plain server. */
 export function splitOptions(argv: readonly string[]): { game?: string; built: boolean; rest: string[] } {
   let game: string | undefined;
   let built = false;
@@ -54,7 +54,7 @@ async function runBuilt(game: string, argv: string[]): Promise<number> {
     return 2;
   }
   if (!isBuiltClient(CLIENT_BUILD)) {
-    console.error(`dev: no built client in ${displayPath(CLIENT_BUILD)}; run: mandrel build`);
+    console.error(`dev: no built client in ${displayPath(CLIENT_BUILD)}; run: mandreljs build`);
     return 1;
   }
   const { url } = await startServer({

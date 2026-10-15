@@ -21,7 +21,7 @@ describe("findMaps", () => {
   });
 
   it("finds maps in another game directory", () => {
-    const game = mkdtempSync(join(tmpdir(), "mandrel-game-"));
+    const game = mkdtempSync(join(tmpdir(), "mandreljs-game-"));
     try {
       mkdirSync(join(game, "maps"));
       writeFileSync(join(game, "maps", "e1m1.map"), "");
@@ -45,7 +45,7 @@ describe("errorLine", () => {
 describe.skipIf(!toolsInstalled())("compileMap (needs ericw-tools)", () => {
   const dirs: string[] = [];
   const outDir = (): string => {
-    const dir = mkdtempSync(join(tmpdir(), "mandrel-compile-"));
+    const dir = mkdtempSync(join(tmpdir(), "mandreljs-compile-"));
     dirs.push(dir);
     return dir;
   };

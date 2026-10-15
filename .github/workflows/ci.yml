@@ -65,3 +65,7 @@ jobs:
       # Fast lighting: leaks, missing textures, and compiler errors fail the build.
       - name: Check maps compile
         run: npm run compile -- --mode check
+
+      # Packs mandreljs and runs it installed, in a game folder outside the repo.
+      - name: Test the installed package
+        run: npm run test:package

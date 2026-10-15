@@ -12,7 +12,7 @@ Shared by every game, and GPL like the rest of the engine. Units are Quake units
   - `weapons.json`: weapon switch timing and weapon definitions, keyed by weapon id
   - `enemies.json`: enemy definitions, keyed by enemy id
 - `lightstyles.json`: animated light patterns, keyed by a light's `style` number. The patterns are Quake's: one letter per step (`a` dark, `m` normal, `z` about double), looping. Presentation only; the sim doesn't read them. `@mandreljs/render` builds them into the engine.
-- `trenchbroom/mandrel.fgd`: the entities every game shares (`worldspawn`, `info_player_start`, `info_marker`, `light`). Each game's FGD starts with `@include "mandrel/mandrel.fgd"`, through a link `npm run install-trenchbroom` makes in the game's `trenchbroom/` folder. The `light` entity's style choices must match `lightstyles.json`, number and name.
+- `trenchbroom/mandreljs.fgd`: the entities every game shares (`worldspawn`, `info_player_start`, `info_marker`, `light`). Each game's FGD starts with `@include "mandreljs/mandreljs.fgd"`, through a link `npm run install-trenchbroom` makes in the game's `trenchbroom/` folder. The `light` entity's style choices must match `lightstyles.json`, number and name.
 
 Editors like VS Code validate data files as you type, through each file's `"$schema"` key.
 

@@ -20,8 +20,8 @@ import { buildDir, findGame, isGameDir, REPO_ROOT } from "./layout.ts";
 import { toolsInstalled } from "./setup.ts";
 import type { Plugin } from "vite";
 
-/** The environment variable mandrel dev sets for the Vite plugin: the game to play. */
-export const GAME_ENV = "MANDREL_GAME";
+/** The environment variable mandreljs dev sets for the Vite plugin: the game to play. */
+export const GAME_ENV = "MANDRELJS_GAME";
 
 const GAME_FOLDERS = ["maps", "textures", "data", "build"]; // served at /games/<game>/<folder>/...
 const GAME_NAME = /^[\w-]+$/;
@@ -117,7 +117,7 @@ function ensureBsp(game: string, outDir: string, name: string, log: (message: st
   const bspPath = join(outDir, `${name}.bsp`);
   const map = modified(mapPath);
   if (map < 0 || modified(bspPath) >= map) return Promise.resolve(null);
-  if (!toolsInstalled()) return Promise.resolve("ericw-tools is not installed; run: mandrel setup");
+  if (!toolsInstalled()) return Promise.resolve("ericw-tools is not installed; run: mandreljs setup");
   let pending = compiling.get(bspPath);
   if (!pending) {
     pending = compileMap(mapPath, outDir, "check", game).then((result) => {
@@ -169,7 +169,7 @@ export function gameHandler(games: Games, log: (message: string) => void): (req:
 
 /**
  * The Vite plugin for apps running from this repo's source: serves every game directory in the repo, plus the game
- * mandrel dev was asked for (from MANDREL_GAME), which is the default; without one, the example game.
+ * mandreljs dev was asked for (from MANDRELJS_GAME), which is the default; without one, the example game.
  */
 export function gameFiles(root: string = REPO_ROOT): Plugin {
   return {
@@ -185,7 +185,7 @@ export function gameFiles(root: string = REPO_ROOT): Plugin {
 export interface ServerOptions {
   /** The built client: a folder holding index.html and its assets. */
   readonly clientDir: string;
-  /** The games to serve at /games, compiling stale maps; without them, /games is served from clientDir like any file (as for a release from mandrel build). */
+  /** The games to serve at /games, compiling stale maps; without them, /games is served from clientDir like any file (as for a release from mandreljs build). */
   readonly games?: Games;
   readonly port: number;
   readonly host: string;

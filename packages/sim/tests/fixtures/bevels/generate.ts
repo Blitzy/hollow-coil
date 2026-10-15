@@ -110,7 +110,7 @@ function byNumbers(a: number[], b: number[]): number {
 
 const mapPath = join(HERE, "shapes.map");
 const centroids = writeMap(mapPath);
-const tmp = mkdtempSync(join(tmpdir(), "mandrel-bevels-"));
+const tmp = mkdtempSync(join(tmpdir(), "mandreljs-bevels-"));
 let brushes: number[][][];
 try {
   // Compiled in a temporary folder, since qbsp writes side files next to its output.

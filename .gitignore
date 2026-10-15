@@ -29,7 +29,7 @@ autosave/
 /example/trenchbroom/GameEngineProfiles.cfg
 /example/trenchbroom/CompilationProfiles.cfg
 # The engine's FGD folder (packages/defs/trenchbroom), linked in by npm run install-trenchbroom for the FGD's @include
-/example/trenchbroom/mandrel
+/example/trenchbroom/mandreljs
 
 # Playwright
 test-results/

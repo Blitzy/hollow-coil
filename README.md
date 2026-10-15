@@ -54,7 +54,7 @@ Every command is listed under [Commands](#commands).
 
 Run everything from the repo root. Options go after `--`, as in `npm run compile -- greybox_01 --mode release`. Commands that work on a game use the folder they run in if it's a game directory, or `--game <dir>`, or the example game.
 
-The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, and `validate`) are also one command, `mandrel`, the same one a game outside this repo will use: `npx mandrel compile --mode release`, or `npx mandrel help` for the list. Run inside a game directory, it works on that game.
+The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, and `validate`) are also one command, `mandreljs`, the same one a game outside this repo will use: `npx mandreljs compile --mode release`, or `npx mandreljs help` for the list. Run inside a game directory, it works on that game.
 
 **Setup**
 
@@ -87,16 +87,29 @@ The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, an
 | `npm run typecheck` | Type-checks everything, plus a check that the sim uses no browser or Node APIs. |
 | `npm run validate` | Checks a game's data, the engine's light styles, and the scenarios against their schemas, plus the rules between files. |
 | `npm run check-files` | Fails if any tracked file is over 2 MB. |
+| `npm run test:package` | Packs the `mandreljs` package, installs it into a scratch folder outside the repo with a copy of the example game, and runs `mandreljs` there as a game's repo would: `setup --check`, `validate`, `compile`, `build`, and `dev`. Needs ericw-tools. |
 
 **The engine package**
 
 | Command | What it does |
 |---|---|
-| `npm run package` | Builds the `mandreljs` package, what a game's own repo installs for the `mandrel` command, in `dist/mandreljs/`: the command bundled into JavaScript, the built client, and the engine's definitions. `-- --pack` also packs it into `dist/mandreljs-<version>.tgz`, which a game's repo can install with `npm install <path to .tgz>`. The version is the root `package.json`'s. |
+| `npm run package` | Builds the `mandreljs` package, what a game's own repo installs for the `mandreljs` command, in `dist/mandreljs/`: the command bundled into JavaScript, the built client, and the engine's definitions. `-- --pack` also packs it into `dist/mandreljs-<version>.tgz`, which a game's repo can install with `npm install <path to .tgz>`. The version is the root `package.json`'s. |
 
 ## Making Your Own Game
 
-The engine plays game directories, like Quake's `id1/`. The example game is `example/` (see [example/README.md](example/README.md)); your game is a sibling directory, such as `mygame/`, checked out from its own repo (add it to `.git/info/exclude` so this repo ignores it). Play it at http://localhost:5173/?game=mygame, and pass `-- --game mygame` to `npm run compile`, `npm run validate`, and `npm run install-trenchbroom`.
+The engine plays game directories, like Quake's `id1/`: a folder of maps, textures, data, and a TrenchBroom config, with no code. The example game is `example/` (see [example/README.md](example/README.md)). Your game lives in its own repo, under your own license, and installs the engine as one package, `mandreljs`, which gives it the `mandreljs` command:
+
+```
+cd mygame
+npm install --save-dev mandreljs
+npx mandreljs setup
+npx mandreljs install-trenchbroom
+npx mandreljs dev
+```
+
+Until `mandreljs` is on npm, build it here with `npm run package -- --pack` and install the `.tgz` instead: `npm install --save-dev <path to>/dist/mandreljs-<version>.tgz`. Copying `example/` is a quick start. The package's [README](tools/package-readme.md) covers the commands, the layout of a game, and how to credit your content.
+
+To work on the engine and a game together, keep the game next to `example/` in this repo (add it to `.git/info/exclude` so this repo ignores it): `npm run dev` plays it at http://localhost:5173/?game=mygame with the engine's source, and the other commands take `-- --game mygame`.
 
 ## Repository Layout
 

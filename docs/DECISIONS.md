@@ -2,9 +2,9 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
-## 2026-10-14: Games use the engine through one installed command, `mandrel`
+## 2026-10-14: Games use the engine through one installed command, `mandreljs`
 
-**Decision:** A game made with Mandrel.js lives in its own repo, anywhere on disk, and gets the engine by installing one npm package, `mandreljs`, which provides a `mandrel` command. A game's repo holds only its game directory and a `package.json`:
+**Decision:** A game made with Mandrel.js lives in its own repo, anywhere on disk, and gets the engine by installing one npm package, `mandreljs`, which provides a `mandreljs` command. A game's repo holds only its game directory and a `package.json`:
 
 ```
 mygame/
@@ -12,10 +12,11 @@ mygame/
   data/  maps/  textures/  trenchbroom/
 ```
 
-Run in the game's folder, `mandrel dev` serves the game client and the game, compiling maps as they're saved; `mandrel build` writes a release (the client, compiled maps, textures, and data) to `dist/`; and `mandrel compile`, `validate`, `bspdump`, `setup`, and `install-trenchbroom` are today's tools. Editors such as a particle editor or model viewer ship in the same package and are served by the same `mandrel dev`, next to the game. Editors save through the server, which writes only inside the game folder, validates what it saves, and accepts requests only from its own pages.
+Run in the game's folder, `mandreljs dev` serves the game client and the game, compiling maps as they're saved; `mandreljs build` writes a release (the client, compiled maps, textures, and data) to `dist/`; and `mandreljs compile`, `validate`, `bspdump`, `setup`, and `install-trenchbroom` are today's tools. Editors such as a particle editor or model viewer ship in the same package and are served by the same `mandreljs dev`, next to the game. Editors save through the server, which writes only inside the game folder, validates what it saves, and accepts requests only from its own pages.
 
 - **The package is built for publishing:** the command bundled into JavaScript, the client and editors built, plus the schemas, the shared FGD, light styles, and the pinned tool versions. No runtime dependencies, and no Vite in a game's repo. Inside this repo, everything keeps running from TypeScript source.
-- **The example game uses the same command.** The root npm scripts run `mandrel` on `example/`, and CI installs the packed package into a scratch folder with a copy of `example/` and runs it there, so what users install is tested.
+- **The example game uses the same command.** The root npm scripts run `mandreljs` on `example/`, and CI installs the packed package into a scratch folder with a copy of `example/` and runs it there, so what users install is tested.
+- **The command is named after the package,** `mandreljs`, not `mandrel`. npx runs a package's command by the package's name, so `npx mandreljs` outside a game folder fetches this package, while `npx mandrel` fetches an unrelated `mandrel` package from npm, and two `mandrel` commands would compete on PATH.
 - **Per game, not per engine:** compiled maps go to the game's own `build/`, and ericw-tools to a per-user cache that every game shares.
 - **Until the engine is public,** a game's repo installs it from a local checkout (`file:`) or a packed `.tgz`. Publishing to npm waits on making the repo public.
 
@@ -58,10 +59,10 @@ This supersedes `packages/toolchain` in "Shared definitions and map compiling mo
 
 **Decision:** Two moves, so that the engine is its packages and only a game's data is in a folder called `data/`:
 
-- **`packages/defs`** (was `packages/data`, the validation) also holds what every game is checked against: the schemas (was `data/schemas/`), `lightstyles.json` (was `data/lightstyles.json`), and the shared FGD, `trenchbroom/mandrel.fgd` (was `trenchbroom/mandrel.fgd` at the root). The root `data/` and `trenchbroom/` folders are gone. `spec/schemas/` stays with `/spec`, since it describes the engine's test scenarios, not a game.
+- **`packages/defs`** (was `packages/data`, the validation) also holds what every game is checked against: the schemas (was `data/schemas/`), `lightstyles.json` (was `data/lightstyles.json`), and the shared FGD, `trenchbroom/mandreljs.fgd` (was `trenchbroom/mandrel.fgd` at the root). The root `data/` and `trenchbroom/` folders are gone. `spec/schemas/` stays with `/spec`, since it describes the engine's test scenarios, not a game.
 - **`packages/toolchain`** (new) holds the Node-only code the tools, the dev server, and tests share: the repo layout (game directories, `build/<game>/`), the pinned ericw-tools and their install (with `versions.json`, was `tools/versions.json`), and map compiling. `tools/` keeps only command-line wrappers.
 - **`@mandreljs/render` imports the light styles** instead of the game fetching them, so they're built into the engine, and the dev server's `/engine/` route is gone.
-- **The FGD link in a game's `trenchbroom/` folder is `mandrel/`** (was `engine/`), so a game's FGD starts with `@include "mandrel/mandrel.fgd"`. `npm run install-trenchbroom` removes the old `engine/` link.
+- **The FGD link in a game's `trenchbroom/` folder is `mandreljs/`** (was `engine/`, then `mandrel/`), so a game's FGD starts with `@include "mandreljs/mandreljs.fgd"`. `npm run install-trenchbroom` removes the old links.
 - **Packages depend in one direction** (written in CLAUDE.md): `sim` on nothing, `defs` and `render` on `sim` (and `render` on `defs`), the Node-only packages on those, and apps and `tools/` on anything.
 
 This supersedes the root `data/` and `trenchbroom/` folders, the `engine/` link, and the `/engine/` route in "The example game lives in example/" below.
@@ -72,7 +73,7 @@ This supersedes the root `data/` and `trenchbroom/` folders, the `engine/` link,
 - "The engine" means the packages, so the engine's shared definitions belong in one. They're the contract between the engine and a game, and `packages/data` already checked it, so the contract and its checks now live together.
 - The dev server, a package, imported map compiling from `tools/`, against the rule that logic other code needs goes in a package with the tool as a thin wrapper. The repo root and the example game's path were also defined in three places.
 - Light styles are engine vocabulary, not a game's content, so they ship with the engine. That also lets a production build use them without serving the file.
-- A game's `@include "mandrel/mandrel.fgd"` reads as "Mandrel's entities", which is clearer in another game's repo than "engine".
+- A game's `@include "mandreljs/mandreljs.fgd"` reads as "Mandrel.js's entities", which is clearer in another game's repo than "engine".
 
 **Alternatives considered:** a root `engine/` folder for the shared files (but "the engine" is the packages, and a code-free folder by that name confuses that); a package named `game-format` (accurate, but `defs` is shorter); moving `spec/schemas/` into `defs` too (they define tests, not games).
 
@@ -99,9 +100,9 @@ TrenchBroom's game path for Mandrel.js Example is now the `example/` folder, and
 
 ## 2026-10-14: The engine is named Mandrel.js
 
-**Decision:** The engine is called Mandrel.js. Where a dot isn't allowed, it's `mandreljs`: the npm scope (`@mandreljs/sim`, `@mandreljs/render`, and so on) and a future GitHub organization. In conversation it's just "Mandrel".
+**Decision:** The engine is called Mandrel.js. Where a dot isn't allowed, it's `mandreljs`: the npm scope (`@mandreljs/sim`, `@mandreljs/render`, and so on) and a future GitHub organization. It's always Mandrel.js or `mandreljs`, never just "Mandrel": that's also Red Hat's GraalVM distribution and an unrelated `mandrel` package on npm, so the command, the TrenchBroom FGD (`mandreljs.fgd`, included from `mandreljs/`), and environment variables (`MANDRELJS_GAME`) all use `mandreljs` too.
 
-The rename covers the workspace packages, the docs that describe the engine, and the TrenchBroom setup: the FGD is `mandrel.fgd`. TrenchBroom's "game" is a game's content, not an engine, so the TrenchBroom game is the example game, "Mandrel.js Example" (see "The engine repo ships a free example game" below): every map starts with `// Game: Mandrel.js Example`, and `npm run install-trenchbroom` links it as `games/MandrelJSExample`. The installer also removes the link it made under an earlier name (`games/MandrelJS`) if it points at this repo, so TrenchBroom doesn't load the config twice. TrenchBroom keeps game paths by game name, so the path has to be set once more under the new name. The page title is "Mandrel.js Example" too.
+The rename covers the workspace packages, the docs that describe the engine, and the TrenchBroom setup: the FGD is `mandreljs.fgd`. TrenchBroom's "game" is a game's content, not an engine, so the TrenchBroom game is the example game, "Mandrel.js Example" (see "The engine repo ships a free example game" below): every map starts with `// Game: Mandrel.js Example`, and `npm run install-trenchbroom` links it as `games/MandrelJSExample`. The installer also removes the link it made under an earlier name (`games/MandrelJS`) if it points at this repo, so TrenchBroom doesn't load the config twice. TrenchBroom keeps game paths by game name, so the path has to be set once more under the new name. The page title is "Mandrel.js Example" too.
 
 **Why:**
 
@@ -147,7 +148,7 @@ The rename covers the workspace packages, the docs that describe the engine, and
 - The engine build contains no content. Content is packed per game directory, and a release is the engine plus one game.
 - `npm run dev` plays the example game by default, and an option points it at another game directory.
 - Every engine behavior is used by at least one piece of example content, with tests. Nothing a game relies on goes untested, and modders always have a working example to copy. Tests never need content from outside this repo.
-- Each game directory has its own TrenchBroom game config and FGD, named after the game, like TrenchBroom's own Quake and Quake 2 configs. The engine's entities (`worldspawn`, `info_player_start`, `light`, `info_marker`, and so on) live in a shared `mandrel.fgd` that each game's FGD pulls in with `@include`; a game's FGD adds only its own entities, such as its monsters. The validator checks each game's enemy classnames against that game's FGD. A map's `// Game:` header names its game, and the page title follows the game being played. Another game's content repo ships its own config and FGD the same way.
+- Each game directory has its own TrenchBroom game config and FGD, named after the game, like TrenchBroom's own Quake and Quake 2 configs. The engine's entities (`worldspawn`, `info_player_start`, `light`, `info_marker`, and so on) live in a shared `mandreljs.fgd` that each game's FGD pulls in with `@include`; a game's FGD adds only its own entities, such as its monsters. The validator checks each game's enemy classnames against that game's FGD. A map's `// Game:` header names its game, and the page title follows the game being played. Another game's content repo ships its own config and FGD the same way.
 - The example game is plainly called "Mandrel.js Example", with no title of its own; it's a sample, not a product. That's its name in TrenchBroom, its maps' `// Game:` headers, and the page title.
 
 **Why:**

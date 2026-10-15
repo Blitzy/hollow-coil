@@ -9,9 +9,9 @@ import {
 import { SchemaValidator } from "@mandreljs/defs/schema";
 
 const loadJson = (path: string): any => JSON.parse(readRepoFile(path));
-/** The example game's FGD with the engine's included, as TrenchBroom reads it once install-trenchbroom links mandrel/. */
+/** The example game's FGD with the engine's included, as TrenchBroom reads it once install-trenchbroom links mandreljs/. */
 const fgd = resolveFgdIncludes(readRepoFile("example/trenchbroom/MandrelJSExample.fgd"), (path) =>
-  readRepoFile(path.startsWith("mandrel/") ? `packages/defs/trenchbroom/${path.slice("mandrel/".length)}` : `example/trenchbroom/${path}`),
+  readRepoFile(path.startsWith("mandreljs/") ? `packages/defs/trenchbroom/${path.slice("mandreljs/".length)}` : `example/trenchbroom/${path}`),
 ).text;
 const realData = (): DataFiles => loadSimConfig() as unknown as DataFiles;
 

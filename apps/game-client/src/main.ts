@@ -31,7 +31,7 @@ import { createSim, simContext, step, type SimConfig, type SimState } from "@man
 
 // Game directories, relative to the page so a release works wherever it's hosted:
 // served by the dev server (tools/src/dev-server.ts), or copied next to the page
-// by mandrel build. Their index.json names the game to play when the URL doesn't.
+// by mandreljs build. Their index.json names the game to play when the URL doesn't.
 const GAMES = "games";
 const HORIZONTAL_FOV = 90;
 const BRIGHTNESS_STEP = 0.1;

@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Developer tools, run in Node and never shipped: the command-line tools, map compiling with the pinned ericw-tools, the dev server's Vite plugin, and test helpers.",
   "bin": {
-    "mandrel": "src/mandrel.ts"
+    "mandreljs": "src/mandreljs.ts"
   },
   "exports": {
     "./*": "./src/*.ts"

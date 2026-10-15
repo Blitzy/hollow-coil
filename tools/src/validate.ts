@@ -31,7 +31,7 @@ import { isMain } from "./cli.ts";
 
 const GAME_DATA = ["game", "player", "weapons", "enemies"];
 /** The folder an engine FGD include starts with: install-trenchbroom links packages/defs/trenchbroom/ there. */
-const ENGINE_INCLUDE = "mandrel/";
+const ENGINE_INCLUDE = "mandreljs/";
 
 /** A schema validator reading schema files from a folder. */
 export function folderValidator(dir: string): SchemaValidator {
@@ -54,7 +54,7 @@ function gameMaps(game: string): Map<string, string> {
 }
 
 /**
- * A game's FGD with its includes resolved. Includes under mandrel/ come from packages/defs/trenchbroom/
+ * A game's FGD with its includes resolved. Includes under mandreljs/ come from packages/defs/trenchbroom/
  * whether or not install-trenchbroom has linked it in; the rest from the game's trenchbroom/.
  */
 export function gameFgd(game: string, file: string): { text: string; problems: string[] } {

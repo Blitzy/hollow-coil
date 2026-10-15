@@ -18,7 +18,7 @@ describe("dev server", () => {
   let url = "";
 
   beforeAll(async () => {
-    dir = mkdtempSync(join(tmpdir(), "mandrel-dev-"));
+    dir = mkdtempSync(join(tmpdir(), "mandreljs-dev-"));
     game = join(dir, "mygame");
     for (const folder of ["data", "textures"]) cpSync(join(EXAMPLE_GAME, folder), join(game, folder), { recursive: true });
     mkdirSync(join(game, "maps"));

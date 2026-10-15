@@ -18,11 +18,11 @@ describe("validate", () => {
   };
   /** A copy of the example game outside the repo, to break. */
   const copyOfExample = (): string => {
-    const dir = mkdtempSync(join(tmpdir(), "mandrel-validate-"));
+    const dir = mkdtempSync(join(tmpdir(), "mandreljs-validate-"));
     dirs.push(dir);
     const game = join(dir, "mygame");
     // Without textures (not checked), editor autosaves, or the engine link install-trenchbroom may have made.
-    const skip = new Set(["textures", "autosave", "mandrel", "engine"]);
+    const skip = new Set(["textures", "autosave", "mandreljs", "mandrel", "engine"]);
     cpSync(EXAMPLE_GAME, game, { recursive: true, filter: (src) => !skip.has(basename(src)) });
     return game;
   };

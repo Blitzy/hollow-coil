@@ -21,7 +21,7 @@ describe("setup", () => {
   });
 
   it("reports an incomplete install", () => {
-    const dir = mkdtempSync(join(tmpdir(), "mandrel-setup-"));
+    const dir = mkdtempSync(join(tmpdir(), "mandreljs-setup-"));
     try {
       expect(() => verifyEricw(dir, "1.0")).toThrow(SetupError);
       expect(() => verifyEricw(dir, "1.0")).toThrow(/missing: qbsp, light/);

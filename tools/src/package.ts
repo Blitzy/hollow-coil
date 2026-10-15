@@ -1,10 +1,10 @@
-// Builds the mandreljs package: what a game's repo installs to get the mandrel
+// Builds the mandreljs package: what a game's repo installs to get the mandreljs
 // command. Repo-only; the package's contents come from this repo:
 //
-//   bin/mandrel.js (+ .map)   the command, bundled into one JavaScript file with Vite,
+//   bin/mandreljs.js (+ .map)   the command, bundled into one JavaScript file with Vite,
 //                             with engine-files.package.ts in place of engine-files.ts
 //   client/                   the built game client, with THIRD-PARTY-NOTICES.txt
-//   defs/                     schemas, light styles, and trenchbroom/mandrel.fgd
+//   defs/                     schemas, light styles, and trenchbroom/mandreljs.fgd
 //   versions.json             pinned third-party tool versions
 //   README.md, LICENSE, LICENSE-EXCEPTION.md, package.json
 //
@@ -34,16 +34,16 @@ export function packageJson(version: string, repository?: unknown): Record<strin
     name: "mandreljs",
     version,
     ...(repository === undefined ? {} : { repository }),
-    description: "A web engine for first-person shooters in the spirit of Doom and Quake: the mandrel command, which plays, checks, compiles, and builds a game directory.",
+    description: "A web engine for first-person shooters in the spirit of Doom and Quake: the mandreljs command, which plays, checks, compiles, and builds a game directory.",
     type: "module",
-    bin: { mandrel: "bin/mandrel.js" },
+    bin: { mandreljs: "bin/mandreljs.js" },
     engines: { node: ">=24" },
     license: "GPL-3.0-or-later",
     keywords: ["game-engine", "fps", "quake", "trenchbroom", "threejs"],
   };
 }
 
-/** Bundles the mandrel command into one file, with the package's engine-files module. */
+/** Bundles the mandreljs command into one file, with the package's engine-files module. */
 async function bundle(out: string): Promise<void> {
   await build({
     configFile: false,
@@ -54,13 +54,13 @@ async function bundle(out: string): Promise<void> {
     // Bundle our own packages too; only Node's built-in modules stay imports.
     ssr: { noExternal: true },
     build: {
-      ssr: repoPath("tools", "src", "mandrel.ts"),
+      ssr: repoPath("tools", "src", "mandreljs.ts"),
       outDir: join(out, "bin"),
       emptyOutDir: true,
       target: "node24",
       minify: false,
       sourcemap: true,
-      rolldownOptions: { output: { entryFileNames: "mandrel.js", codeSplitting: false } },
+      rolldownOptions: { output: { entryFileNames: "mandreljs.js", codeSplitting: false } },
     },
   });
 }
@@ -83,12 +83,12 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   console.log("ok    client");
 
   await bundle(out);
-  console.log("ok    bin/mandrel.js");
+  console.log("ok    bin/mandreljs.js");
 
   mkdirSync(join(out, "defs", "trenchbroom"), { recursive: true });
   cpSync(join(DEFS_DIR, "schemas"), join(out, "defs", "schemas"), { recursive: true });
   cpSync(join(DEFS_DIR, "lightstyles.json"), join(out, "defs", "lightstyles.json"));
-  cpSync(join(DEFS_DIR, "trenchbroom", "mandrel.fgd"), join(out, "defs", "trenchbroom", "mandrel.fgd"));
+  cpSync(join(DEFS_DIR, "trenchbroom", "mandreljs.fgd"), join(out, "defs", "trenchbroom", "mandreljs.fgd"));
   cpSync(VERSIONS_FILE, join(out, "versions.json"));
   for (const file of ["LICENSE", "LICENSE-EXCEPTION.md"]) cpSync(repoPath(file), join(out, file));
   cpSync(repoPath("tools", "package-readme.md"), join(out, "README.md"));

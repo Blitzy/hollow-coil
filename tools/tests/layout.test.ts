@@ -11,7 +11,7 @@ describe("layout", () => {
   });
   /** A folder outside the repo holding a game directory, mygame/. */
   const outside = (): { dir: string; game: string } => {
-    const dir = mkdtempSync(join(tmpdir(), "mandrel-layout-"));
+    const dir = mkdtempSync(join(tmpdir(), "mandreljs-layout-"));
     dirs.push(dir);
     const game = join(dir, "mygame");
     mkdirSync(join(game, "data"), { recursive: true });

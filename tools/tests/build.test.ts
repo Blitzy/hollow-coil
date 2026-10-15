@@ -1,7 +1,7 @@
-// What mandrel build writes, from a copy of the example game and a stand-in
+// What mandreljs build writes, from a copy of the example game and a stand-in
 // client, so the test needs neither Vite nor ericw-tools and writes nothing in the repo.
 
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -17,10 +17,10 @@ describe("build", () => {
 
   /** A copy of the example game with stand-in compiled maps, and a stand-in client. */
   const setup = (): { game: string; client: string } => {
-    const dir = mkdtempSync(join(tmpdir(), "mandrel-build-"));
+    const dir = mkdtempSync(join(tmpdir(), "mandreljs-build-"));
     dirs.push(dir);
     const game = join(dir, "mygame");
-    for (const folder of ["data", "textures", "trenchbroom"]) cpSync(join(EXAMPLE_GAME, folder), join(game, folder), { recursive: true, filter: (src) => !src.endsWith("mandrel") });
+    for (const folder of ["data", "textures", "trenchbroom"]) cpSync(join(EXAMPLE_GAME, folder), join(game, folder), { recursive: true, filter: (src) => !lstatSync(src).isSymbolicLink() });
     mkdirSync(join(game, "maps"));
     mkdirSync(join(game, "build"));
     for (const map of ["greybox_01", "test_movement"]) {

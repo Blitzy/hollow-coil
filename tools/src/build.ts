@@ -15,7 +15,7 @@
 // fails to compile. Inside this repo it builds the client from source first,
 // so the release has the current engine.
 //
-// Usage: node tools/src/build.ts [--game dir] [--mode release|check]   (or mandrel build, npm run build)
+// Usage: node tools/src/build.ts [--game dir] [--mode release|check]   (or mandreljs build, npm run build)
 //   --mode   map lighting: release (the default) or the faster check, to try a release quickly
 
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";

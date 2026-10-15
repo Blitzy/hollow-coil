@@ -4,7 +4,7 @@ Developer tools: they run in Node during development and never ship to players. 
 
 Command-line tools, each run from the repo root with `npm run <name>`. The ones that work on a game also run on a game directory anywhere else, run from inside it:
 
-- `src/mandrel.ts`: the `mandrel` command (this package's `bin`), which runs the game tools below as subcommands: `mandrel compile`, `mandrel validate`, and so on. The npm scripts call it.
+- `src/mandreljs.ts`: the `mandreljs` command (this package's `bin`), which runs the game tools below as subcommands: `mandreljs compile`, `mandreljs validate`, and so on. The npm scripts call it.
 - `src/build.ts`: builds a release of a game in its `dist/` folder: the client, `games/index.json`, and the game's data, textures, and maps compiled at release quality.
 - `src/dev.ts`: plays the game in the browser. From this repo's source it runs Vite on `apps/game-client`; with `--built`, or where there's no client source, it serves the built client with the plain server in `dev-server.ts`.
 - `src/setup.ts`: installs the pinned third-party tools (ericw-tools) into a per-user cache shared by every game. Versions and checksums are in `versions.json`.
@@ -14,7 +14,7 @@ Command-line tools, each run from the repo root with `npm run <name>`. The ones 
 - `src/install-trenchbroom.ts`: links a game's TrenchBroom config into TrenchBroom.
 - `src/make-placeholder-textures.ts`: regenerates the example game's placeholder textures.
 - `src/check-files.ts`: fails if any tracked file is over 2 MB.
-- `src/package.ts`: builds the `mandreljs` package in `dist/mandreljs/` (`npm run package`): `mandrel` bundled into `bin/mandrel.js` with Vite, the built client, the defs, pinned versions, licenses, and `package-readme.md` as its README.
+- `src/package.ts`: builds the `mandreljs` package in `dist/mandreljs/` (`npm run package`): `mandreljs` bundled into `bin/mandreljs.js` with Vite, the built client, the defs, pinned versions, licenses, and `package-readme.md` as its README.
 
 Used by other code:
 
