@@ -127,7 +127,7 @@ The TypeScript side is one [npm workspace](https://docs.npmjs.com/cli/using-npm/
 
 ## Contributing
 
-Project guidelines live in [CLAUDE.md](CLAUDE.md). Design decisions and their reasons are recorded in [docs/DECISIONS.md](docs/DECISIONS.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md): how to get set up, the rules the engine follows, and the licensing terms contributions are made under. Project guidelines live in [CLAUDE.md](CLAUDE.md), and design decisions and their reasons in [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## License
 
