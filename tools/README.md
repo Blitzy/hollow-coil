@@ -14,11 +14,13 @@ Command-line tools, each run from the repo root with `npm run <name>`. The ones 
 - `src/install-trenchbroom.ts`: links a game's TrenchBroom config into TrenchBroom.
 - `src/make-placeholder-textures.ts`: regenerates the example game's placeholder textures.
 - `src/check-files.ts`: fails if any tracked file is over 2 MB.
+- `src/rebaseline-demos.ts`: remakes golden demos' hashes and keyframes from their inputs, after an intentional behavior change (see `demos/README.md`).
 - `src/package.ts`: builds the `mandreljs` package in `dist/mandreljs/` (`npm run package`): `mandreljs` bundled into `bin/mandreljs.js` with Vite, the built client, the defs, pinned versions, licenses, and `package-readme.md` as its README.
 
 Used by other code:
 
 - `src/dev-server.ts`: the dev server. It serves game directories at `/games/<game>/`, lists them (and the one to play) at `/games/index.json`, and compiles stale maps when the page asks for them. The same request handling runs as the Vite plugin each app's `vite.config.ts` uses, and as a plain Node server for the built client.
+- `src/demo-levels.ts`: loads the level a demo was recorded on, compiling its `.bsp` when it was played on one. The golden demo test and `rebaseline-demos` use it.
 - `src/testing.ts` and `src/level-parity.ts`: helpers for tests: reading repo files, the example game's data as a sim config, and comparing a level loaded from a `.map` with the same level from its `.bsp`.
 - `src/engine-files.ts` and `src/engine-files.package.ts`: where the engine's own files are (schemas, light styles, the shared FGD, pinned versions, the client), from source and in the installed package. The package's bundle uses the second in place of the first, so they export the same names.
 - `src/layout.ts`: where things are: the engine's own files, the game a command works on (the folder it runs in, `--game`, or the example game inside this repo), its `build/`, and the tools cache.

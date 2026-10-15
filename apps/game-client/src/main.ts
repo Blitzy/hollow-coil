@@ -5,7 +5,8 @@
 // one it was started for, from /games/index.json),
 // &map=<name> (default: the game's start map), &lighting=off to load the
 // unlit .map instead of the compiled .bsp, &brightness=<n> to try another lightmap scale,
-// &rawinput=off for the OS's accelerated mouse instead of raw input.
+// &rawinput=off for the OS's accelerated mouse instead of raw input. R records a demo
+// (see demos/README.md): it starts the level over, and R again or starting over saves it.
 // Everything comes from one file: the .bsp (drawing, collision, and entities),
 // or the .map when there's no usable .bsp or lighting is off.
 
@@ -23,13 +24,13 @@ import { ImpactMarks } from "@mandreljs/render/impacts";
 import { LIGHT_STYLES, type LightStyleData } from "@mandreljs/render/light-styles";
 import { buildLevelMeshes, loadTextures, textureNames } from "@mandreljs/render/level-mesh";
 import { TICK_RATE } from "@mandreljs/sim/constants";
+import { contentHashes, DemoRecorder, formatDemo, type DemoHeader } from "@mandreljs/sim/demo";
 import type { EnemiesData, PlayerData, WeaponsData } from "@mandreljs/sim/data";
-import { enemySpawns } from "@mandreljs/sim/enemy/enemy";
-import { angleToRadians, degreesToUnits, wrapYaw } from "@mandreljs/sim/input";
+import { angleToRadians } from "@mandreljs/sim/input";
 import { levelFromBsp, levelFromMap, type Level } from "@mandreljs/sim/level";
 import { readBsp } from "@mandreljs/sim/map/bsp";
 import { normalize, sub, vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
-import { createSim, playerAlive, simContext, step, type SimConfig, type SimEvent, type SimState } from "@mandreljs/sim/sim";
+import { levelSpawn, playerAlive, simContext, startLevel, step, type SimConfig, type SimEvent, type SimState } from "@mandreljs/sim/sim";
 
 // Game directories, relative to the page so a release works wherever it's hosted:
 // served by the dev server (tools/src/dev-server.ts), or copied next to the page
@@ -37,6 +38,15 @@ import { createSim, playerAlive, simContext, step, type SimConfig, type SimEvent
 const GAMES = "games";
 const HORIZONTAL_FOV = 90;
 const BRIGHTNESS_STEP = 0.1;
+/** The RNG seed every game starts with. */
+const SEED = 0;
+
+/** Hands the player a text file to save. */
+function download(name: string, text: string): void {
+  const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  Object.assign(document.createElement("a"), { href: url, download: name }).click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 async function fetchText(url: string): Promise<string> {
   const response = await fetch(url);
@@ -159,26 +169,40 @@ async function main(): Promise<void> {
   window.addEventListener("resize", resize);
   resize();
 
-  const start = level.playerStart ?? { origin: vec3(0, 0, 24), angle: 0 };
-  const startYaw = wrapYaw(degreesToUnits(start.angle));
+  const startYaw = levelSpawn(level).yaw;
   const preferRawInput = params.get("rawinput") !== "off";
   const input = new BrowserInput(renderer.domElement, preferRawInput);
   input.yaw = angleToRadians(startYaw);
   const weaponData = config.weapons.weapons;
   const slots = config.player.weapons.map((id) => weaponData[id]!.slot).sort((a, b) => a - b);
 
-  const newGame = (): SimState => createSim(config, { origin: start.origin, yaw: startYaw }, 0, enemySpawns(level, ctx.enemies));
-  let previous = newGame();
+  let previous = startLevel(level, config, SEED);
   let current = previous;
   /** Starts the level over, as Quake's single player restarts the map when you respawn. */
   const restart = (): void => {
-    previous = current = newGame();
+    previous = current = startLevel(level, config, SEED);
     input.yaw = angleToRadians(startYaw);
     input.pitch = 0;
     damageView.reset();
     impacts.clear();
     blood.clear();
   };
+
+  // Recording a demo: R starts the level over and records from its start; R again, or starting over, saves it.
+  let recorder: DemoRecorder | null = null;
+  const header: DemoHeader = { game: info.name, map: mapName, level: world.lit ? "bsp" : "map", seed: SEED, engine: __MANDRELJS_VERSION__, content: contentHashes(level, config) };
+  const saveDemo = (): void => {
+    if (recorder === null) return;
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    download(`${mapName}-${stamp}.demo.json`, formatDemo(recorder.finish()));
+    recorder = null;
+  };
+  window.addEventListener("keydown", (e) => {
+    if (e.code !== "KeyR" || e.repeat) return;
+    if (recorder !== null) return saveDemo();
+    restart();
+    recorder = new DemoRecorder(header, current);
+  });
 
   /** Presents what happened in a tick: marks where shots hit, and the player getting hurt. */
   const present = (events: readonly SimEvent[], state: SimState, now: number): void => {
@@ -212,8 +236,12 @@ async function main(): Promise<void> {
       const result = step(current, cmd, ctx);
       previous = current;
       current = result.state;
+      recorder?.record(cmd, current);
       present(result.events, current, now / 1000);
-      if (respawn.update(current.tick, playerAlive(current.player), cmd.buttons)) restart();
+      if (respawn.update(current.tick, playerAlive(current.player), cmd.buttons)) {
+        saveDemo(); // a demo is one life, from the level's start
+        restart();
+      }
     }
 
     // Interpolate position between the last two ticks; view angles come straight from the mouse for low latency.
@@ -243,6 +271,7 @@ async function main(): Promise<void> {
       `pos ${p.origin.x.toFixed(1)} ${p.origin.y.toFixed(1)} ${p.origin.z.toFixed(1)}`,
       `speed ${Math.hypot(p.velocity.x, p.velocity.y).toFixed(0)}  ${p.onGround ? "ground" : "air"}`,
       alive ? `health ${p.health}  ${weaponData[p.weapon.current]!.name}  ${p.weapon.phase}` : respawn.ready ? "dead  (click or jump to start over)" : "dead",
+      recorder !== null ? `recording  ${(recorder.ticks / TICK_RATE).toFixed(1)}s  (R to stop and save)` : "R to record a demo",
       world.lit ? `lit  brightness ${world.lit.brightness.value.toFixed(1)}  ([ and ] adjust)` : world.note,
       input.locked
         ? `mouse ${input.rawInput ? "raw" : preferRawInput ? "accelerated (raw input unavailable)" : "accelerated (rawinput=off)"}`

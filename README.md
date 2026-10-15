@@ -86,6 +86,7 @@ The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, an
 | `npm run compile` | Compiles every map into the game's `build/` folder, failing on leaks, missing textures, and compiler errors. Name maps to compile only those; `--mode release` for full-quality lighting. |
 | `npm run bspdump -- <file>` | Prints a compiled map's entities, counts, textures, and lightmap stats as JSON, such as `-- example/build/greybox_01.bsp`. `--no-entities` leaves out the entity list. |
 | `npm run make-placeholder-textures` | Regenerates the example game's placeholder textures in `example/textures/dev/`. |
+| `npm run rebaseline-demos` | Remakes golden demos' hashes and keyframes from their recorded inputs, after an intentional behavior change (say so in the commit message). Name demos to do only those; see [demos/README.md](demos/README.md). |
 
 **Checks**
 

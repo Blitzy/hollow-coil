@@ -168,7 +168,7 @@ Tests:
 
 ### M4: Enemy
 
-In progress. Enemy AI follows Quake's, infighting included (see `docs/ENEMIES.md`). Done: spawning, the think cadence, noticing the player by sight, taking damage (pain, death, and enemies blocking the player), chasing with Quake's movetogoal, and shooting back (with a wind-up, aim lag, and Quake's infighting), with placeholder boxes in the game. The game shows getting hurt (Quake's red flash and view kick), shots hitting someone, and dying (Quake's dead view), and a press restarts the level. Remaining: golden demos.
+Done (2026-10-15). Enemy AI follows Quake's, infighting included (see `docs/ENEMIES.md`): spawning, the think cadence, noticing the player by sight, taking damage (pain, death, and enemies blocking the player), chasing with Quake's movetogoal, and shooting back (with a wind-up, aim lag, and Quake's infighting), with placeholder boxes in the game. The game shows getting hurt (Quake's red flash and view kick), shots hitting someone, and dying (Quake's dead view), and a press restarts the level. Golden demos work: R records one in the game (format in `demos/README.md`), CI replays every demo in `demos/`, and `npm run rebaseline-demos` remakes one after an intentional change. The first, a fight in `greybox_01` that kills both shotgunners, found that browsers and Node disagree on `Math.sin` and friends, so the sim now does its own trigonometry (see DECISIONS.md).
 
 - States: idle, chase, attack, pain, dead. The reaction delay holds the first attack, as in Quake, rather than being a separate alert state.
 - Infighting, as in Quake: an enemy hurt by another enemy turns on it, then returns to the player
@@ -186,6 +186,16 @@ Tests:
 - Enemy dies at zero health and stops acting
 - Scenario: a chasing enemy closes distance to the player, steps up stairs, and never passes through walls
 - Golden demo: Ryan records a short fight in `greybox_01` with an in-game recorder; CI replays it against its per-tick state hashes
+
+### Demo Playback
+
+Planned next: watching a demo in the game, to see what a golden demo does and where a failing one goes wrong. Playback presents the demo through the same events as play, so hurt flashes, marks, and enemies all show.
+
+- Drag a `.demo.json` onto the game page to play it (in the dev server and in a release). A demo from another map reloads the page on that map first, from the file the demo was recorded on (the `.bsp`, or the `.map` with lighting off). If the map or data changed since it was recorded, the overlay says so before it plays.
+- The camera follows the recorded view angles, smoothed between ticks like movement.
+- Space pauses, the left and right arrows change speed (1/4x to 4x), and Escape leaves playback.
+- The overlay shows the time, the speed, and whether every tick's hash still matches the recording, flagging the tick where it first diverges.
+- Later: seeking, starting from the keyframes' full states.
 
 ### M5: Feel and Presentation
 
@@ -230,5 +240,4 @@ The sim's only input is one command per tick, in an engine-neutral format used b
 
 ## Open Decisions
 
-- Cross-browser determinism (custom trig or lookup tables), deferred until demos need to play across browsers. Desktop builds sidestep it, since Electron bundles one browser engine.
 - For standalone games (above): whether `example/` gets a `package.json` so it doubles as a starter template, or a separate starter repo does that; and when to publish `mandreljs` to npm, which makes the engine public. Until then, game repos install it from a local checkout or a packed `.tgz`. (A release from `mandreljs build` holds only its own game, so `?game=` can't load another one there.)

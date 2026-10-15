@@ -5,6 +5,7 @@
 // follows Quake's movetogoal (see move.ts); attacking follows the grunt's
 // SoldierCheckAttack, attack frames, and army_fire in soldier.qc.
 
+import { cos, sin } from "../math/trig.ts";
 import { CONTENTS } from "../constants.ts";
 import { aimAngles, eyePosition, rayBoxFraction, SHOT_MASK, type HitTarget } from "../combat/hitscan.ts";
 import { trace, type CollisionWorld } from "../collision/trace.ts";
@@ -29,7 +30,7 @@ export function canSee(enemy: EnemyState, type: EnemyType, world: CollisionWorld
   const distance = length(toPoint);
   if (distance > type.data.sight_range) return false;
   const yaw = angleToRadians(enemy.yaw);
-  const facing = vec3(Math.cos(yaw), Math.sin(yaw), 0);
+  const facing = vec3(cos(yaw), sin(yaw), 0);
   if (distance > 0 && dot(facing, toPoint) / distance < type.viewCos) return false;
   return lineOfSight(world, eye, point);
 }

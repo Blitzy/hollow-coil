@@ -30,6 +30,7 @@
     "setup": "mandreljs setup",
     "install-trenchbroom": "mandreljs install-trenchbroom",
     "make-placeholder-textures": "node tools/src/make-placeholder-textures.ts",
+    "rebaseline-demos": "node tools/src/rebaseline-demos.ts",
     "package": "node tools/src/package.ts"
   },
   "devDependencies": {

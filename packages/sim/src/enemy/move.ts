@@ -4,6 +4,7 @@
 // are in angle units (65536 per turn; 45 degrees is 8192). See docs/ENEMIES.md,
 // "Chasing".
 
+import { cos, sin } from "../math/trig.ts";
 import { trace, type CollisionWorld } from "../collision/trace.ts";
 import type { Hull } from "../data.ts";
 import { angleToRadians, ANGLE_UNITS_PER_TURN, wrapYaw } from "../input.ts";
@@ -75,7 +76,7 @@ export function moveStep(blockers: CollisionWorld, world: CollisionWorld, origin
 /** A horizontal move of dist in the direction of yaw. */
 export function moveToward(yaw: number, dist: number): Vec3 {
   const radians = angleToRadians(yaw);
-  return vec3(Math.cos(radians) * dist, Math.sin(radians) * dist, 0);
+  return vec3(cos(radians) * dist, sin(radians) * dist, 0);
 }
 
 /** True if two boxes, each grown by 1 unit as Quake's absmin and absmax are, come within dist of each other on every axis (SV_CloseEnough). */

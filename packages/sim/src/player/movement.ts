@@ -3,6 +3,7 @@
 // edge friction from Quake WinQuake/sv_user.c SV_UserFriction and the slide
 // move's same-plane nudge from Quake 3 code/game/bg_slidemove.c (both GPLv2 or later).
 
+import { cos, hypot, sin } from "../math/trig.ts";
 import { CONTENTS, TICK_RATE } from "../constants.ts";
 import { add, addScaled, cross, dot, length, scale, sub, vec3, ZERO, type Vec3 } from "../math/vec3.ts";
 import { trace, type CollisionWorld, type TraceResult } from "../collision/trace.ts";
@@ -95,7 +96,7 @@ export function friction(m: Mover, ctx: MovementContext): void {
 
   let f = ctx.movement.friction;
   // Edge friction: stop faster when the leading edge is over a drop-off.
-  const horizontal = Math.hypot(v.x, v.y);
+  const horizontal = hypot(v.x, v.y);
   if (horizontal > 0) {
     const start = vec3(
       m.origin.x + (v.x / horizontal) * EDGE_PROBE_AHEAD,
@@ -114,8 +115,8 @@ export function friction(m: Mover, ctx: MovementContext): void {
 /** Movement direction and speed the player is asking for, from the view's yaw. */
 export function wish(cmd: InputCommand, maxSpeed: number): { dir: Vec3; speed: number } {
   const yaw = angleToRadians(cmd.yaw);
-  const forward = vec3(Math.cos(yaw), Math.sin(yaw), 0);
-  const right = vec3(Math.sin(yaw), -Math.cos(yaw), 0);
+  const forward = vec3(cos(yaw), sin(yaw), 0);
+  const right = vec3(sin(yaw), -cos(yaw), 0);
   const wishVel = addScaled(scale(forward, (cmd.forward / 127) * maxSpeed), right, (cmd.side / 127) * maxSpeed);
   const speed = length(wishVel);
   return { dir: speed > 0 ? scale(wishVel, 1 / speed) : ZERO, speed: Math.min(speed, maxSpeed) };
@@ -145,7 +146,7 @@ function airMove(m: Mover, cmd: InputCommand, ctx: MovementContext): void {
  * climbs it. A deliberate departure from QuakeWorld; see docs/MOVEMENT.md.
  */
 export function withoutPushInto(dir: Vec3, speed: number, surfaceNormal: Vec3): { dir: Vec3; speed: number } {
-  const across = Math.hypot(surfaceNormal.x, surfaceNormal.y);
+  const across = hypot(surfaceNormal.x, surfaceNormal.y);
   if (across === 0 || speed === 0) return { dir, speed };
   const out = vec3(surfaceNormal.x / across, surfaceNormal.y / across, 0); // horizontal, pointing away from the surface
   const into = dot(dir, out);
@@ -185,7 +186,7 @@ export function clipVelocity(v: Vec3, normal: Vec3, overbounce: number): Vec3 {
  */
 export function asWallIfSteep(normal: Vec3): Vec3 {
   if (normal.z <= 0 || normal.z >= GROUND_NORMAL_Z) return normal;
-  const across = Math.hypot(normal.x, normal.y);
+  const across = hypot(normal.x, normal.y);
   return vec3(normal.x / across, normal.y / across, 0);
 }
 

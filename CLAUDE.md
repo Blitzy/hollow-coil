@@ -41,6 +41,7 @@ The simulation is strictly separated from presentation. These rules are not opti
 - Enemy AI decisions run on a 10 Hz think cadence, offset per enemy. Movement, collision, and weapons update every tick.
 - The sim reads only per-tick input commands. No wall clock, input devices, or renderer access.
 - All randomness comes from a seeded RNG stored in sim state. Never use `Math.random` in sim code.
+- Trigonometry comes from `packages/sim/src/math/trig.ts`, never `Math.sin`, `cos`, `tan`, `atan2`, `hypot`, or any other `Math` function JavaScript doesn't define exactly: those differ in the last bit between browsers, which breaks demos (`packages/sim/tests/math/trig.test.ts` checks).
 - All sim state is plain, serializable data with stable entity IDs.
 - The sim emits events (fired, hit, damaged, died). Rendering and audio consume events. The sim never calls presentation code.
 - Sim code (`packages/sim`) must not import Three.js, any DOM API, or Node APIs, or depend on another package.
@@ -49,7 +50,7 @@ The simulation is strictly separated from presentation. These rules are not opti
 
 - Every gameplay change ships with tests: unit tests for the logic, and a scenario in `/scenarios` when behavior is observable.
 - Never change test expectations, scenario tolerances, or golden demos just to make a failing test pass. Explain the failure first.
-- Re-record golden demos only for intentional behavior changes, and say so in the commit message. Golden demos are only valid at the tick rate they were recorded with.
+- Rebaseline golden demos (`npm run rebaseline-demos`) only for intentional behavior or content changes, and say so in the commit message; after a content change (a map or data file a demo plays on), play the demo back to check it still does what it should. Golden demos are only valid at the tick rate they were recorded with. Keep the demo format growable (`demos/README.md`): new inputs are new columns with a neutral default, and new sim state starts neutral.
 - Map compiles must stay clean. Treat a leak as a failing test.
 
 ## Code Conventions
