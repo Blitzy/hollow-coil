@@ -13,6 +13,27 @@ mygame/
   trenchbroom/        your TrenchBroom game config and FGD
 ```
 
+## Starting a game
+
+The quickest start is a copy of the engine's example game, [`example/`](https://github.com/mandreljs/mandrel.js/tree/main/example), in a new folder such as `mygame/`. Give the copy its own name in four places, or TrenchBroom and the engine will treat it as the example:
+
+- `name` in `data/game.json`
+- `name` in `trenchbroom/GameConfig.cfg`
+- the `// Game:` line at the top of each map
+- the FGD's file name, and its entry in `GameConfig.cfg` (TrenchBroom's link to your config is named after it)
+
+Then, inside it:
+
+```
+npm install --save-dev mandreljs
+npx mandreljs validate
+npx mandreljs setup
+npx mandreljs install-trenchbroom
+npx mandreljs dev
+```
+
+`validate` points out anything that still doesn't match. The data files' `$schema` lines point into the engine's repo; point them at the package instead (see below) for checking as you type. The example's content is licensed under CC BY 4.0, so keep its `LICENSE.md` (which gives the credit) for as long as you use any of it.
+
 ## Commands
 
 Run them inside your game's folder, with Node.js 24 or newer:

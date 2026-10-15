@@ -9,6 +9,4 @@ The example game: a game directory, like Quake's `id1/`, with the content the en
 
 Maps compile to `build/` here (gitignored). The content here is CC BY 4.0, except the TrenchBroom config and FGD; see `LICENSE.md`, which releases carry so the content is always credited, and `LICENSE-EXCEPTION.md` at the repo root.
 
-## Another game
-
-A game made with the engine is a sibling directory with the same layout, checked out from its own repo. Name its FGD after the game (as TrenchBroom's own `Quake2/Quake2.fgd` is), start it with `@include "mandreljs/mandreljs.fgd"`, and gitignore `trenchbroom/mandreljs` in its repo. Then play it at `http://localhost:5173/?game=<dir>`, and pass `-- --game <dir>` to `npm run compile`, `npm run validate`, and `npm run install-trenchbroom`.
+To make your own game, see [Make your own game](../README.md#make-your-own-game) in the README.

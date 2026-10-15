@@ -22,6 +22,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:package": "node tools/src/test-package.ts",
+    "check": "npm run check-files && npm run validate && npm run typecheck && npm test && npm run compile -- --mode check && npm run test:package",
     "check-files": "node tools/src/check-files.ts",
     "validate": "mandreljs validate",
     "bspdump": "mandreljs bspdump",

@@ -2,7 +2,7 @@
 // import the tools: tools run in Node during development and are never shipped.
 // Tests and an app's vite.config.ts may use them.
 
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { displayPath, REPO_ROOT, repoPath } from "../src/layout.ts";
@@ -16,7 +16,7 @@ const tsFiles = (dir: string): string[] =>
 
 const sources = ["packages", "apps"].flatMap((group) =>
   readdirSync(repoPath(group), { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
+    .filter((entry) => entry.isDirectory() && existsSync(repoPath(group, entry.name, "src"))) // not a leftover empty folder
     .flatMap((entry) => tsFiles(repoPath(group, entry.name, "src"))),
 );
 

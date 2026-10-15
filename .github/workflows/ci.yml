@@ -50,22 +50,8 @@ jobs:
       - name: Install pinned tools
         run: npm run setup -- ericw-tools
 
-      - name: Check file sizes
-        run: npm run check-files
-
-      - name: Validate data and scenarios
-        run: npm run validate
-
-      - name: Type-check (including the sim-only check)
-        run: npm run typecheck
-
-      - name: Test
-        run: npm test
-
-      # Fast lighting: leaks, missing textures, and compiler errors fail the build.
-      - name: Check maps compile
-        run: npm run compile -- --mode check
-
-      # Packs mandreljs and runs it installed, in a game folder outside the repo.
-      - name: Test the installed package
-        run: npm run test:package
+      # Every check, in one script (see package.json), so CI and contributors run the
+      # same ones: file sizes, validation, type-checking, tests, compiling every map
+      # with fast lighting, and the installed mandreljs package.
+      - name: Check
+        run: npm run check

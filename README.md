@@ -1,24 +1,28 @@
 # Mandrel.js
 
-An open-source web engine for first-person shooters in the spirit of mid-90s shooters like Doom and Quake, with a free example game to play and test it with.
+An open-source web engine for first-person shooters in the spirit of mid-90s shooters like Doom and Quake.
 
-Levels are hand-authored and abstract rather than realistic, made for fun, variety, and fast combat. (A mandrel is the core a coil is wound around and takes its shape from.)
+A game made with Mandrel.js is content, not code: levels built in [TrenchBroom](https://trenchbroom.github.io/), textures, and data files that define its weapons, enemies, and movement. The engine plays it in the browser, and one command, `mandreljs`, plays, checks, compiles, and builds it from the game's own repo. A free example game comes with the engine, to play and test it with.
+
+(A mandrel is the core a coil is wound around and takes its shape from.)
 
 ## Status
 
-Early prototyping: building a small vertical slice in the browser with TypeScript and Three.js. You can walk around the test maps with Quake-style movement and baked, colored lighting. (We built the same slice in Godot too, to compare, and chose the web build.) There are no weapons or enemies yet.
+Early development. The engine is playable in the browser, but features, data formats, and the `mandreljs` command change often, and the example game uses placeholder art. It's not ready for making real games yet.
 
-See [docs/PLAN.md](docs/PLAN.md) for the current plan.
+See [docs/PLAN.md](docs/PLAN.md) for what's done and what's next.
 
 ## How It Works
 
-- Levels are made in [TrenchBroom](https://trenchbroom.github.io/) and compiled with [ericw-tools](https://ericw.github.io/ericw-tools/).
-- Weapons, enemies, and movement are defined in data files, not code.
-- The game simulation runs at a fixed tick and is deterministic, so recorded demos replay exactly and can be used as regression tests.
+- **A game is a folder**, laid out like Quake's `id1/`: `maps/`, `textures/`, `data/`, and its TrenchBroom config. It lives in its own repo, under its own license, and installs the engine as one npm package, `mandreljs` (see [Make your own game](#make-your-own-game)).
+- **Levels are made in TrenchBroom** and compiled with [ericw-tools](https://ericw.github.io/ericw-tools/), which bakes the lighting.
+- **Behavior lives in the engine; content combines it.** Weapons, enemies, and movement are tuned in data files, checked against the engine's schemas.
+- **The simulation is deterministic,** on a fixed tick, so recorded demos replay exactly and double as regression tests.
+- **Releases are static files** that run on any web host. Desktop builds will wrap them in Electron.
 
 ## How It's Made
 
-Mandrel.js is built with agentic coding. Most of the code is written with an AI coding agent ([Claude Code](https://claude.com/claude-code)), and every change is reviewed by a human before it's committed. The content you play is made by hand: levels are built in TrenchBroom, and weapon tuning, encounters, and art direction are human decisions. The agent handles the plumbing so more time goes into the parts that make a game feel good. See [docs/DECISIONS.md](docs/DECISIONS.md) for the reasoning and how AI-generated assets are handled.
+Mandrel.js is built with agentic coding. Most of the code is written with an AI coding agent ([Claude Code](https://claude.com/claude-code)), and every change is reviewed by a human before it's committed. The example game's content is made by hand: levels are built in TrenchBroom, and weapon tuning, encounters, and art direction are human decisions. The agent handles the plumbing so more time goes into the parts that make a game feel good. See [docs/DECISIONS.md](docs/DECISIONS.md) for the reasoning and how AI-generated assets are handled.
 
 ## Getting Started
 
@@ -27,28 +31,33 @@ You'll need:
 - [Node.js](https://nodejs.org/) 24 or newer
 - [TrenchBroom](https://trenchbroom.github.io/) 2026.2 or newer, to edit maps
 
-From the repo root, install the dependencies and the pinned map compiler ([ericw-tools](https://ericw.github.io/ericw-tools/)), which goes into a per-user cache shared by every game:
+### Play the example game
+
+Get the code, then install the dependencies and the pinned map compiler ([ericw-tools](https://ericw.github.io/ericw-tools/)), which goes into a per-user cache shared by every game:
 
 ```
+git clone https://github.com/mandreljs/mandrel.js.git
+cd mandrel.js
 npm install
 npm run setup
-```
-
-Then play:
-
-```
 npm run dev
 ```
 
-and open http://localhost:5173/?map=greybox_01. See [apps/game-client/README.md](apps/game-client/README.md) for URL options and how the dev server compiles maps as you edit them.
+Open the address `npm run dev` prints, such as http://localhost:5173/?map=greybox_01. Maps compile when the game loads them, so the first load takes a moment. See [apps/game-client/README.md](apps/game-client/README.md) for URL options.
 
-To edit maps, link the Mandrel.js Example game config into TrenchBroom, then in TrenchBroom open Preferences > Games > Mandrel.js Example and set the game path to the `example` folder (the one containing `maps` and `textures`):
+To edit its maps, link the example's game config into TrenchBroom:
 
 ```
 npm run install-trenchbroom
 ```
 
-Every command is listed under [Commands](#commands).
+It ends by telling you what to set in TrenchBroom: under Preferences > Games > Mandrel.js Example, the game path is the `example` folder (the one holding `maps` and `textures`, not `example/trenchbroom`). Restart TrenchBroom if it was open, then open a map from `example/maps/`. With `npm run dev` running, save the map and reload the page to play your changes.
+
+### Make your own game
+
+A game lives in its own repo, under your own license, and installs the engine as one npm package, `mandreljs`, for the `mandreljs` command. The package's [README](tools/package-readme.md) covers starting a game from a copy of the example, its commands, and crediting your content. Until `mandreljs` is on npm, build it here with `npm run package -- --pack` and install the `.tgz` it makes.
+
+To work on the engine and a game together, keep the game next to `example/` in this repo instead (add it to `.git/info/exclude` so this repo ignores it). Then `npm run dev` plays it at http://localhost:5173/?game=mygame from the engine's source, and the other commands take `-- --game mygame`.
 
 ## Commands
 
@@ -78,10 +87,11 @@ The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, an
 | `npm run bspdump -- <file>` | Prints a compiled map's entities, counts, textures, and lightmap stats as JSON, such as `-- example/build/greybox_01.bsp`. `--no-entities` leaves out the entity list. |
 | `npm run make-placeholder-textures` | Regenerates the example game's placeholder textures in `example/textures/dev/`. |
 
-**Checks** (CI runs all of these except `test:watch`)
+**Checks**
 
 | Command | What it does |
 |---|---|
+| `npm run check` | Runs every check below except `test:watch`, as CI does. Run it before opening a pull request. |
 | `npm test` | Runs every test. The compile tests need ericw-tools, and skip without it. |
 | `npm run test:watch` | Reruns the tests as you edit. |
 | `npm run typecheck` | Type-checks everything, plus a check that the sim uses no browser or Node APIs. |
@@ -95,22 +105,6 @@ The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, an
 |---|---|
 | `npm run package` | Builds the `mandreljs` package, what a game's own repo installs for the `mandreljs` command, in `dist/mandreljs/`: the command bundled into JavaScript, the built client, and the engine's definitions. `-- --pack` also packs it into `dist/mandreljs-<version>.tgz`, which a game's repo can install with `npm install <path to .tgz>`. The version is the root `package.json`'s. |
 
-## Making Your Own Game
-
-The engine plays game directories, like Quake's `id1/`: a folder of maps, textures, data, and a TrenchBroom config, with no code. The example game is `example/` (see [example/README.md](example/README.md)). Your game lives in its own repo, under your own license, and installs the engine as one package, `mandreljs`, which gives it the `mandreljs` command:
-
-```
-cd mygame
-npm install --save-dev mandreljs
-npx mandreljs setup
-npx mandreljs install-trenchbroom
-npx mandreljs dev
-```
-
-Until `mandreljs` is on npm, build it here with `npm run package -- --pack` and install the `.tgz` instead: `npm install --save-dev <path to>/dist/mandreljs-<version>.tgz`. Copying `example/` is a quick start. The package's [README](tools/package-readme.md) covers the commands, the layout of a game, and how to credit your content.
-
-To work on the engine and a game together, keep the game next to `example/` in this repo (add it to `.git/info/exclude` so this repo ignores it): `npm run dev` plays it at http://localhost:5173/?game=mygame with the engine's source, and the other commands take `-- --game mygame`.
-
 ## Repository Layout
 
 | Folder | Contents |
@@ -121,13 +115,13 @@ To work on the engine and a game together, keep the game next to `example/` in t
 | `tools/` | Developer tools, run in Node and never shipped: map compiling, validation, the dev server, the TrenchBroom install, and test helpers |
 | `apps/` | Things you run: `game-client/` (plays a game in the browser), and future editors |
 | `packages/` | The engine's code: `sim/` (game rules, physics, and map files), `render/` (drawing, with Three.js), `defs/` (what game content must look like, and the checks for it) |
-| `docs/` | Plan, decision log, and the movement reference |
+| `docs/` | The plan, the decision log, and the movement, weapon, and enemy references |
 
 The TypeScript side is one [npm workspace](https://docs.npmjs.com/cli/using-npm/workspaces): install once at the root, and apps import packages as `@mandreljs/<name>/<module>`, straight from source with no build step.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md): how to get set up, the rules the engine follows, and the licensing terms contributions are made under. Project guidelines live in [CLAUDE.md](CLAUDE.md), and design decisions and their reasons in [docs/DECISIONS.md](docs/DECISIONS.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

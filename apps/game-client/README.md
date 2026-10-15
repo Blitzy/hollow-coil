@@ -1,20 +1,10 @@
 # game-client
 
-The game client: plays a game directory in the browser. It loads a map, runs the sim, and draws it. From the repo root:
+The game client: plays a game directory in the browser. It loads a map, runs the sim, and draws it. Run it with `npm run dev` from the repo root, and build a release with `npm run build` (see Commands in the [README](../../README.md#commands)); the client alone builds to `apps/game-client/dist`.
 
-```
-npm install          # once, or after any package.json changes
-npm run dev          # play at http://localhost:5173/?map=test_movement
-npm run build        # a release of the example game in example/dist (the client alone is in apps/game-client/dist)
-```
-
-Tests and type-checking run for the whole repo from the root (`npm test`, `npm run typecheck`).
-
-In the browser, click to capture the mouse, then move with WASD, look with the mouse, and jump with space. Click to fire; the 1 and 2 keys or the mouse wheel switch weapons (wheel up is the next weapon, as in Quake 3). The overlay shows the weapon and what it's doing, and shots leave short-lived marks where they hit walls (placeholders until real effects). The dev server (the Vite plugin in `tools/src/dev-server.ts`) serves each game directory's `maps/`, `textures/`, and `data/` folders at `/games/<game>/`, with its compiled maps from its `build/` folder at `/games/<game>/build/`, so saving a map in TrenchBroom and reloading the page picks it up. The page title is the game's name, from its `data/game.json`. (A production build doesn't bundle those files yet.)
+In the browser, click to capture the mouse, then move with WASD, look with the mouse, and jump with space. Click to fire; the 1 and 2 keys or the mouse wheel switch weapons (wheel up is the next weapon, as in Quake 3). The overlay shows the weapon and what it's doing, and shots leave short-lived marks where they hit walls (placeholders until real effects). The dev server (the Vite plugin in `tools/src/dev-server.ts`) serves each game directory's `maps/`, `textures/`, and `data/` folders at `/games/<game>/`, with its compiled maps from its `build/` folder at `/games/<game>/build/`, so saving a map in TrenchBroom and reloading the page picks it up. The page title is the game's name, from its `data/game.json`. A release from `npm run build` puts the game's data, textures, and compiled maps at the same paths, so it runs on any static host.
 
 A level loads from one file: the compiled `.bsp`, which gives the drawing with its baked lighting, the collision, and the entities. When the page asks for a compiled map and the `.map` is newer, the dev server compiles it first in check mode (with `tools/src/compile.ts`) (about a tenth of a second), so lighting stays current. If the compile fails or ericw-tools isn't installed, the page falls back to the `.map` for everything, unlit, and shows why in the overlay; the full report is in the browser console and the dev server's output. The overlay's first line names the file the level came from. Both files give the same collision and entities (`tools/tests/compiled-maps.test.ts` checks every example map). Lights with a `style` animate using the engine's patterns in `packages/defs/lightstyles.json`, built into the game, stepped on sim ticks.
-
-Pass Vite options after `--`, such as `npm run dev -- --port 5199`.
 
 ## URL options
 
