@@ -27,7 +27,7 @@ You'll need:
 - [Node.js](https://nodejs.org/) 24 or newer
 - [TrenchBroom](https://trenchbroom.github.io/) 2026.2 or newer, to edit maps
 
-From the repo root, install the dependencies and the pinned map compiler ([ericw-tools](https://ericw.github.io/ericw-tools/)), which goes into `.tools/`:
+From the repo root, install the dependencies and the pinned map compiler ([ericw-tools](https://ericw.github.io/ericw-tools/)), which goes into a per-user cache shared by every game:
 
 ```
 npm install
@@ -52,13 +52,13 @@ Every command is listed under [Commands](#commands).
 
 ## Commands
 
-Run everything from the repo root. Options go after `--`, as in `npm run compile -- greybox_01 --mode release`. Commands that work on a game take `--game <dir>` and use the example game without it.
+Run everything from the repo root. Options go after `--`, as in `npm run compile -- greybox_01 --mode release`. Commands that work on a game use the folder they run in if it's a game directory, or `--game <dir>`, or the example game.
 
 **Setup**
 
 | Command | What it does |
 |---|---|
-| `npm run setup` | Installs the pinned ericw-tools into `.tools/`. `--check` verifies the install without changing anything; `--force` reinstalls. |
+| `npm run setup` | Installs the pinned ericw-tools into a per-user cache (`%LOCALAPPDATA%\mandreljs` on Windows, `~/Library/Caches/mandreljs` on macOS, `~/.cache/mandreljs` on Linux), shared by every game. `--check` verifies the install without changing anything; `--force` reinstalls. |
 | `npm run install-trenchbroom` | Links the game's config into TrenchBroom, and checks TrenchBroom's game path for it. `--uninstall` removes the links. |
 
 **Play and build**
@@ -72,8 +72,8 @@ Run everything from the repo root. Options go after `--`, as in `npm run compile
 
 | Command | What it does |
 |---|---|
-| `npm run compile` | Compiles every map to `build/<game>/`, failing on leaks, missing textures, and compiler errors. Name maps to compile only those; `--mode release` for full-quality lighting. |
-| `npm run bspdump -- <file>` | Prints a compiled map's entities, counts, textures, and lightmap stats as JSON, such as `-- build/example/greybox_01.bsp`. `--no-entities` leaves out the entity list. |
+| `npm run compile` | Compiles every map into the game's `build/` folder, failing on leaks, missing textures, and compiler errors. Name maps to compile only those; `--mode release` for full-quality lighting. |
+| `npm run bspdump -- <file>` | Prints a compiled map's entities, counts, textures, and lightmap stats as JSON, such as `-- example/build/greybox_01.bsp`. `--no-entities` leaves out the entity list. |
 | `npm run make-placeholder-textures` | Regenerates the example game's placeholder textures in `example/textures/dev/`. |
 
 **Checks** (CI runs all of these except `test:watch`)

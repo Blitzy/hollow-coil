@@ -10,7 +10,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { crc32, deflateSync } from "node:zlib";
-import { EXAMPLE_GAME, relativeToRepo } from "./layout.ts";
+import { displayPath, EXAMPLE_GAME } from "./layout.ts";
 import { isMain } from "./cli.ts";
 
 export const OUT_DIR = join(EXAMPLE_GAME, "textures", "dev");
@@ -90,7 +90,7 @@ export function main(outDir: string = OUT_DIR): number {
   mkdirSync(outDir, { recursive: true });
   const textures = placeholderTextures();
   for (const [name, pixels] of textures) writeFileSync(join(outDir, `${name}.png`), pngBytes(SIZE, SIZE, pixels));
-  console.log(`wrote ${textures.size} textures to ${relativeToRepo(outDir)}`);
+  console.log(`wrote ${textures.size} textures to ${displayPath(outDir)}`);
   return 0;
 }
 

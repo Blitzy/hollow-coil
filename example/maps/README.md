@@ -12,7 +12,7 @@ Light entities use ericw-tools' default linear falloff: a light's `light` value 
 
 ## Previewing lighting without the game
 
-TrenchBroom doesn't show baked lighting. To see it without an engine, use `lightpreview`, which ships with ericw-tools: run `.tools/ericw-tools/<version>/lightpreview.exe` (installed by `npm run setup`), open a `.map` from this folder, set the **qbsp** field to `-q2bsp`, leave **common** and **vis** empty, set **light** to `-bouncestyled 0` (to match `npm run compile`), and press **Reload**. It compiles next to the map; those outputs are gitignored. Fly with WASD plus Q/E; Alt+1 to Alt+3 switch between lightmapped, lightmap-only, and fullbright views.
+TrenchBroom doesn't show baked lighting. To see it without an engine, use `lightpreview`, which ships with ericw-tools: run `lightpreview.exe` from `%LOCALAPPDATA%\mandreljs\ericw-tools\<version>\` (installed by `npm run setup`; `~/Library/Caches/mandreljs/...` on macOS, `~/.cache/mandreljs/...` on Linux), open a `.map` from this folder, set the **qbsp** field to `-q2bsp`, leave **common** and **vis** empty, set **light** to `-bouncestyled 0` (to match `npm run compile`), and press **Reload**. It compiles next to the map; those outputs are gitignored. Fly with WASD plus Q/E; Alt+1 to Alt+3 switch between lightmapped, lightmap-only, and fullbright views.
 
 ## Maps
 
@@ -34,4 +34,4 @@ Units are Quake units. Player and enemy origins sit 24 above the floor (the hull
 
 New maps must start with `// Game: Mandrel.js Example` (TrenchBroom writes this when you create a map with the Mandrel.js Example game).
 
-Compiled `.bsp` files go to `/build/example/`, never here.
+Compiled `.bsp` files go to `example/build/`, never here.

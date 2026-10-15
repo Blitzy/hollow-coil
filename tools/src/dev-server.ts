@@ -2,7 +2,7 @@
 // directories, the same files the tools use.
 //
 //   /games/<game>/{maps,textures,data}/...  a game directory: a folder in the repo root holding data/game.json
-//   /games/<game>/build/...                 build/<game>/, where its maps compile to
+//   /games/<game>/build/...                 the game's build/, where its maps compile to
 //
 // A request for /games/<game>/build/<name>.bsp compiles the map first when it
 // has changed, so saving in TrenchBroom and reloading shows new lighting.
@@ -11,7 +11,7 @@ import { createReadStream, statSync } from "node:fs";
 import type { ServerResponse } from "node:http";
 import { extname, join, normalize, sep } from "node:path";
 import { compileMap, compileOk } from "./compile.ts";
-import { isGameDir, REPO_ROOT } from "./layout.ts";
+import { buildDir, isGameDir, REPO_ROOT } from "./layout.ts";
 import { toolsInstalled } from "./setup.ts";
 import type { Plugin } from "vite";
 
@@ -98,7 +98,7 @@ export function gameFiles(root: string = REPO_ROOT): Plugin {
         if (!GAME_NAME.test(name) || !GAME_FOLDERS.includes(folder) || !isGameDir(game)) return next();
         if (folder !== "build") return send(join(game, folder, ...rest), res, next);
 
-        const outDir = join(root, "build", name);
+        const outDir = buildDir(game);
         const bsp = rest.length === 1 ? /^([\w-]+)\.bsp$/.exec(rest[0]!) : null;
         if (!bsp) return send(join(outDir, ...rest), res, next);
         void ensureBsp(game, outDir, bsp[1]!, log).then((failure) => {

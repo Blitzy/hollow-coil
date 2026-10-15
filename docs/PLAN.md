@@ -55,10 +55,10 @@ Out of scope for the spike:
   textures/    Textures (PNG), next to maps/ as Quake tools expect
   data/        game.json (name, start map), player.json (health, hull, movement), weapons.json, enemies.json
   trenchbroom/ The game's TrenchBroom config and FGD
+  build/       Compiled .bsp output (gitignored)
 /scenarios   Engine-neutral test scenarios (JSON), played on the example game
 /tools       Developer tools, run in Node: compile, validate, bspdump, setup, install-trenchbroom,
              the dev server's Vite plugin, and test helpers
-/build       Compiled .bsp output, per game (build/example/; gitignored)
 /demos       Golden demo recordings for regression tests
 /apps        Things you run: game-client/ (plays a game in the browser), and future editors
 /packages    The engine's code: sim/, render/, defs/ (schemas, light styles, the shared FGD, and the checks)
@@ -198,6 +198,19 @@ Mostly hands-on tuning by Ryan, with few tests.
 - View bob, weapon sway, muzzle flash, impact effects, placeholder audio
 - Minimal HUD
 
+## Standalone Games
+
+A game made with the engine lives in its own repo and installs one package, `mandreljs`, for a `mandrel` command (see DECISIONS.md, 2026-10-14, "Games use the engine through one installed command"). The tools now work on a game folder anywhere (S1). Still tied to this repo: the client defaults to `example`, the dev server only runs inside Vite, and there's no single command or package yet.
+
+- [x] S1 Tools work on any game folder, still from source in this repo. `layout.ts` separates engine files (schemas, the shared FGD, light styles, pinned tool versions, later the built client), found relative to the tools themselves, from the game: the current folder if it holds `data/game.json`, otherwise `--game`, otherwise `example`. Compiled maps go to `<game>/build/`, ericw-tools to a per-user cache, and `install-trenchbroom` links the engine's FGD from wherever the engine is. Repo-only checks (scenarios, `check-files`, `make-placeholder-textures`, old-link cleanup) stay repo-only. Done when `compile`, `validate`, and `install-trenchbroom` work on a copy of `example/` outside the repo.
+- [ ] S2 One `mandrel` command (`tools/src/mandrel.ts`) with `dev`, `build`, `compile`, `validate`, `bspdump`, `setup`, and `install-trenchbroom`. The root npm scripts become aliases that run it on `example/`.
+- [ ] S3 A dev server without Vite: the request handling (serving game files, compiling stale maps) moves from the Vite plugin into plain Node code, shared by the plugin and a standalone `mandrel dev` that serves the built client and the current game. The client learns which game to play from the server instead of defaulting to `example`.
+- [ ] S4 `mandrel build`: compiles maps at release quality and writes the client with the game's compiled maps, textures, and data to `<game>/dist/`, ready for any static host.
+- [ ] S5 The `mandreljs` package: the command bundled into one JavaScript file with Vite (with source maps), the built client, the schemas, the shared FGD, light styles, pinned tool versions, and the license files. No runtime dependencies. Requires Node 24.
+- [ ] S6 CI packs the package, installs it into a scratch folder with a copy of `example/`, and runs `validate`, `compile`, `build`, and a `mandrel dev` request. The README's "Making Your Own Game" describes installing `mandreljs`.
+
+Editors (particle editor, model viewer, and so on) join the same package later and are served by `mandrel dev` next to the game; saving needs a write request that stays inside the game folder, validates, and accepts only the server's own pages.
+
 ## Testing
 
 - **Unit tests** in Vitest (the sim runs in Node with no Three.js imports).
@@ -218,4 +231,4 @@ The sim's only input is one command per tick, in an engine-neutral format used b
 ## Open Decisions
 
 - Cross-browser determinism (custom trig or lookup tables), deferred until demos need to play across browsers. Desktop builds sidestep it, since Electron bundles one browser engine.
-- Release builds for a game directory. Today `npm run build` builds the game client with no game, and only the dev server serves game files, so a built client can't load any game. A release is the engine plus one game (DECISIONS.md, 2026-10-14), so we need something like `npm run build -- --game <dir>` that puts the client, the game's compiled maps, textures, and data in `dist/`. Still to decide: whether a game's repo must sit inside an engine checkout (as now) or can use the engine from outside, such as through published npm packages; and whether a shipped build still accepts `?game=` or plays only its own game.
+- For standalone games (above): whether a shipped build still accepts `?game=` or plays only its own game; whether `example/` gets a `package.json` so it doubles as a starter template, or a separate starter repo does that; and when to publish `mandreljs` to npm, which makes the engine public. Until then, game repos install it from a local checkout or a packed `.tgz`.

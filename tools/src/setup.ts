@@ -1,6 +1,7 @@
-// Downloads and installs pinned third-party tools into .tools/, at the
-// versions and checksums pinned in tools/versions.json, so every machine and
-// CI use the same builds:
+// Downloads and installs pinned third-party tools into the per-user tools cache
+// (see toolsCacheDir in layout.ts), shared by every game on this computer, at the
+// versions and checksums pinned in tools/versions.json, so every machine and CI
+// use the same builds:
 //   - ericw-tools (qbsp, light, vis, bsputil, bspinfo)
 //
 // Usage: node tools/src/setup.ts [tool ...] [--check | --force]   (or npm run setup)
@@ -15,11 +16,11 @@ import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writ
 import { dirname, join } from "node:path";
 import { parseArgs } from "node:util";
 import { isMain } from "./cli.ts";
-import { relativeToRepo, repoPath } from "./layout.ts";
+import { displayPath, repoPath, toolsCacheDir } from "./layout.ts";
 import { extractZip } from "./zip.ts";
 
 export const VERSIONS_FILE = repoPath("tools", "versions.json");
-export const TOOLS_DIR = repoPath(".tools");
+export const TOOLS_DIR = toolsCacheDir();
 export const DOWNLOADS_DIR = join(TOOLS_DIR, "downloads");
 
 /** Written last during install, holding the archive checksum. Its absence means the install is missing or incomplete. */
@@ -121,7 +122,7 @@ async function installEricw(versions: Versions, force: boolean): Promise<void> {
   writeFileSync(join(staging, MARKER), `${platform.sha256}\n`);
   rmSync(installDir, { recursive: true, force: true });
   renameSync(staging, installDir);
-  console.log(`  installed to ${relativeToRepo(installDir)}`);
+  console.log(`  installed to ${displayPath(installDir)}`);
 }
 
 function checkEricw(versions: Versions): boolean {

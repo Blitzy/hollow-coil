@@ -9,8 +9,8 @@
 // ericw-tools pads each face's lightmap to a multiple of 4 samples, so faces
 // are not packed back to back; always locate a face's lightmap by its offset.
 //
-// Usage: node tools/src/bspdump.ts build/example/test_movement.bsp [--no-entities]
-//        (or npm run bspdump -- build/example/test_movement.bsp)
+// Usage: node tools/src/bspdump.ts example/build/test_movement.bsp [--no-entities]
+//        (or npm run bspdump -- example/build/test_movement.bsp)
 
 import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";

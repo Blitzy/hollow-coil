@@ -17,7 +17,7 @@
 // and textures/ (not its trenchbroom/ folder), and says what to set if it isn't.
 //
 // Usage: node tools/src/install-trenchbroom.ts [--game dir] [--uninstall]   (or npm run install-trenchbroom)
-//   --game        the game directory, relative to the repo root; default: example
+//   --game        the game directory; default: the folder it runs in if that's a game, otherwise example
 //   --uninstall   remove the links (the repo files are untouched)
 
 import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, rmdirSync, symlinkSync, unlinkSync } from "node:fs";
@@ -25,7 +25,7 @@ import { homedir } from "node:os";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { parseArgs, styleText } from "node:util";
 import { trenchbroomConfig } from "@mandreljs/defs/checks";
-import { DEFS_DIR, gameDir, relativeToRepo, repoPath } from "./layout.ts";
+import { DEFS_DIR, displayPath, findGame, repoPath } from "./layout.ts";
 import { isMain } from "./cli.ts";
 
 /** The engine's TrenchBroom files: the FGD every game's FGD includes. */
@@ -151,18 +151,18 @@ export function report(gameName: string, game: string, rows: readonly Row[], sty
 function showLink(link: string, target?: string): string {
   const show = (path: string): string => {
     const userDir = trenchbroomUserDir();
-    return normalize(path).startsWith(normalize(userDir)) ? `TrenchBroom${path.slice(userDir.length).split("\\").join("/")}` : relativeToRepo(path);
+    return normalize(path).startsWith(normalize(userDir)) ? `TrenchBroom${path.slice(userDir.length).split("\\").join("/")}` : displayPath(path);
   };
   return target === undefined ? show(link) : `${show(link)} -> ${show(target)}`;
 }
 
 export function main(argv: string[] = process.argv.slice(2)): number {
   const { values } = parseArgs({ args: argv, options: { game: { type: "string" }, uninstall: { type: "boolean" } } });
-  const game = gameDir(values.game);
-  const configDir = join(game, "trenchbroom");
   const games = join(trenchbroomUserDir(), "games");
-  const engineLink = join(configDir, ENGINE_LINK_NAME);
   try {
+    const game = findGame(values.game);
+    const configDir = join(game, "trenchbroom");
+    const engineLink = join(configDir, ENGINE_LINK_NAME);
     const name = trenchbroomConfig(readFileSync(join(configDir, "GameConfig.cfg"), "utf-8")).name;
     const link = join(games, gameLinkName(configDir));
     const oldLinks: [string, string][] = [

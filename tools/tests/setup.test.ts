@@ -17,7 +17,7 @@ describe("setup", () => {
     const pin = versions["ericw-tools"];
     expect(pin.version).toMatch(/^\d/);
     for (const platform of ["windows", "linux", "macos"]) expect(pin.platforms[platform]?.sha256).toMatch(/^[0-9a-f]{64}$/);
-    expect(ericwTool("qbsp", versions)).toContain(join(".tools", "ericw-tools", pin.version));
+    expect(ericwTool("qbsp", versions)).toContain(join("mandreljs", "ericw-tools", pin.version));
   });
 
   it("reports an incomplete install", () => {

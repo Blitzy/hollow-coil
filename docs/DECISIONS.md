@@ -2,6 +2,33 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-14: Games use the engine through one installed command, `mandrel`
+
+**Decision:** A game made with Mandrel.js lives in its own repo, anywhere on disk, and gets the engine by installing one npm package, `mandreljs`, which provides a `mandrel` command. A game's repo holds only its game directory and a `package.json`:
+
+```
+mygame/
+  package.json        { "devDependencies": { "mandreljs": "<version>" } }
+  data/  maps/  textures/  trenchbroom/
+```
+
+Run in the game's folder, `mandrel dev` serves the game client and the game, compiling maps as they're saved; `mandrel build` writes a release (the client, compiled maps, textures, and data) to `dist/`; and `mandrel compile`, `validate`, `bspdump`, `setup`, and `install-trenchbroom` are today's tools. Editors such as a particle editor or model viewer ship in the same package and are served by the same `mandrel dev`, next to the game. Editors save through the server, which writes only inside the game folder, validates what it saves, and accepts requests only from its own pages.
+
+- **The package is built for publishing:** the command bundled into JavaScript, the client and editors built, plus the schemas, the shared FGD, light styles, and the pinned tool versions. No runtime dependencies, and no Vite in a game's repo. Inside this repo, everything keeps running from TypeScript source.
+- **The example game uses the same command.** The root npm scripts run `mandrel` on `example/`, and CI installs the packed package into a scratch folder with a copy of `example/` and runs it there, so what users install is tested.
+- **Per game, not per engine:** compiled maps go to the game's own `build/`, and ericw-tools to a per-user cache that every game shares.
+- **Until the engine is public,** a game's repo installs it from a local checkout (`file:`) or a packed `.tgz`. Publishing to npm waits on making the repo public.
+
+This replaces the plan in "The engine repo ships a free example game" (below) for other games to be sibling directories of `example/` in this repo. The steps are in PLAN.md, under "Standalone games".
+
+**Why:**
+
+- Content never contains code (see "Mods add behavior through engine actions"), so a game doesn't need any. A content-only repo keeps the license split clean: the engine is GPL, and a game's repo holds only data under whatever license it chooses. It's Quake's model: install the engine, point it at a game directory.
+- One package means one engine version to pin, and editors built from the same engine as the client show exactly what the game shows.
+- Node refuses to strip TypeScript types from files under `node_modules` (`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`, checked on Node 24), so an installed package must ship JavaScript. The client needs a build for browsers anyway, and our TypeScript is erasable-only, so the build is mechanical. Testing the packed package in CI catches anything the build drops.
+
+**Alternatives considered:** publishing `sim`, `render`, and the other packages as libraries that a game's own app imports (more flexible, but it invites game code, mixing GPL engine code into a game's repo, and means maintaining a library API; possible later for editors or source mods); running on Bun, which runs TypeScript from `node_modules` (everyone would need Bun, its Windows support is the newest, and it runs JavaScriptCore rather than V8, so tests would no longer prove the game behaves as it does in Chromium and Electron, where cross-engine math differences can change state hashes); our own Node loader that strips types at run time (works around a deliberate Node rule with experimental APIs); writing the tools in JavaScript with JSDoc types (a rewrite, and clumsier types); only linking a local engine checkout (no build step, and fine before publishing, but not an install); other games as sibling directories in this repo (the previous plan; every game would need an engine checkout around it).
+
 ## 2026-10-14: Every top-level folder says what it is in one line
 
 **Decision:** The layout is simplified so that each folder can be described in one plain line:

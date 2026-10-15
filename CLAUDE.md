@@ -79,9 +79,9 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 
 ## Commands
 
-- `npm run setup [-- tool ...]`: install pinned third-party tools (ericw-tools) into `.tools/`. Name tools to install only those. `-- --check` verifies without changing anything; `-- --force` reinstalls.
-- `npm run compile [-- map ...] [-- --mode check|release] [-- --game dir]`: compile a game's maps (the example's by default) to `build/<game>/<name>.bsp`. Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
-- `npm run bspdump -- build/example/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON, read with the game's own `.bsp` reader.
+- `npm run setup [-- tool ...]`: install pinned third-party tools (ericw-tools) into the per-user tools cache (`%LOCALAPPDATA%\mandreljs` on Windows, `~/Library/Caches/mandreljs` on macOS, `~/.cache/mandreljs` on Linux), shared by every game. Name tools to install only those. `-- --check` verifies without changing anything; `-- --force` reinstalls.
+- `npm run compile [-- map ...] [-- --mode check|release] [-- --game dir]`: compile a game's maps to its own `build/<name>.bsp` (`example/build/` for the example). Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
+- `npm run bspdump -- example/build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON, read with the game's own `.bsp` reader.
 - `npm run validate [-- --game dir]`: validate the engine's light styles, a game's `data/*.json` (the example's by default), and the `scenarios/*.json` scenarios against their schemas, plus cross-file checks, such as the game's enemies against its FGD and its name in its TrenchBroom config and map headers (runs in CI). The checks themselves live in `packages/defs`, so editors can use them too.
 - `npm run check-files`: fail if any tracked file is over 2 MB (runs in CI).
 - `npm run install-trenchbroom [-- --game dir]`: link a game's `trenchbroom/` folder (the example's by default) into TrenchBroom's games folder, named after its FGD (`games/MandrelJSExample`), and link the engine's FGD folder (`packages/defs/trenchbroom`) into it as `mandrel/` for its FGD's `@include` (and remove links left by earlier versions). `-- --uninstall` removes the links.

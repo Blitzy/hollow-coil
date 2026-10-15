@@ -5,7 +5,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { relativeToRepo, repoPath } from "../src/layout.ts";
+import { displayPath, REPO_ROOT, repoPath } from "../src/layout.ts";
 
 /** Every .ts file under dir. */
 const tsFiles = (dir: string): string[] =>
@@ -25,7 +25,7 @@ describe("engine code", () => {
     expect(sources.length).toBeGreaterThan(20);
   });
 
-  it.each(sources.map((path) => [relativeToRepo(path), path]))("%s never imports the tools", (_, path) => {
+  it.each(sources.map((path) => [displayPath(path, REPO_ROOT), path]))("%s never imports the tools", (_, path) => {
     const imports = [...readFileSync(path, "utf-8").matchAll(/\bfrom\s+["']([^"']+)["']/g)].map((m) => m[1]!);
     expect(imports.filter((spec) => spec.startsWith("@mandreljs/tools") || /(^|\/)tools\//.test(spec))).toEqual([]);
   });

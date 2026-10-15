@@ -6,7 +6,8 @@
 // checked against its TrenchBroom FGD, which includes the engine's.
 //
 // Usage: node tools/src/validate.ts [--game dir]   (or npm run validate)
-//   --game   the game directory, relative to the repo root; default: example.
+//   --game   the game directory; default: the folder it runs in if that's a game,
+//            otherwise example.
 //            Scenarios run on the example game, so they're checked only with it.
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -24,7 +25,7 @@ import {
 } from "@mandreljs/defs/checks";
 import type { DataFiles, GameFile, LightStylesFile, ScenarioFile } from "@mandreljs/defs/checks";
 import { SchemaError, SchemaValidator } from "@mandreljs/defs/schema";
-import { DEFS_DIR, EXAMPLE_GAME, gameDir, relativeToRepo, repoPath } from "./layout.ts";
+import { DEFS_DIR, displayPath, EXAMPLE_GAME, findGame, GameNotFoundError, repoPath } from "./layout.ts";
 import { isMain } from "./cli.ts";
 
 const GAME_DATA = ["game", "player", "weapons", "enemies"];
@@ -75,7 +76,7 @@ function validateFile(path: string, validator: SchemaValidator, schema: string):
     else if (error instanceof SchemaError) errors = [`schema problem: ${error.message}`];
     else throw error;
   }
-  console.log(`${errors.length === 0 ? "ok  " : "FAIL"}  ${relativeToRepo(path)}`);
+  console.log(`${errors.length === 0 ? "ok  " : "FAIL"}  ${displayPath(path)}`);
   for (const error of errors) console.log(`        ${error}`);
   return errors.length === 0 ? value : undefined;
 }
@@ -95,7 +96,14 @@ function validateFolder(dir: string, validator: SchemaValidator, schemaFor: (nam
 
 export function main(argv: string[] = process.argv.slice(2)): number {
   const { values } = parseArgs({ args: argv, options: { game: { type: "string" } } });
-  const game = gameDir(values.game);
+  let game: string;
+  try {
+    game = findGame(values.game);
+  } catch (error) {
+    if (!(error instanceof GameNotFoundError)) throw error;
+    console.log(`FAIL  ${error.message}`);
+    return 1;
+  }
   const withScenarios = resolve(game) === resolve(EXAMPLE_GAME);
 
   const dataValidator = folderValidator(join(DEFS_DIR, "schemas"));
@@ -104,7 +112,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
   const scenarios = withScenarios ? validateFolder(repoPath("scenarios"), folderValidator(repoPath("scenarios", "schemas")), () => "scenario.schema.json") : null;
   if (!withScenarios) console.log("skip  scenarios/ (they run on the example game)");
 
-  const missing = GAME_DATA.filter((name) => !data.valid.has(name)).map((name) => `${relativeToRepo(join(game, "data"))}/${name}.json`);
+  const missing = GAME_DATA.filter((name) => !data.valid.has(name)).map((name) => `${displayPath(join(game, "data"))}/${name}.json`);
   if (lightstyles === undefined || data.failed || scenarios?.failed || missing.length > 0) {
     if (missing.length > 0) console.log(`FAIL  missing or invalid data files: ${missing.join(", ")}`);
     console.log("cross-file checks skipped until every file is valid");

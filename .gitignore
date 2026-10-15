@@ -1,11 +1,13 @@
 ### Mandrel.js
-# Compiled maps (tools/compile writes here, one folder per game)
-/build/
+# Compiled maps: each game compiles into its own build/ (npm run compile)
+/example/build/
 
-# Pinned third-party tools installed by tools/src/setup.ts (npm run setup)
+# Where compiled maps and pinned tools went before they moved to example/build/ and the
+# per-user tools cache; safe to delete
+/build/
 /.tools/
 
-# ericw-tools side output, in case a compile runs outside /build
+# ericw-tools side output, in case a compile runs outside a build/ folder
 *.bsp
 *.prt
 *.pts

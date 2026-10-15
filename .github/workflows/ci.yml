@@ -42,7 +42,8 @@ jobs:
       - name: Cache tool downloads
         uses: actions/cache@v6
         with:
-          path: .tools/downloads
+          # The per-user tools cache on Linux (toolsCacheDir in tools/src/layout.ts).
+          path: ~/.cache/mandreljs/downloads
           key: tools-${{ runner.os }}-${{ hashFiles('tools/versions.json') }}
 
       # Before the tests, so the tests that need ericw-tools run instead of skipping.

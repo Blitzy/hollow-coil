@@ -1,7 +1,7 @@
 // Compiles maps with the pinned ericw-tools (qbsp, then light).
 //
 // Compiles every .map in a game's maps/ (or the ones named) to
-// build/<game>/<name>.bsp in the Quake 2 formats. A map fails if it leaks, references a texture that doesn't
+// <game>/build/<name>.bsp in the Quake 2 formats. A map fails if it leaks, references a texture that doesn't
 // exist, or if qbsp or light exits with an error. A failed map leaves no .bsp
 // behind, so a stale or broken build is never mistaken for a good one.
 //
@@ -11,7 +11,7 @@
 //
 // Usage: node tools/src/compile.ts [map ...] [--mode check|release] [--game dir]   (or npm run compile)
 //   map names (as in maps/<name>.map) or paths; default: every map
-//   --game   the game directory, relative to the repo root; default: example
+//   --game   the game directory; default: the folder it runs in if that's a game, otherwise example
 //
 // The dev server compiles stale maps with compileMap too.
 
@@ -20,7 +20,7 @@ import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { isMain } from "./cli.ts";
-import { buildDir, EXAMPLE_GAME, gameDir, relativeToRepo, REPO_ROOT } from "./layout.ts";
+import { buildDir, displayPath, EXAMPLE_GAME, findGame } from "./layout.ts";
 import { ericwTool, toolsInstalled } from "./setup.ts";
 
 const QBSP_ARGS = ["-q2bsp", "-leaktest", "-noverbose"];
@@ -97,8 +97,7 @@ export async function compileMap(mapPath: string, outDir: string = buildDir(EXAM
   const leak = LEAK.exec(qbsp.output);
   if (leak) {
     const pts = join(outDir, `${name}.pts`);
-    const shown = resolve(pts).startsWith(resolve(REPO_ROOT)) ? relativeToRepo(pts) : pts;
-    result.problems.push(`leak: "${leak[1]}" at (${leak[2]}) can reach the outside of the map. Load ${shown} in TrenchBroom (File > Load Point File) to see the path.`);
+    result.problems.push(`leak: "${leak[1]}" at (${leak[2]}) can reach the outside of the map. Load ${displayPath(pts)} in TrenchBroom (File > Load Point File) to see the path.`);
   }
   for (const [, texture] of qbsp.output.matchAll(MISSING_TEXTURE)) {
     if (!IGNORED_MISSING_TEXTURES.has(texture!)) result.problems.push(`missing texture: ${texture}`);
@@ -139,21 +138,22 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     console.error("ericw-tools is not installed; run: npm run setup");
     return 1;
   }
-  const game = gameDir(values.game);
-  const outDir = buildDir(game);
+  let game: string;
   let maps: string[];
   try {
+    game = findGame(values.game);
     maps = findMaps(positionals, game);
   } catch (error) {
     console.error(`error: ${error instanceof Error ? error.message : String(error)}`);
     return 1;
   }
   if (maps.length === 0) {
-    console.log(`no maps found in ${relativeToRepo(join(game, "maps"))}/`);
+    console.log(`no maps found in ${displayPath(join(game, "maps"))}/`);
     return 0;
   }
 
-  console.log(`compiling ${maps.length} map(s) in ${mode} mode -> ${relativeToRepo(outDir)}/`);
+  const outDir = buildDir(game);
+  console.log(`compiling ${maps.length} map(s) in ${mode} mode -> ${displayPath(outDir)}/`);
   const width = Math.max(...maps.map((m) => basename(m, ".map").length));
   let failed = 0;
   for (const map of maps) {
