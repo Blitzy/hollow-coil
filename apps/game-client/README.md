@@ -5,7 +5,7 @@ The game client: plays a game directory in the browser. It loads a map, runs the
 ```
 npm install          # once, or after any package.json changes
 npm run dev          # play at http://localhost:5173/?map=test_movement
-npm run build        # type-check, then build to apps/game-client/dist
+npm run build        # a release of the example game in example/dist (the client alone is in apps/game-client/dist)
 ```
 
 Tests and type-checking run for the whole repo from the root (`npm test`, `npm run typecheck`).

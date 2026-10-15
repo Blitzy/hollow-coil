@@ -17,7 +17,7 @@ describe("mandrel", () => {
   it("lists its commands", async () => {
     const { out } = capture();
     expect(await main(["help"])).toBe(0);
-    for (const name of ["dev", "compile", "validate", "bspdump", "setup", "install-trenchbroom"]) expect(out.join("\n")).toContain(name);
+    for (const name of ["dev", "build", "compile", "validate", "bspdump", "setup", "install-trenchbroom"]) expect(out.join("\n")).toContain(name);
     expect(await main([])).toBe(2); // no command: the list, but as a failure
   });
 
@@ -45,7 +45,7 @@ describe("mandrel", () => {
   it("is the tools package's command, and the root scripts use it", () => {
     expect(JSON.parse(readFileSync(repoPath("tools", "package.json"), "utf-8")).bin).toEqual({ mandrel: "src/mandrel.ts" });
     const scripts = JSON.parse(readFileSync(repoPath("package.json"), "utf-8")).scripts as Record<string, string>;
-    for (const name of ["dev", "compile", "validate", "bspdump", "setup", "install-trenchbroom"]) expect(scripts[name]).toBe(`mandrel ${name}`);
+    for (const name of ["dev", "build", "compile", "validate", "bspdump", "setup", "install-trenchbroom"]) expect(scripts[name]).toBe(`mandrel ${name}`);
   });
 
   it("runs when started through the node_modules link, as npm starts it", () => {

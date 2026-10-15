@@ -1,6 +1,8 @@
 ### Mandrel.js
-# Compiled maps: each game compiles into its own build/ (npm run compile)
+# Compiled maps and releases: each game compiles into its own build/ (npm run compile)
+# and builds releases into its own dist/ (npm run build)
 /example/build/
+/example/dist/
 
 # Where compiled maps and pinned tools went before they moved to example/build/ and the
 # per-user tools cache; safe to delete

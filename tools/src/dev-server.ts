@@ -12,7 +12,7 @@
 // (gameFiles), when the client runs from this repo's source; and as a plain
 // Node server (startServer) for the built client, as an installed engine runs.
 
-import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { createReadStream, readdirSync, readFileSync, statSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { basename, extname, join, normalize, resolve, sep } from "node:path";
 import { compileMap, compileOk } from "./compile.ts";
@@ -77,6 +77,14 @@ function pathParts(url: string | undefined): string[] | null {
   const parts = path.split(sep).filter((part) => part !== "");
   return parts.includes("..") ? null : parts;
 }
+
+const isFolder = (path: string): boolean => {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+};
 
 const notFound = (res: ServerResponse): void => {
   res.statusCode = 404;
@@ -177,7 +185,8 @@ export function gameFiles(root: string = REPO_ROOT): Plugin {
 export interface ServerOptions {
   /** The built client: a folder holding index.html and its assets. */
   readonly clientDir: string;
-  readonly games: Games;
+  /** The games to serve at /games, compiling stale maps; without them, /games is served from clientDir like any file (as for a release from mandrel build). */
+  readonly games?: Games;
   readonly port: number;
   readonly host: string;
   /** Try the next ports when this one is taken, as Vite does. */
@@ -185,19 +194,21 @@ export interface ServerOptions {
   readonly log?: (message: string) => void;
 }
 
-/** Serves the built client and the games with plain Node, as an installed engine does. Resolves once it's listening. */
+/** Serves the built client and the games with plain Node, as an installed engine does, or a release as a static host would. Resolves once it's listening. */
 export function startServer(options: ServerOptions): Promise<{ server: Server; url: string }> {
   const log = options.log ?? ((message: string): void => console.log(message));
-  const games = gameHandler(options.games, log);
+  const games = options.games === undefined ? null : gameHandler(options.games, log);
   const server = createServer((req, res) => {
     const path = (req.url ?? "/").split("?")[0]!;
-    if (path === "/games" || path.startsWith("/games/")) {
+    if (games !== null && (path === "/games" || path.startsWith("/games/"))) {
       req.url = (req.url ?? "").slice("/games".length) || "/";
       return games(req, res, () => notFound(res));
     }
     const parts = pathParts(req.url);
     if (parts === null) return notFound(res);
-    send(join(options.clientDir, ...(parts.length === 0 ? ["index.html"] : parts)), res);
+    const file = join(options.clientDir, ...parts);
+    // A folder's page is its index.html, as on any static host.
+    send(isFolder(file) ? join(file, "index.html") : file, res);
   });
   return new Promise((done, fail) => {
     let port = options.port;
@@ -226,6 +237,3 @@ export function gameName(game: string): string {
     return basename(game);
   }
 }
-
-/** True if a folder holds a built client. */
-export const isBuiltClient = (dir: string): boolean => existsSync(join(dir, "index.html"));

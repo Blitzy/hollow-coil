@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "dev": "mandrel dev",
-    "build": "npm run typecheck && npm run build -w @mandreljs/game-client",
+    "build": "mandrel build",
     "typecheck": "tsc -p tsconfig.json && tsc -p packages/sim/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",

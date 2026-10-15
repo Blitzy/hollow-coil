@@ -5,10 +5,11 @@
 // scenario against scenarios/schemas/scenario.schema.json. The game's data is
 // checked against its TrenchBroom FGD, which includes the engine's.
 //
-// Usage: node tools/src/validate.ts [--game dir]   (or npm run validate)
+// Usage: node tools/src/validate.ts [--game dir] [--quiet]   (or npm run validate)
 //   --game   the game directory; default: the folder it runs in if that's a game,
 //            otherwise example.
 //            Scenarios run on the example game, so they're checked only with it.
+//   --quiet  print only problems, and the final line
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
@@ -64,6 +65,9 @@ export function gameFgd(game: string, file: string): { text: string; problems: s
   return resolveFgdIncludes(top, read);
 }
 
+/** False with --quiet: print only problems and the final line. */
+let showOk = true;
+
 /** Validates one JSON file against a schema, printing the result. Returns the file's value, or undefined if it isn't valid. */
 function validateFile(path: string, validator: SchemaValidator, schema: string): unknown {
   let value: unknown;
@@ -76,7 +80,7 @@ function validateFile(path: string, validator: SchemaValidator, schema: string):
     else if (error instanceof SchemaError) errors = [`schema problem: ${error.message}`];
     else throw error;
   }
-  console.log(`${errors.length === 0 ? "ok  " : "FAIL"}  ${displayPath(path)}`);
+  if (errors.length > 0 || showOk) console.log(`${errors.length === 0 ? "ok  " : "FAIL"}  ${displayPath(path)}`);
   for (const error of errors) console.log(`        ${error}`);
   return errors.length === 0 ? value : undefined;
 }
@@ -95,7 +99,8 @@ function validateFolder(dir: string, validator: SchemaValidator, schemaFor: (nam
 }
 
 export function main(argv: string[] = process.argv.slice(2)): number {
-  const { values } = parseArgs({ args: argv, options: { game: { type: "string" } } });
+  const { values } = parseArgs({ args: argv, options: { game: { type: "string" }, quiet: { type: "boolean" } } });
+  showOk = !values.quiet;
   let game: string;
   try {
     game = findGame(values.game);
@@ -110,7 +115,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
   const lightstyles = validateFile(join(DEFS_DIR, "lightstyles.json"), dataValidator, "lightstyles.schema.json");
   const data = validateFolder(join(game, "data"), dataValidator, (name) => `${name}.schema.json`);
   const scenarios = withScenarios ? validateFolder(repoPath("scenarios"), folderValidator(repoPath("scenarios", "schemas")), () => "scenario.schema.json") : null;
-  if (!withScenarios) console.log("skip  scenarios/ (they run on the example game)");
+  if (!withScenarios && showOk) console.log("skip  scenarios/ (they run on the example game)");
 
   const missing = GAME_DATA.filter((name) => !data.valid.has(name)).map((name) => `${displayPath(join(game, "data"))}/${name}.json`);
   if (lightstyles === undefined || data.failed || scenarios?.failed || missing.length > 0) {

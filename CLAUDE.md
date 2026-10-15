@@ -79,7 +79,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 
 ## Commands
 
-The commands that work on a game (`dev`, `compile`, `validate`, `bspdump`, `setup`, `install-trenchbroom`) are subcommands of one `mandrel` command (`tools/src/mandrel.ts`), the one a game outside this repo will install. The npm scripts below run it on the example game; `npx mandrel <command>` runs it too, including from inside a game directory. `npx mandrel help` lists them.
+The commands that work on a game (`dev`, `build`, `compile`, `validate`, `bspdump`, `setup`, `install-trenchbroom`) are subcommands of one `mandrel` command (`tools/src/mandrel.ts`), the one a game outside this repo will install. The npm scripts below run it on the example game; `npx mandrel <command>` runs it too, including from inside a game directory. `npx mandrel help` lists them.
 
 - `npm run setup [-- tool ...]`: install pinned third-party tools (ericw-tools) into the per-user tools cache (`%LOCALAPPDATA%\mandreljs` on Windows, `~/Library/Caches/mandreljs` on macOS, `~/.cache/mandreljs` on Linux), shared by every game. Name tools to install only those. `-- --check` verifies without changing anything; `-- --force` reinstalls.
 - `npm run compile [-- map ...] [-- --mode check|release] [-- --game dir]`: compile a game's maps to its own `build/<name>.bsp` (`example/build/` for the example). Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
@@ -89,7 +89,7 @@ The commands that work on a game (`dev`, `compile`, `validate`, `bspdump`, `setu
 - `npm run install-trenchbroom [-- --game dir]`: link a game's `trenchbroom/` folder (the example's by default) into TrenchBroom's games folder, named after its FGD (`games/MandrelJSExample`), and link the engine's FGD folder (`packages/defs/trenchbroom`) into it as `mandrel/` for its FGD's `@include` (and remove links left by earlier versions). `-- --uninstall` removes the links.
 - `npm run make-placeholder-textures`: regenerate the placeholder PNGs in `example/textures/dev/`.
 
-Everything runs from the repo root: `npm install` once, then `npm run dev` (play at http://localhost:5173/?map=test_movement; run as `npx mandrel dev` inside another game directory to play that game, or `&game=<dir>` for another one in the repo; pass Vite options after `--`, or `--built` for the plain Node server an installed engine uses), `npm test` (Vitest: every app, package, and tool; the compile tests need ericw-tools and skip without it), `npm run typecheck` (includes the sim-only check), and `npm run build`.
+Everything runs from the repo root: `npm install` once, then `npm run dev` (play at http://localhost:5173/?map=test_movement; run as `npx mandrel dev` inside another game directory to play that game, or `&game=<dir>` for another one in the repo; pass Vite options after `--`, or `--built` for the plain Node server an installed engine uses), `npm test` (Vitest: every app, package, and tool; the compile tests need ericw-tools and skip without it), `npm run typecheck` (includes the sim-only check), and `npm run build` (a release of the example game in `example/dist/`).
 
 ## Tools
 

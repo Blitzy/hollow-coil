@@ -11,29 +11,13 @@
 //        (or mandrel dev, npm run dev)
 
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
 import { parseArgs, styleText } from "node:util";
 import { isMain } from "./cli.ts";
-import { GAME_ENV, gameName, isBuiltClient, singleGame, startServer } from "./dev-server.ts";
-import { displayPath, findGame, repoPath } from "./layout.ts";
+import { CLIENT_BUILD, CLIENT_SOURCE, isBuiltClient, viteScript } from "./client.ts";
+import { GAME_ENV, gameName, singleGame, startServer } from "./dev-server.ts";
+import { displayPath, findGame } from "./layout.ts";
 
-/** The game client's source, which Vite serves. */
-const CLIENT_SOURCE = repoPath("apps", "game-client");
-/** The built client (npm run build). */
-export const CLIENT_BUILD = join(CLIENT_SOURCE, "dist");
 const DEFAULT_PORT = 5173;
-
-/** Vite's command-line script, from the installed vite package, or null without one. */
-function viteScript(): string | null {
-  try {
-    const pkg = createRequire(import.meta.url).resolve("vite/package.json");
-    return join(dirname(pkg), "bin", "vite.js");
-  } catch {
-    return null;
-  }
-}
 
 /** Splits mandrel's own options (--game, --built) from the rest, which go to Vite or the plain server. */
 export function splitOptions(argv: readonly string[]): { game?: string; built: boolean; rest: string[] } {
@@ -70,7 +54,7 @@ async function runBuilt(game: string, argv: string[]): Promise<number> {
     return 2;
   }
   if (!isBuiltClient(CLIENT_BUILD)) {
-    console.error(`dev: no built client in ${displayPath(CLIENT_BUILD)}; run: npm run build`);
+    console.error(`dev: no built client in ${displayPath(CLIENT_BUILD)}; run: mandrel build`);
     return 1;
   }
   const { url } = await startServer({
@@ -98,7 +82,7 @@ async function runBuilt(game: string, argv: string[]): Promise<number> {
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const { game: option, built, rest } = splitOptions(argv);
   const game = findGame(option);
-  const vite = existsSync(join(CLIENT_SOURCE, "index.html")) ? viteScript() : null;
+  const vite = viteScript();
   return built || vite === null ? runBuilt(game, rest) : runVite(vite, game, rest);
 }
 

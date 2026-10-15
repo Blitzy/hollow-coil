@@ -67,8 +67,8 @@ The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, an
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Starts the dev server at http://localhost:5173, compiling maps as you save them. In this repo it runs the client from source with Vite, so engine changes reload too, and Vite options work, such as `-- --port 5199`. `--built` serves the built client (`npm run build` first) without Vite, as an installed engine will. |
-| `npm run build` | Type-checks, then builds the game client to `apps/game-client/dist`. |
+| `npm run dev` | Starts the dev server at http://localhost:5173, compiling maps as you save them. In this repo it runs the client from source with Vite, so engine changes reload too, and Vite options work, such as `-- --port 5199`. `--built` serves the built client (from `npm run build`) without Vite, as an installed engine will. |
+| `npm run build` | Builds a release of the game in its `dist/` folder (`example/dist/`), ready for any static web host, even in a subfolder: the client, built from source here, plus the game's data, textures, and maps compiled at release quality. It validates the game first and stops at any problem. `--mode check` uses fast lighting, to try a release quickly. |
 
 **Maps**
 

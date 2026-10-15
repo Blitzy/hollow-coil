@@ -29,9 +29,10 @@ import { readBsp } from "@mandreljs/sim/map/bsp";
 import { vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
 import { createSim, simContext, step, type SimConfig, type SimState } from "@mandreljs/sim/sim";
 
-// Game directories, served by the dev server (tools/src/dev-server.ts). Its
-// index.json names the game to play when the URL doesn't.
-const GAMES = "/games";
+// Game directories, relative to the page so a release works wherever it's hosted:
+// served by the dev server (tools/src/dev-server.ts), or copied next to the page
+// by mandrel build. Their index.json names the game to play when the URL doesn't.
+const GAMES = "games";
 const HORIZONTAL_FOV = 90;
 const BRIGHTNESS_STEP = 0.1;
 

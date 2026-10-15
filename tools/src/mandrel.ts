@@ -23,6 +23,11 @@ const COMMANDS: Record<string, Command> = {
     summary: "Play in the browser, compiling maps as you save them",
     run: async (argv) => (await import("./dev.ts")).main(argv),
   },
+  build: {
+    usage: "[--game dir] [--mode release|check]",
+    summary: "Build a release in the game's dist/ folder, for any static web host",
+    run: async (argv) => (await import("./build.ts")).main(argv),
+  },
   compile: {
     usage: "[map ...] [--mode check|release] [--game dir]",
     summary: "Compile maps into the game's build/ folder",
