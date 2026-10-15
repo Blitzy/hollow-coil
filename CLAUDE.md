@@ -76,7 +76,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 - Adapting code from Quake, ericw-tools, or other GPLv2-or-later / GPLv3 projects is allowed. Credit the source in a comment next to the adapted code.
 - Do not copy code from GPLv2-only projects; it cannot be combined with GPLv3.
 - New dependencies must have GPLv3-compatible licenses (MIT, BSD, Apache-2.0, LGPL, GPLv3, and similar). Ask before adding anything else.
-- What ships to players carries its notices: the client's build lists every bundled npm package and its license in `THIRD-PARTY-NOTICES.txt` (`tools/src/notices.ts`), and a release from `mandrel build` adds the engine's `LICENSE`, `LICENSE-EXCEPTION.md`, and a `NOTICE.md` linking the engine's source (the `repository` in the root `package.json`).
+- What ships to players carries its notices: the client's build lists every bundled npm package and its license in `THIRD-PARTY-NOTICES.txt` (`tools/src/notices.ts`), and a release from `mandrel build` adds the engine's `LICENSE`, `LICENSE-EXCEPTION.md`, and a `NOTICE.md` linking the engine's source (the `repository` in the root `package.json`), plus the game's own `LICENSE`/`NOTICE`/`CREDITS` files (the example's `LICENSE.md` gives the credit CC BY requires).
 
 ## Commands
 

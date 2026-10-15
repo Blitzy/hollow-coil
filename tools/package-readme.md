@@ -29,6 +29,8 @@ Run them inside your game's folder, with Node.js 24 or newer:
 
 `npx mandrel help` lists them, and `npx mandrel <command> --help` shows a command's options. Add `build/` and `dist/` to your `.gitignore`.
 
+A release from `mandrel build` carries the engine's license and a `NOTICE.md` saying what's the engine's and what's yours. Put your content's license or credits in a `LICENSE`, `NOTICE`, `CREDITS`, or `COPYING` file at the top of your game's folder (any extension, such as `LICENSE.md`), and every release carries it too, linked from `NOTICE.md`. If you use assets under a license that requires credit, such as CC BY, credit them there.
+
 ## The engine's definitions
 
 Your game is checked against files in this package:

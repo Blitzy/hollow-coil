@@ -26,6 +26,6 @@ The example content in this repository is licensed under the [Creative Commons A
 - textures: everything in `example/textures/`
 - gameplay data: the JSON files in `example/data/` (`game.json`, `player.json`, `weapons.json`, and `enemies.json`)
 
-Files compiled from them, such as `.bsp` files, are covered by the same license. Credit them as "example content by Ryan Cook and Mandrel.js contributors, licensed under CC BY 4.0", with a link to this repository where possible.
+Files compiled from them, such as `.bsp` files, are covered by the same license. Credit them as "example content by Ryan Cook and Mandrel.js contributors, licensed under CC BY 4.0", with a link to this repository where possible. `example/LICENSE.md` says the same, and releases built with `mandrel build` carry it.
 
 Everything else in this repository, including the TrenchBroom game config and FGDs (`example/trenchbroom/` and `packages/defs/trenchbroom/`), `packages/defs/lightstyles.json`, schemas, test scenarios, demos, and documentation, is covered by the GNU GPL as stated above.

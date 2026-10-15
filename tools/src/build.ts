@@ -8,6 +8,8 @@
 //   dist/games/<game>/data/         the game's data files
 //   dist/games/<game>/textures/     its textures
 //   dist/games/<game>/build/        its maps, compiled at release quality (the .map sources stay out)
+//   dist/games/<game>/LICENSE.md    the game's own notices (LICENSE, NOTICE, CREDITS, or COPYING
+//                                   files at the top of its folder), linked from NOTICE.md
 //
 // It validates the game first and stops at any problem, as it does if a map
 // fails to compile. Inside this repo it builds the client from source first,
@@ -44,9 +46,21 @@ export function engineInfo(root: string = ENGINE_ROOT): { version: string; sourc
   return { version: pkg.version, source: url === undefined ? null : url.replace(/^git\+/, "").replace(/\.git$/, "") };
 }
 
-/** NOTICE.md for a release: what's the engine's, under which license and where its source is, and what's the game's. */
-export function releaseNotice(game: string, engine: { version: string; source: string | null }): string {
+/** A game's own notices: LICENSE, NOTICE, CREDITS, or COPYING files (any extension) at the top of its folder, which its releases carry. */
+export function gameNotices(game: string): string[] {
+  return readdirSync(game, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /^(LICEN[CS]E|NOTICE|CREDITS|COPYING)(\..+)?$/i.test(entry.name))
+    .map((entry) => entry.name)
+    .sort();
+}
+
+/**
+ * NOTICE.md for a release: what's the engine's, under which license and where its source is, and what's the game's.
+ * contentNotices are the game's own notices, as paths in the release.
+ */
+export function releaseNotice(game: string, engine: { version: string; source: string | null }, contentNotices: readonly string[] = []): string {
   const source = engine.source === null ? "Its source code is available from its authors." : `Its source code is at ${engine.source} (version ${engine.version}).`;
+  const terms = contentNotices.length === 0 ? "under their own terms" : `under their own terms: see ${contentNotices.map((path) => `\`${path}\``).join(" and ")}`;
   return [
     "# Notices",
     "",
@@ -54,7 +68,7 @@ export function releaseNotice(game: string, engine: { version: string; source: s
     "",
     `- **The engine** is \`index.html\` and \`assets/\`. It's licensed under the GNU General Public License v3.0 or later, with an additional permission for linking with platform SDKs: see \`LICENSE\` and \`LICENSE-EXCEPTION.md\`. ${source}`,
     "- **Third-party software** in the engine, and its licenses, is listed in `THIRD-PARTY-NOTICES.txt`.",
-    `- **The game's content** (\`games/\`: its maps, textures, and data) is by the authors of ${game}, under their own terms.`,
+    `- **The game's content** (\`games/\`: its maps, textures, and data) is by the authors of ${game}, ${terms}.`,
     "",
   ].join("\n");
 }
@@ -64,10 +78,13 @@ export function writeRelease(game: string, clientDir: string, out: string): { ma
   rmSync(out, { recursive: true, force: true });
   cpSync(clientDir, out, { recursive: true });
   for (const file of ["LICENSE", "LICENSE-EXCEPTION.md"]) cpSync(join(ENGINE_ROOT, file), join(out, file));
-  writeFileSync(join(out, "NOTICE.md"), releaseNotice(gameName(game), engineInfo()));
   const name = basename(game);
   const target = join(out, "games", name);
   mkdirSync(join(target, "data"), { recursive: true });
+  // The game's own notices travel with its content, such as the credit a CC BY license requires.
+  const notices = gameNotices(game);
+  for (const file of notices) cpSync(join(game, file), join(target, file));
+  writeFileSync(join(out, "NOTICE.md"), releaseNotice(gameName(game), engineInfo(), notices.map((file) => `games/${name}/${file}`)));
   writeFileSync(join(out, "games", "index.json"), `${JSON.stringify({ default: name, games: [name] })}\n`);
 
   const data = readdirSync(join(game, "data")).filter((file) => file.endsWith(".json"));

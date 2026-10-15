@@ -68,7 +68,7 @@ The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, an
 | Command | What it does |
 |---|---|
 | `npm run dev` | Starts the dev server at http://localhost:5173, compiling maps as you save them. In this repo it runs the client from source with Vite, so engine changes reload too, and Vite options work, such as `-- --port 5199`. `--built` serves the built client (from `npm run build`) without Vite, as an installed engine will. |
-| `npm run build` | Builds a release of the game in its `dist/` folder (`example/dist/`), ready for any static web host, even in a subfolder: the client, built from source here, plus the game's data, textures, and maps compiled at release quality. It validates the game first and stops at any problem. Each release carries the engine's license, a `NOTICE.md` saying what's the engine's (with a link to its source) and what's the game's, and `THIRD-PARTY-NOTICES.txt` for libraries bundled into the client, such as Three.js. `--mode check` uses fast lighting, to try a release quickly. |
+| `npm run build` | Builds a release of the game in its `dist/` folder (`example/dist/`), ready for any static web host, even in a subfolder: the client, built from source here, plus the game's data, textures, and maps compiled at release quality. It validates the game first and stops at any problem. Each release carries the engine's license, a `NOTICE.md` saying what's the engine's (with a link to its source) and what's the game's, `THIRD-PARTY-NOTICES.txt` for libraries bundled into the client, such as Three.js, and the game's own `LICENSE`, `NOTICE`, or `CREDITS` files. `--mode check` uses fast lighting, to try a release quickly. |
 
 **Maps**
 

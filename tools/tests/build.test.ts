@@ -5,7 +5,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { engineInfo, main, releaseNotice, writeRelease } from "../src/build.ts";
+import { engineInfo, gameNotices, main, releaseNotice, writeRelease } from "../src/build.ts";
 import { EXAMPLE_GAME } from "../src/layout.ts";
 
 describe("build", () => {
@@ -57,6 +57,24 @@ describe("build", () => {
     expect(notice).toContain("Its source code is at https://example.com/engine (version 1.2.3).");
     expect(notice).toContain("THIRD-PARTY-NOTICES.txt");
     expect(notice).toContain("is by the authors of My Game, under their own terms");
+  });
+
+  it("carries the game's own notices with its content, and points to them", () => {
+    const { game, client } = setup();
+    writeFileSync(join(game, "LICENSE.md"), "CC BY 4.0");
+    writeFileSync(join(game, "CREDITS.txt"), "textures by someone");
+    writeFileSync(join(game, "README.md"), "not a notice");
+    expect(gameNotices(game)).toEqual(["CREDITS.txt", "LICENSE.md"]);
+    const out = join(game, "dist");
+    writeRelease(game, client, out);
+    expect(readFileSync(join(out, "games", "mygame", "LICENSE.md"), "utf-8")).toBe("CC BY 4.0");
+    expect(existsSync(join(out, "games", "mygame", "README.md"))).toBe(false);
+    expect(readFileSync(join(out, "NOTICE.md"), "utf-8")).toContain("under their own terms: see `games/mygame/CREDITS.txt` and `games/mygame/LICENSE.md`.");
+  });
+
+  it("finds the example game's license, which credits its CC BY content", () => {
+    expect(gameNotices(EXAMPLE_GAME)).toEqual(["LICENSE.md"]);
+    expect(readFileSync(join(EXAMPLE_GAME, "LICENSE.md"), "utf-8")).toContain("licensed under CC BY 4.0");
   });
 
   it("finds the engine's version and source in its package.json", () => {
