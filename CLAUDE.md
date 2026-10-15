@@ -79,6 +79,8 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 
 ## Commands
 
+The commands that work on a game (`dev`, `compile`, `validate`, `bspdump`, `setup`, `install-trenchbroom`) are subcommands of one `mandrel` command (`tools/src/mandrel.ts`), the one a game outside this repo will install. The npm scripts below run it on the example game; `npx mandrel <command>` runs it too, including from inside a game directory. `npx mandrel help` lists them.
+
 - `npm run setup [-- tool ...]`: install pinned third-party tools (ericw-tools) into the per-user tools cache (`%LOCALAPPDATA%\mandreljs` on Windows, `~/Library/Caches/mandreljs` on macOS, `~/.cache/mandreljs` on Linux), shared by every game. Name tools to install only those. `-- --check` verifies without changing anything; `-- --force` reinstalls.
 - `npm run compile [-- map ...] [-- --mode check|release] [-- --game dir]`: compile a game's maps to its own `build/<name>.bsp` (`example/build/` for the example). Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
 - `npm run bspdump -- example/build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON, read with the game's own `.bsp` reader.

@@ -54,6 +54,8 @@ Every command is listed under [Commands](#commands).
 
 Run everything from the repo root. Options go after `--`, as in `npm run compile -- greybox_01 --mode release`. Commands that work on a game use the folder they run in if it's a game directory, or `--game <dir>`, or the example game.
 
+The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, and `validate`) are also one command, `mandrel`, the same one a game outside this repo will use: `npx mandrel compile --mode release`, or `npx mandrel help` for the list. Run inside a game directory, it works on that game.
+
 **Setup**
 
 | Command | What it does |
