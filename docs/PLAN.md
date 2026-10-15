@@ -197,6 +197,23 @@ Planned next: watching a demo in the game, to see what a golden demo does and wh
 - The overlay shows the time, the speed, and whether every tick's hash still matches the recording, flagging the tick where it first diverges.
 - Later: seeking, starting from the keyframes' full states.
 
+### Console
+
+Planned: a drop-down console, as in Quake, opened and closed with the backquote / tilde key. It's where commands with arguments go: recording and playing demos, loading maps, and cheats for testing levels and enemies.
+
+Commands come in two kinds, because the sim's rules decide where each one runs:
+
+- **Client commands** act on the session, outside the sim: `map <name>`, `maps`, `restart`, `record [name]`, `stop`, `playdemo <file>`, `help [command]`, `clear`, and settings such as `sensitivity <n>` and `brightness <n>`.
+- **Sim commands** change game state, so they go into the sim as actions on a tick, beside that tick's input command, never by editing state from outside. That keeps them deterministic, and the demo format already has a place for them: they're recorded in a demo's `actions` and replay exactly. Each is a generic engine action with tests, and its state starts neutral (see `demos/README.md`). Quake's names where it had one: `god` (take no damage), `noclip` (fly through walls, along the view), `notarget` (enemies don't notice you), `kill` (die), `give <weapon>`, plus `killmonsters` (kill every enemy).
+
+Steps:
+
+- [ ] C1 The console itself: it slides down over the top half of the view, releases the mouse, and takes the keyboard while open (the game pauses, as single player can). A command line with history (up and down), tab completion of command and map names, and scrollback (Page Up and Page Down). Commands are parsed as Quake did: words, with quotes for one that has spaces. The engine's messages go to it too (map loaded, demo saved, why a map is unlit), not only to the overlay and the browser console. The first client commands: `help`, `clear`, `map`, `maps`, `restart`, `record`, and `stop`; `record` replaces the R key. `map` loads a map in place instead of reloading the page, and `maps` needs the list of a game's maps: the dev server and a release's `games/index.json` say which maps each game has.
+- [ ] C2 Sim actions: the sim takes a tick's actions along with its command, demos record and replay them, and the first actions are `god`, `noclip`, `notarget`, `kill`, `give`, and `killmonsters`, each with unit tests and, where it can be seen in play, a scenario. Noclip movement goes in `docs/MOVEMENT.md`.
+- [ ] C3 With demo playback: `playdemo`, and settings that last between visits (stored in the browser).
+
+Open questions: where a game's own demos live and how `playdemo` finds them (the golden demos are the engine's, in `demos/`); and whether settings become Quake-style cvars that `set` and the config can name.
+
 ### M5: Feel and Presentation
 
 Mostly hands-on tuning by Ryan, with few tests.
