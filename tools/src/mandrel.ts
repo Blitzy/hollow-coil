@@ -8,6 +8,7 @@
 
 import { styleText } from "node:util";
 import { isMain } from "./cli.ts";
+import { GameNotFoundError } from "./layout.ts";
 
 interface Command {
   /** Arguments after the command name, for help. */
@@ -18,7 +19,7 @@ interface Command {
 
 const COMMANDS: Record<string, Command> = {
   dev: {
-    usage: "[vite options]",
+    usage: "[--game dir] [--port n] [--host name] [--built]",
     summary: "Play in the browser, compiling maps as you save them",
     run: async (argv) => (await import("./dev.ts")).main(argv),
   },
@@ -86,14 +87,18 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     console.error(`mandrel: unknown command '${name}'\n\n${helpText()}`);
     return 2;
   }
-  // dev passes its options to Vite, which has its own --help.
-  if (name !== "dev" && rest.some((arg) => arg === "--help" || arg === "-h")) {
-    console.log(`${usageLine(name)}\n\n${command.summary}.`);
+  if (rest.some((arg) => arg === "--help" || arg === "-h")) {
+    const note = name === "dev" ? "\n\nInside the engine's repo, other options go to Vite, such as --open." : "";
+    console.log(`${usageLine(name)}\n\n${command.summary}.${note}`);
     return 0;
   }
   try {
     return await command.run(rest);
   } catch (error) {
+    if (error instanceof GameNotFoundError) {
+      console.error(`mandrel ${name}: ${error.message}`);
+      return 1;
+    }
     if (!isOptionError(error)) throw error;
     // Node's message goes on to explain '--'; the first sentence is the useful part.
     const problem = error.message.split(/\.\s/)[0]!.replace(/^\w/, (c) => c.toLowerCase());

@@ -89,7 +89,7 @@ The commands that work on a game (`dev`, `compile`, `validate`, `bspdump`, `setu
 - `npm run install-trenchbroom [-- --game dir]`: link a game's `trenchbroom/` folder (the example's by default) into TrenchBroom's games folder, named after its FGD (`games/MandrelJSExample`), and link the engine's FGD folder (`packages/defs/trenchbroom`) into it as `mandrel/` for its FGD's `@include` (and remove links left by earlier versions). `-- --uninstall` removes the links.
 - `npm run make-placeholder-textures`: regenerate the placeholder PNGs in `example/textures/dev/`.
 
-Everything runs from the repo root: `npm install` once, then `npm run dev` (play at http://localhost:5173/?map=test_movement; `&game=<dir>` plays another game directory; pass Vite options after `--`), `npm test` (Vitest: every app, package, and tool; the compile tests need ericw-tools and skip without it), `npm run typecheck` (includes the sim-only check), and `npm run build`.
+Everything runs from the repo root: `npm install` once, then `npm run dev` (play at http://localhost:5173/?map=test_movement; run as `npx mandrel dev` inside another game directory to play that game, or `&game=<dir>` for another one in the repo; pass Vite options after `--`, or `--built` for the plain Node server an installed engine uses), `npm test` (Vitest: every app, package, and tool; the compile tests need ericw-tools and skip without it), `npm run typecheck` (includes the sim-only check), and `npm run build`.
 
 ## Tools
 

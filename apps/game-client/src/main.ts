@@ -1,7 +1,8 @@
 // Browser entry point: loads a game's map, runs the sim at its fixed tick rate,
 // and renders between ticks.
 //
-// URL options: ?game=<dir> (a game directory in the repo, default example),
+// URL options: ?game=<dir> (a game directory the server offers; default: the
+// one it was started for, from /games/index.json),
 // &map=<name> (default: the game's start map), &lighting=off to load the
 // unlit .map instead of the compiled .bsp, &brightness=<n> to try another lightmap scale,
 // &rawinput=off for the OS's accelerated mouse instead of raw input.
@@ -28,9 +29,9 @@ import { readBsp } from "@mandreljs/sim/map/bsp";
 import { vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
 import { createSim, simContext, step, type SimConfig, type SimState } from "@mandreljs/sim/sim";
 
-// Game directories, served by the dev server (vite.config.ts).
+// Game directories, served by the dev server (tools/src/dev-server.ts). Its
+// index.json names the game to play when the URL doesn't.
 const GAMES = "/games";
-const DEFAULT_GAME = "example";
 const HORIZONTAL_FOV = 90;
 const BRIGHTNESS_STEP = 0.1;
 
@@ -41,6 +42,12 @@ async function fetchText(url: string): Promise<string> {
 }
 
 const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => vec3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
+
+/** The server's /games/index.json: the games it serves, and the one to play when the URL names none. */
+interface GameIndex {
+  readonly default: string;
+  readonly games: readonly string[];
+}
 
 /** A game directory's data/game.json. */
 interface GameInfo {
@@ -89,9 +96,10 @@ async function loadLevel(game: string, mapName: string, lightStyles: LightStyleD
 
 async function main(): Promise<void> {
   const params = new URLSearchParams(location.search);
-  const game = `${GAMES}/${encodeURIComponent(params.get("game") ?? DEFAULT_GAME)}`;
   const overlay = document.getElementById("overlay")!;
   overlay.textContent = "loading...";
+  const gameDir = params.get("game") ?? (JSON.parse(await fetchText(`${GAMES}/index.json`)) as GameIndex).default;
+  const game = `${GAMES}/${encodeURIComponent(gameDir)}`;
 
   const [gameText, playerText, weaponsText, enemiesText] = await Promise.all([
     fetchText(`${game}/data/game.json`),
