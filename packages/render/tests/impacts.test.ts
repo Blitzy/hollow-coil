@@ -34,6 +34,14 @@ describe("ImpactMarks", () => {
     expect(visible(marks)).toHaveLength(0);
   });
 
+  it("hides every mark when cleared", () => {
+    const marks = new ImpactMarks({ capacity: 4 });
+    marks.add(vec3(1, 0, 0), vec3(0, 0, 1), 0);
+    marks.add(vec3(2, 0, 0), vec3(0, 0, 1), 0);
+    marks.clear();
+    expect(visible(marks)).toHaveLength(0);
+  });
+
   it("reuses the oldest mark once all are showing", () => {
     const marks = new ImpactMarks({ capacity: 2 });
     marks.add(vec3(1, 0, 0), vec3(0, 0, 1), 0);

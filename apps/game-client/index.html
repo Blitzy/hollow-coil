@@ -12,6 +12,8 @@
         font: 13px/1.4 ui-monospace, Consolas, monospace; color: #e8e8e8;
         text-shadow: 1px 1px 0 #000; white-space: pre; pointer-events: none;
       }
+      /* Getting hurt tints the screen red (Quake's damage flash); its opacity is set each frame. */
+      #flash { position: fixed; inset: 0; background: #f00; opacity: 0; pointer-events: none; }
       /* A dot where shots go: the center of the view. */
       #crosshair {
         position: fixed; top: 50%; left: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px;
@@ -20,6 +22,7 @@
     </style>
   </head>
   <body>
+    <div id="flash"></div>
     <pre id="overlay"></pre>
     <div id="crosshair"></div>
     <script type="module" src="/src/main.ts"></script>
