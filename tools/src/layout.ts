@@ -6,14 +6,18 @@
 //     trenchbroom/, wherever it is on disk; its maps compile to its own build/
 //
 // Inside this repo the engine's files are the repo itself, and the game is
-// example/ unless another one is named.
+// example/ unless another one is named. Where the engine's files are comes from
+// engine-files.ts, which the mandreljs package swaps for its own layout.
 
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
+import { DEFS_DIR, ENGINE_ROOT, IN_REPO } from "./engine-files.ts";
 
-/** The repo root. The engine's files are found from here, and repo-only tools (scenarios, check-files) use it. */
-export const REPO_ROOT = join(import.meta.dirname, "../..");
+export { DEFS_DIR, IN_REPO };
+
+/** The repo root, for repo-only tools and tests (scenarios, check-files). In the installed package, the package's folder. */
+export const REPO_ROOT = ENGINE_ROOT;
 
 /** A path inside the repo, from slash-separated parts. */
 export const repoPath = (...parts: string[]): string => join(REPO_ROOT, ...parts);
@@ -23,9 +27,6 @@ export const displayPath = (path: string, cwd: string = process.cwd()): string =
   const rel = relative(cwd, resolve(path));
   return rel === "" || rel.startsWith("..") || isAbsolute(rel) ? resolve(path) : rel.split("\\").join("/");
 };
-
-/** The definitions every game is checked against (@mandreljs/defs): schemas, light styles, and the shared FGD in trenchbroom/. */
-export const DEFS_DIR = repoPath("packages", "defs");
 
 /** The example game's directory, holding maps/, textures/, data/, and trenchbroom/ (the standard Quake layout). */
 export const EXAMPLE_GAME = repoPath("example");
@@ -48,7 +49,7 @@ const isInside = (path: string, dir: string): boolean => {
  * it's a game directory, or, inside this repo, the example game. Throws if the result isn't a game directory.
  */
 export function findGame(option?: string, cwd: string = process.cwd()): string {
-  const here = isGameDir(cwd) ? resolve(cwd) : isInside(cwd, REPO_ROOT) ? EXAMPLE_GAME : cwd;
+  const here = isGameDir(cwd) ? resolve(cwd) : IN_REPO && isInside(cwd, REPO_ROOT) ? EXAMPLE_GAME : cwd;
   const game = option !== undefined ? resolve(cwd, option) : here;
   if (!isGameDir(game)) {
     const why = option !== undefined ? `${game} has no data/game.json` : "run this in a game directory (a folder holding data/game.json), or pass --game <dir>";

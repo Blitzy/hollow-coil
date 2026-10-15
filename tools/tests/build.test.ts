@@ -5,7 +5,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { main, writeRelease } from "../src/build.ts";
+import { engineInfo, main, releaseNotice, writeRelease } from "../src/build.ts";
 import { EXAMPLE_GAME } from "../src/layout.ts";
 
 describe("build", () => {
@@ -39,7 +39,8 @@ describe("build", () => {
     const { game, client } = setup();
     const out = join(game, "dist");
     const wrote = writeRelease(game, client, out);
-    expect(readdirSync(out).sort()).toEqual(["assets", "games", "index.html"]);
+    expect(readdirSync(out).sort()).toEqual(["LICENSE", "LICENSE-EXCEPTION.md", "NOTICE.md", "assets", "games", "index.html"]);
+    expect(readFileSync(join(out, "NOTICE.md"), "utf-8")).toContain("Mandrel.js Example runs on Mandrel.js");
     expect(JSON.parse(readFileSync(join(out, "games", "index.json"), "utf-8"))).toEqual({ default: "mygame", games: ["mygame"] });
     expect(readdirSync(join(out, "games", "mygame")).sort()).toEqual(["build", "data", "textures"]);
     expect(readdirSync(join(out, "games", "mygame", "build")).sort()).toEqual(["greybox_01.bsp", "test_movement.bsp"]); // no logs or .map sources
@@ -47,6 +48,21 @@ describe("build", () => {
     expect(existsSync(join(out, "games", "mygame", "textures", "dev", "grid_grey.png"))).toBe(true);
     expect(wrote).toMatchObject({ maps: 2, data: 4, textures: 13 });
     expect(wrote.bytes).toBeGreaterThan(0);
+  });
+
+  it("says what's the engine's (its license and source) and what's the game's", () => {
+    const notice = releaseNotice("My Game", { version: "1.2.3", source: "https://example.com/engine" });
+    expect(notice).toContain("My Game runs on Mandrel.js 1.2.3");
+    expect(notice).toContain("GNU General Public License v3.0 or later");
+    expect(notice).toContain("Its source code is at https://example.com/engine (version 1.2.3).");
+    expect(notice).toContain("THIRD-PARTY-NOTICES.txt");
+    expect(notice).toContain("is by the authors of My Game, under their own terms");
+  });
+
+  it("finds the engine's version and source in its package.json", () => {
+    const { version, source } = engineInfo();
+    expect(version).toMatch(/^\d+\.\d+\.\d+/);
+    expect(source).toBe("https://github.com/mandreljs/mandrel.js");
   });
 
   it("replaces an earlier release", () => {

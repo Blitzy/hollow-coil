@@ -7,7 +7,7 @@
 // Usage: mandrel <command> [options]   (mandrel help lists the commands)
 
 import { styleText } from "node:util";
-import { isMain } from "./cli.ts";
+import { isMain, runsAsBundle } from "./cli.ts";
 import { GameNotFoundError } from "./layout.ts";
 
 interface Command {
@@ -112,4 +112,5 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   }
 }
 
-if (isMain(import.meta.url)) process.exitCode = await main();
+// From source, run when it's the file node runs; in the package's bundle, mandrel is the command.
+if (isMain(import.meta.url) || runsAsBundle()) process.exitCode = await main();

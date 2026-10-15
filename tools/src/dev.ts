@@ -37,7 +37,7 @@ export function splitOptions(argv: readonly string[]): { game?: string; built: b
 function runVite(vite: string, game: string, argv: string[]): Promise<number> {
   console.log(`${styleText("bold", gameName(game))}  ${styleText("dim", displayPath(game))}`);
   return new Promise((done) => {
-    const child = spawn(process.execPath, [vite, ...argv], { cwd: CLIENT_SOURCE, stdio: "inherit", env: { ...process.env, [GAME_ENV]: game } });
+    const child = spawn(process.execPath, [vite, ...argv], { cwd: CLIENT_SOURCE ?? undefined, stdio: "inherit", env: { ...process.env, [GAME_ENV]: game } });
     child.on("error", (error) => {
       console.error(`dev: could not start Vite: ${error.message}`);
       done(1);

@@ -1,6 +1,9 @@
 // Builds a release of a game in its dist/ folder, ready for any static web host:
 //
-//   dist/index.html, assets/        the game client
+//   dist/index.html, assets/        the game client (the engine), with THIRD-PARTY-NOTICES.txt
+//   dist/LICENSE, LICENSE-EXCEPTION.md, NOTICE.md
+//                                   the engine's license, and what's whose: the engine is
+//                                   GPL and its source is linked; the game's content is its authors'
 //   dist/games/index.json           names the game to play
 //   dist/games/<game>/data/         the game's data files
 //   dist/games/<game>/textures/     its textures
@@ -13,13 +16,14 @@
 // Usage: node tools/src/build.ts [--game dir] [--mode release|check]   (or mandrel build, npm run build)
 //   --mode   map lighting: release (the default) or the faster check, to try a release quickly
 
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { parseArgs, styleText } from "node:util";
 import { isMain } from "./cli.ts";
 import { buildClient, CLIENT_BUILD, isBuiltClient, viteScript } from "./client.ts";
 import { main as compile, findMaps, LIGHT_ARGS, type Mode } from "./compile.ts";
 import { gameName } from "./dev-server.ts";
+import { ENGINE_ROOT } from "./engine-files.ts";
 import { buildDir, displayPath, findGame } from "./layout.ts";
 import { main as validate } from "./validate.ts";
 
@@ -33,10 +37,34 @@ function filesIn(dir: string): { path: string; size: number }[] {
 
 const megabytes = (bytes: number): string => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 
+/** The engine's version and where its source is, from its package.json (this repo's root, or the installed package's). */
+export function engineInfo(root: string = ENGINE_ROOT): { version: string; source: string | null } {
+  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf-8")) as { version: string; repository?: { url?: string } | string };
+  const url = typeof pkg.repository === "string" ? pkg.repository : pkg.repository?.url;
+  return { version: pkg.version, source: url === undefined ? null : url.replace(/^git\+/, "").replace(/\.git$/, "") };
+}
+
+/** NOTICE.md for a release: what's the engine's, under which license and where its source is, and what's the game's. */
+export function releaseNotice(game: string, engine: { version: string; source: string | null }): string {
+  const source = engine.source === null ? "Its source code is available from its authors." : `Its source code is at ${engine.source} (version ${engine.version}).`;
+  return [
+    "# Notices",
+    "",
+    `${game} runs on Mandrel.js ${engine.version}, an open-source game engine.`,
+    "",
+    `- **The engine** is \`index.html\` and \`assets/\`. It's licensed under the GNU General Public License v3.0 or later, with an additional permission for linking with platform SDKs: see \`LICENSE\` and \`LICENSE-EXCEPTION.md\`. ${source}`,
+    "- **Third-party software** in the engine, and its licenses, is listed in `THIRD-PARTY-NOTICES.txt`.",
+    `- **The game's content** (\`games/\`: its maps, textures, and data) is by the authors of ${game}, under their own terms.`,
+    "",
+  ].join("\n");
+}
+
 /** Copies the client and the game's release files into out, replacing what was there. Returns what it wrote, for the summary. */
 export function writeRelease(game: string, clientDir: string, out: string): { maps: number; textures: number; data: number; bytes: number } {
   rmSync(out, { recursive: true, force: true });
   cpSync(clientDir, out, { recursive: true });
+  for (const file of ["LICENSE", "LICENSE-EXCEPTION.md"]) cpSync(join(ENGINE_ROOT, file), join(out, file));
+  writeFileSync(join(out, "NOTICE.md"), releaseNotice(gameName(game), engineInfo()));
   const name = basename(game);
   const target = join(out, "games", name);
   mkdirSync(join(target, "data"), { recursive: true });

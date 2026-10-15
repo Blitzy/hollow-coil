@@ -76,6 +76,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): 
 - Adapting code from Quake, ericw-tools, or other GPLv2-or-later / GPLv3 projects is allowed. Credit the source in a comment next to the adapted code.
 - Do not copy code from GPLv2-only projects; it cannot be combined with GPLv3.
 - New dependencies must have GPLv3-compatible licenses (MIT, BSD, Apache-2.0, LGPL, GPLv3, and similar). Ask before adding anything else.
+- What ships to players carries its notices: the client's build lists every bundled npm package and its license in `THIRD-PARTY-NOTICES.txt` (`tools/src/notices.ts`), and a release from `mandrel build` adds the engine's `LICENSE`, `LICENSE-EXCEPTION.md`, and a `NOTICE.md` linking the engine's source (the `repository` in the root `package.json`).
 
 ## Commands
 
@@ -85,6 +86,7 @@ The commands that work on a game (`dev`, `build`, `compile`, `validate`, `bspdum
 - `npm run compile [-- map ...] [-- --mode check|release] [-- --game dir]`: compile a game's maps to its own `build/<name>.bsp` (`example/build/` for the example). Fails on leaks, missing textures, and compiler errors. `check` (default) uses fast lighting; `release` uses full quality.
 - `npm run bspdump -- example/build/<name>.bsp [--no-entities]`: print a compiled .bsp's entities, counts, textures, and lightmap stats as JSON, read with the game's own `.bsp` reader.
 - `npm run validate [-- --game dir]`: validate the engine's light styles, a game's `data/*.json` (the example's by default), and the `scenarios/*.json` scenarios against their schemas, plus cross-file checks, such as the game's enemies against its FGD and its name in its TrenchBroom config and map headers (runs in CI). The checks themselves live in `packages/defs`, so editors can use them too.
+- `npm run package [-- --pack]`: build the `mandreljs` package (what a game's repo installs for the `mandrel` command) in `dist/mandreljs/`: the command bundled with Vite into `bin/mandrel.js`, the built client, the defs, and the pinned versions; `--pack` also makes `dist/mandreljs-<version>.tgz`. The package's engine-file paths come from `tools/src/engine-files.package.ts`, which the bundle uses in place of `engine-files.ts`; keep the two in step (`tools/tests/package.test.ts` checks).
 - `npm run check-files`: fail if any tracked file is over 2 MB (runs in CI).
 - `npm run install-trenchbroom [-- --game dir]`: link a game's `trenchbroom/` folder (the example's by default) into TrenchBroom's games folder, named after its FGD (`games/MandrelJSExample`), and link the engine's FGD folder (`packages/defs/trenchbroom`) into it as `mandrel/` for its FGD's `@include` (and remove links left by earlier versions). `-- --uninstall` removes the links.
 - `npm run make-placeholder-textures`: regenerate the placeholder PNGs in `example/textures/dev/`.

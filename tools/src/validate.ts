@@ -26,7 +26,7 @@ import {
 } from "@mandreljs/defs/checks";
 import type { DataFiles, GameFile, LightStylesFile, ScenarioFile } from "@mandreljs/defs/checks";
 import { SchemaError, SchemaValidator } from "@mandreljs/defs/schema";
-import { DEFS_DIR, displayPath, EXAMPLE_GAME, findGame, GameNotFoundError, repoPath } from "./layout.ts";
+import { DEFS_DIR, displayPath, EXAMPLE_GAME, findGame, GameNotFoundError, IN_REPO, repoPath } from "./layout.ts";
 import { isMain } from "./cli.ts";
 
 const GAME_DATA = ["game", "player", "weapons", "enemies"];
@@ -69,7 +69,7 @@ export function gameFgd(game: string, file: string): { text: string; problems: s
 let showOk = true;
 
 /** Validates one JSON file against a schema, printing the result. Returns the file's value, or undefined if it isn't valid. */
-function validateFile(path: string, validator: SchemaValidator, schema: string): unknown {
+function validateFile(path: string, validator: SchemaValidator, schema: string, show: boolean = showOk): unknown {
   let value: unknown;
   let errors: string[];
   try {
@@ -80,7 +80,7 @@ function validateFile(path: string, validator: SchemaValidator, schema: string):
     else if (error instanceof SchemaError) errors = [`schema problem: ${error.message}`];
     else throw error;
   }
-  if (errors.length > 0 || showOk) console.log(`${errors.length === 0 ? "ok  " : "FAIL"}  ${displayPath(path)}`);
+  if (errors.length > 0 || show) console.log(`${errors.length === 0 ? "ok  " : "FAIL"}  ${displayPath(path)}`);
   for (const error of errors) console.log(`        ${error}`);
   return errors.length === 0 ? value : undefined;
 }
@@ -109,13 +109,14 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     console.log(`FAIL  ${error.message}`);
     return 1;
   }
-  const withScenarios = resolve(game) === resolve(EXAMPLE_GAME);
+  const withScenarios = IN_REPO && resolve(game) === resolve(EXAMPLE_GAME);
 
   const dataValidator = folderValidator(join(DEFS_DIR, "schemas"));
-  const lightstyles = validateFile(join(DEFS_DIR, "lightstyles.json"), dataValidator, "lightstyles.schema.json");
+  // The engine's own file: listed inside this repo, where it's edited; elsewhere only if it fails.
+  const lightstyles = validateFile(join(DEFS_DIR, "lightstyles.json"), dataValidator, "lightstyles.schema.json", showOk && IN_REPO);
   const data = validateFolder(join(game, "data"), dataValidator, (name) => `${name}.schema.json`);
   const scenarios = withScenarios ? validateFolder(repoPath("scenarios"), folderValidator(repoPath("scenarios", "schemas")), () => "scenario.schema.json") : null;
-  if (!withScenarios && showOk) console.log("skip  scenarios/ (they run on the example game)");
+  if (IN_REPO && !withScenarios && showOk) console.log("skip  scenarios/ (they run on the example game)");
 
   const missing = GAME_DATA.filter((name) => !data.valid.has(name)).map((name) => `${displayPath(join(game, "data"))}/${name}.json`);
   if (lightstyles === undefined || data.failed || scenarios?.failed || missing.length > 0) {

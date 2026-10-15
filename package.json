@@ -1,6 +1,11 @@
 {
-  "name": "mandreljs",
+  "name": "mandreljs-root",
+  "version": "0.1.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mandreljs/mandrel.js.git"
+  },
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -22,7 +27,8 @@
     "compile": "mandrel compile",
     "setup": "mandrel setup",
     "install-trenchbroom": "mandrel install-trenchbroom",
-    "make-placeholder-textures": "node tools/src/make-placeholder-textures.ts"
+    "make-placeholder-textures": "node tools/src/make-placeholder-textures.ts",
+    "package": "node tools/src/package.ts"
   },
   "devDependencies": {
     "@types/node": "24.19.0",

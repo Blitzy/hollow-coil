@@ -16,10 +16,12 @@ import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writ
 import { dirname, join } from "node:path";
 import { parseArgs } from "node:util";
 import { isMain } from "./cli.ts";
-import { displayPath, repoPath, toolsCacheDir } from "./layout.ts";
+import { VERSIONS_FILE } from "./engine-files.ts";
+import { displayPath, toolsCacheDir } from "./layout.ts";
+
+export { VERSIONS_FILE };
 import { extractZip } from "./zip.ts";
 
-export const VERSIONS_FILE = repoPath("tools", "versions.json");
 export const TOOLS_DIR = toolsCacheDir();
 export const DOWNLOADS_DIR = join(TOOLS_DIR, "downloads");
 
