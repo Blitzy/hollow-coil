@@ -27,11 +27,18 @@ import { VERSIONS_FILE } from "./setup.ts";
 /** Where the package is assembled. */
 export const PACKAGE_DIR = repoPath("dist", "mandreljs");
 
-/** The package's package.json, with the version and repository of this repo's root package.json. */
-export function packageJson(version: string, repository?: unknown): Record<string, unknown> {
+/** The links a package.json can carry from this repo's root package.json. */
+export interface PackageLinks {
+  readonly homepage?: string;
+  readonly repository?: unknown;
+}
+
+/** The package's package.json, with the version, homepage, and repository of this repo's root package.json. */
+export function packageJson(version: string, { homepage, repository }: PackageLinks = {}): Record<string, unknown> {
   return {
     name: "mandreljs",
     version,
+    ...(homepage === undefined ? {} : { homepage }),
     ...(repository === undefined ? {} : { repository }),
     description: "A web engine for first-person shooters in the spirit of Doom and Quake: the mandreljs command, which plays, checks, compiles, and builds a game directory.",
     type: "module",
@@ -65,7 +72,7 @@ async function bundle(out: string): Promise<void> {
 }
 
 export async function main(): Promise<number> {
-  const { version, repository } = JSON.parse(readFileSync(repoPath("package.json"), "utf-8")) as { version: string; repository?: unknown };
+  const { version, homepage, repository } = JSON.parse(readFileSync(repoPath("package.json"), "utf-8")) as { version: string } & PackageLinks;
   const out = PACKAGE_DIR;
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
@@ -90,7 +97,7 @@ export async function main(): Promise<number> {
   cpSync(VERSIONS_FILE, join(out, "versions.json"));
   for (const file of ["LICENSE", "LICENSE-EXCEPTION.md"]) cpSync(repoPath(file), join(out, file));
   cpSync(repoPath("tools", "package-readme.md"), join(out, "README.md"));
-  writeFileSync(join(out, "package.json"), `${JSON.stringify(packageJson(version, repository), null, 2)}\n`);
+  writeFileSync(join(out, "package.json"), `${JSON.stringify(packageJson(version, { homepage, repository }), null, 2)}\n`);
   console.log("ok    defs, versions.json, licenses, README.md, package.json");
   console.log(`\nmandreljs ${version} is in ${displayPath(out)}/`);
 

@@ -2,6 +2,7 @@
   "name": "mandreljs-root",
   "version": "0.0.1",
   "private": true,
+  "homepage": "https://mandreljs.github.io/mandrel.js/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mandreljs/mandrel.js.git"

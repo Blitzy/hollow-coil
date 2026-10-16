@@ -26,6 +26,10 @@ describe("package.json", () => {
     const pkg = packageJson("1.2.3");
     expect(pkg).toMatchObject({ name: "mandreljs", version: "1.2.3", bin: { mandreljs: "bin/mandreljs.js" }, engines: { node: ">=24" }, type: "module" });
     expect(pkg).not.toHaveProperty("dependencies");
-    expect(packageJson("1.2.3", { type: "git", url: "git+https://github.com/mandreljs/mandrel.js.git" }).repository).toEqual({ type: "git", url: "git+https://github.com/mandreljs/mandrel.js.git" });
+  });
+
+  it("carries the root package.json's homepage and repository", () => {
+    const repository = { type: "git", url: "git+https://github.com/mandreljs/mandrel.js.git" };
+    expect(packageJson("1.2.3", { homepage: "https://mandreljs.github.io/mandrel.js/", repository })).toMatchObject({ homepage: "https://mandreljs.github.io/mandrel.js/", repository });
   });
 });
