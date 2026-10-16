@@ -122,9 +122,10 @@ describe("example maps", () => {
     for (const faces of entities[0]!.brushes) expect(buildBrush(faces)).not.toBeNull();
   });
 
-  it("test_movement gets the 3 bevels qbsp reports (one per ramp)", () => {
+  // One per ramp, plus two for the wedge ramp, which has no face at its thin end or on top.
+  it("test_movement gets the 5 bevels qbsp reports", () => {
     const world = parseMap(readFileSync(join(mapsDir, "test_movement.map"), "utf-8"))[0]!;
     const total = world.brushes.reduce((n, faces) => n + bevelCount(buildBrush(faces)!), 0);
-    expect(total).toBe(3);
+    expect(total).toBe(5);
   });
 });
