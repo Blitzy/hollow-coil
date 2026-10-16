@@ -33,7 +33,9 @@ You'll need:
 
 ### Play the example game
 
-Get the code, then install the dependencies and the pinned map compiler ([ericw-tools](https://ericw.github.io/ericw-tools/)), which goes into a per-user cache shared by every game:
+Play it in your browser at https://mandreljs.github.io/mandrel.js/ ([greybox_01](https://mandreljs.github.io/mandrel.js/?map=greybox_01) is the most to see), built from `main` each time CI passes there.
+
+To run it yourself, get the code, then install the dependencies and the pinned map compiler ([ericw-tools](https://ericw.github.io/ericw-tools/)), which goes into a per-user cache shared by every game:
 
 ```
 git clone https://github.com/mandreljs/mandrel.js.git
@@ -102,7 +104,7 @@ The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, an
 
 **The engine package and releases**
 
-Releases publish themselves. On `develop`, run `npm run release -- prepare <bump>`, commit, and merge `develop` into `main`; when CI passes there, the release workflow publishes `mandreljs` to npm and makes the GitHub release and its tag, with the version's `CHANGELOG.md` section as its notes.
+Releases publish themselves. On `develop`, run `npm run release -- prepare <bump>`, commit, and merge `develop` into `main`; when CI passes there, the release workflow publishes `mandreljs` to npm and makes the GitHub release and its tag, with the version's `CHANGELOG.md` section as its notes. Every merge into `main` that passes CI also rebuilds the example game on the repo's [GitHub Pages site](https://mandreljs.github.io/mandrel.js/) (`.github/workflows/pages.yml`).
 
 | Command | What it does |
 |---|---|

@@ -1,0 +1,66 @@
+name: Pages
+
+# Puts the example game on the repo's GitHub Pages site, built as `npm run build`
+# builds it, once CI passes on main, so the site plays what main has. Its own
+# workflow, not a job in CI, so pull requests never deploy and CI's
+# cancel-in-progress can never stop a deploy halfway.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write # the deploy
+  id-token: write # proves to Pages that the deploy comes from this workflow
+
+jobs:
+  pages:
+    name: Build and deploy the example game
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The commit CI passed on (or, run by hand, main's latest).
+          ref: ${{ github.event.workflow_run.head_sha || 'main' }}
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Cache tool downloads
+        uses: actions/cache@v6
+        with:
+          # The per-user tools cache on Linux (toolsCacheDir in tools/src/layout.ts).
+          path: ~/.cache/mandreljs/downloads
+          key: tools-${{ runner.os }}-${{ hashFiles('tools/versions.json') }}
+
+      - name: Install pinned tools
+        run: npm run setup -- ericw-tools
+
+      - name: Build the example game
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: example/dist
+
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v5.0.1
