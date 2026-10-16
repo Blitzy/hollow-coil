@@ -1,5 +1,6 @@
-// Builds the mandreljs package: what a game's repo installs to get the mandreljs
-// command. Repo-only; the package's contents come from this repo:
+// Builds the mandreljs package, what a game's repo installs to get the mandreljs
+// command, in dist/mandreljs/, and packs it into dist/mandreljs-<version>.tgz
+// with npm pack. Repo-only; the package's contents come from this repo:
 //
 //   bin/mandreljs.js (+ .map)   the command, bundled into one JavaScript file with Vite,
 //                             with engine-files.package.ts in place of engine-files.ts
@@ -12,13 +13,11 @@
 // JavaScript; the bundle also folds in our own packages, so it has no
 // dependencies. See DECISIONS.md, "Games use the engine through one installed command".
 //
-// Usage: node tools/src/package.ts [--pack]   (or npm run package)
-//   --pack   also pack it into dist/mandreljs-<version>.tgz with npm pack
+// Usage: node tools/src/package.ts   (or npm run package)
 
 import { execSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseArgs } from "node:util";
 import { build } from "vite";
 import { isMain } from "./cli.ts";
 import { buildClient, CLIENT_BUILD, viteScript } from "./client.ts";
@@ -65,8 +64,7 @@ async function bundle(out: string): Promise<void> {
   });
 }
 
-export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
-  const { values } = parseArgs({ args: argv, options: { pack: { type: "boolean" } } });
+export async function main(): Promise<number> {
   const { version, repository } = JSON.parse(readFileSync(repoPath("package.json"), "utf-8")) as { version: string; repository?: unknown };
   const out = PACKAGE_DIR;
   rmSync(out, { recursive: true, force: true });
@@ -96,10 +94,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   console.log("ok    defs, versions.json, licenses, README.md, package.json");
   console.log(`\nmandreljs ${version} is in ${displayPath(out)}/`);
 
-  if (values.pack) {
-    const tgz = execSync("npm pack --pack-destination ..", { cwd: out, encoding: "utf-8" }).trim().split("\n").at(-1)!;
-    console.log(`packed: ${displayPath(join(out, "..", tgz))}`);
-  }
+  const tgz = execSync("npm pack --pack-destination ..", { cwd: out, encoding: "utf-8" }).trim().split("\n").at(-1)!;
+  console.log(`packed: ${displayPath(join(out, "..", tgz))}`);
   return 0;
 }
 

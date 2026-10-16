@@ -75,7 +75,7 @@ jobs:
 
       - name: Build the package
         if: steps.notes.outputs.found == 'true'
-        run: npm run package -- --pack
+        run: npm run package
 
       # No npm token: npm's trusted publishing accepts mandreljs only from this
       # workflow in this repo, which proves who it is with GitHub's OIDC (the
