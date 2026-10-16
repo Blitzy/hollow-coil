@@ -5,7 +5,7 @@
   "map": "greybox_01",
   "level": "bsp",
   "seed": 0,
-  "engine": "0.1.0",
+  "engine": "0.0.1",
   "tick_rate": 60,
   "ticks": 860,
   "content": {"map":"46db5611","player":"5eb88e74","weapons":"5779d0c3","enemies":"ec73ca5f"},

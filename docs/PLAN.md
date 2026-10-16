@@ -227,7 +227,7 @@ Mostly hands-on tuning by Ryan, with few tests.
 
 ## Standalone Games
 
-A game made with the engine lives in its own repo and installs one package, `mandreljs`, for a `mandreljs` command (see DECISIONS.md, 2026-10-14, "Games use the engine through one installed command"). The tools now work on a game folder anywhere (S1). `mandreljs` runs them as one command (S2), and `mandreljs dev` serves the built client without Vite (S3). `mandreljs build` writes a release (S4). The `mandreljs` package bundles it all (S5), and CI tests it as installed (S6). Still to come: publishing it to npm.
+A game made with the engine lives in its own repo and installs one package, `mandreljs`, for a `mandreljs` command (see DECISIONS.md, 2026-10-14, "Games use the engine through one installed command"). The tools now work on a game folder anywhere (S1). `mandreljs` runs them as one command (S2), and `mandreljs dev` serves the built client without Vite (S3). `mandreljs build` writes a release (S4). The `mandreljs` package bundles it all (S5), and CI tests it as installed (S6). It's on npm from v0.0.1.
 
 - [x] S1 Tools work on any game folder, still from source in this repo. `layout.ts` separates engine files (schemas, the shared FGD, light styles, pinned tool versions, later the built client), found relative to the tools themselves, from the game: the current folder if it holds `data/game.json`, otherwise `--game`, otherwise `example`. Compiled maps go to `<game>/build/`, ericw-tools to a per-user cache, and `install-trenchbroom` links the engine's FGD from wherever the engine is. Repo-only checks (scenarios, `check-files`, `make-placeholder-textures`, old-link cleanup) stay repo-only. Done when `compile`, `validate`, and `install-trenchbroom` work on a copy of `example/` outside the repo.
 - [x] S2 One `mandreljs` command (`tools/src/mandreljs.ts`, the tools package's `bin`) with `dev`, `compile`, `validate`, `bspdump`, `setup`, and `install-trenchbroom`; the root npm scripts run it. `mandreljs build` arrives with S4. Inside this repo `mandreljs dev` runs Vite on the client's source.
@@ -257,4 +257,4 @@ The sim's only input is one command per tick, in an engine-neutral format used b
 
 ## Open Decisions
 
-- For standalone games (above): whether `example/` gets a `package.json` so it doubles as a starter template, or a separate starter repo does that; and when to publish `mandreljs` to npm, which makes the engine public. Until then, game repos install it from a local checkout or a packed `.tgz`. (A release from `mandreljs build` holds only its own game, so `?game=` can't load another one there.)
+- For standalone games (above): whether `example/` gets a `package.json` so it doubles as a starter template, or a separate starter repo does that. (A release from `mandreljs build` holds only its own game, so `?game=` can't load another one there.)

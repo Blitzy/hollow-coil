@@ -55,7 +55,7 @@ It ends by telling you what to set in TrenchBroom: under Preferences > Games > M
 
 ### Make your own game
 
-A game lives in its own repo, under your own license, and installs the engine as one npm package, `mandreljs`, for the `mandreljs` command. The package's [README](tools/package-readme.md) covers starting a game from a copy of the example, its commands, and crediting your content. Until `mandreljs` is on npm, build it here with `npm run package -- --pack` and install the `.tgz` it makes.
+A game lives in its own repo, under your own license, and installs the engine as one npm package, `mandreljs`, for the `mandreljs` command. The package's [README](tools/package-readme.md) covers starting a game from a copy of the example, its commands, and crediting your content. To try the engine as it is in this repo, between releases, build the package here with `npm run package -- --pack` and install the `.tgz` it makes.
 
 To work on the engine and a game together, keep the game next to `example/` in this repo instead (add it to `.git/info/exclude` so this repo ignores it). Then `npm run dev` plays it at http://localhost:5173/?game=mygame from the engine's source, and the other commands take `-- --game mygame`.
 

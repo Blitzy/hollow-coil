@@ -24,7 +24,7 @@ import { simContext, startLevel, step } from "@mandreljs/sim/sim";
 
 const config = loadSimConfig();
 const level = levelFromMap(readRepoFile("example/maps/test_movement.map"));
-const header: DemoHeader = { game: "Mandrel.js Example", map: "test_movement", level: "map", seed: 0, engine: "0.1.0", content: contentHashes(level, config) };
+const header: DemoHeader = { game: "Mandrel.js Example", map: "test_movement", level: "map", seed: 0, engine: "0.0.1", content: contentHashes(level, config) };
 
 /** A few seconds of play: walking, turning left past yaw 0 and back, a jump, and fire. */
 function inputs(ticks: number): InputCommand[] {
