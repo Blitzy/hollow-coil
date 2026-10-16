@@ -15,6 +15,7 @@ Command-line tools, each run from the repo root with `npm run <name>`. The ones 
 - `src/make-placeholder-textures.ts`: regenerates the example game's placeholder textures.
 - `src/check-files.ts`: fails if any tracked file is over 2 MB.
 - `src/rebaseline-demos.ts`: remakes golden demos' hashes and keyframes from their inputs, after an intentional behavior change (see `demos/README.md`).
+- `src/release.ts`: prepares a release (`npm run release -- prepare <bump>`): bumps the engine's version and stamps `CHANGELOG.md`, using `src/changelog.ts`, which also prints a version's section for the release workflow (`.github/workflows/release.yml`).
 - `src/package.ts`: builds the `mandreljs` package in `dist/mandreljs/` (`npm run package`): `mandreljs` bundled into `bin/mandreljs.js` with Vite, the built client, the defs, pinned versions, licenses, and `package-readme.md` as its README.
 
 Used by other code:

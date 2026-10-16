@@ -83,6 +83,7 @@ Every command is in the README's Commands section (imported above). On top of th
 
 - Run `npm run check` before saying a change is done: it runs every check CI runs. The compile tests and `npm run test:package` need ericw-tools (`npm run setup`).
 - The `mandreljs` package's engine-file paths come from `tools/src/engine-files.package.ts`, which the bundle uses in place of `engine-files.ts`; keep the two in step (`tools/tests/package.test.ts` checks).
+- Releases publish themselves from `main` (`.github/workflows/release.yml`); never publish to npm or tag by hand. A release starts with `npm run release -- prepare <bump>` on `develop`, which needs entries in `CHANGELOG.md`'s TBD section.
 - When a command, option, or file name changes, update the README, `tools/package-readme.md` (what game makers read), and the command's own usage text in `tools/src/mandreljs.ts`; other docs link to those rather than repeating them.
 
 ## Tools

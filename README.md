@@ -100,11 +100,15 @@ The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, an
 | `npm run check-files` | Fails if any tracked file is over 2 MB. |
 | `npm run test:package` | Packs the `mandreljs` package, installs it into a scratch folder outside the repo with a copy of the example game, and runs `mandreljs` there as a game's repo would: `setup --check`, `validate`, `compile`, `build`, and `dev`. Needs ericw-tools. |
 
-**The engine package**
+**The engine package and releases**
+
+Releases publish themselves. On `develop`, run `npm run release -- prepare <bump>`, commit, and merge `develop` into `main`; when CI passes there, the release workflow publishes `mandreljs` to npm and makes the GitHub release and its tag, with the version's `CHANGELOG.md` section as its notes.
 
 | Command | What it does |
 |---|---|
 | `npm run package` | Builds the `mandreljs` package, what a game's own repo installs for the `mandreljs` command, in `dist/mandreljs/`: the command bundled into JavaScript, the built client, and the engine's definitions. `-- --pack` also packs it into `dist/mandreljs-<version>.tgz`, which a game's repo can install with `npm install <path to .tgz>`. The version is the root `package.json`'s. |
+| `npm run release -- prepare <bump>` | Prepares a release: bumps the engine's version (`major`, `minor`, `patch`, or an explicit version such as `1.2.3`, or a pre-release such as `1.2.0-rc.1`, which is published as one and never as npm's latest) in `package.json` and its lockfile, and turns `CHANGELOG.md`'s TBD section into the version's, dated today (`--date YYYY-MM-DD` for another day), with a fresh TBD section above it. Refuses when TBD has no entries. |
+| `npm run changelog -- extract <version>` | Prints a version's `CHANGELOG.md` section, as the release workflow does for the GitHub release's notes. |
 
 ## Repository Layout
 

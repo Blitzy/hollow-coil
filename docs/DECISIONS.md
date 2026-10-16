@@ -2,6 +2,19 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-16: Releases publish themselves from main
+
+**Decision:** A release is prepared on `develop` with `npm run release -- prepare <bump>`, which bumps the engine's version (the root `package.json`, which the `mandreljs` package and the game client carry, and the lockfile) and turns `CHANGELOG.md`'s TBD section into that version's section. Merging `develop` into `main` releases it: once CI passes on `main`, `.github/workflows/release.yml` publishes `mandreljs` to npm through npm's trusted publishing (npm accepts it only from this workflow in this repo, so no npm token is stored) and with provenance, then makes the GitHub release and its `vX.Y.Z` tag, with the version's changelog section as the notes and the packed `.tgz` attached. Each step checks whether it's done first, so a push to `main` that isn't a release does nothing, and a failed release is finished by running the workflow again. A version with no changelog section is skipped with a warning, and a pre-release (such as `1.2.0-rc.1`) goes to npm's `next` tag and is marked as a pre-release on GitHub.
+
+**Why:**
+
+- Releasing by hand is a list of steps in an order that matters (publish before the source link works, tag the right commit, notes that match the changelog); a workflow does them the same way every time, only after CI passes.
+- Provenance lets anyone check that an npm release was built by this repo's workflow from a given commit, which matters for a package people run on their machines.
+- The changelog is written as work lands (the changelog-update skill); a release just stamps it, so the notes are already reviewed by the time they're published.
+- The workflow runs on its own, after CI, rather than as a job inside it: CI cancels a run when a newer commit arrives, which must never interrupt a publish.
+
+**Alternatives considered:** releasing by hand (error-prone, and easy to tag the wrong commit); an npm token stored as a repo secret (safe, since only pushes to `main` release, but tokens that can publish expire within months and must be replaced, and a token is one more secret to guard); release-please or semantic-release (they choose versions from commit messages and write changelogs themselves, while here a person writes the changelog for players and game makers and chooses the version); publishing on every tag pushed by hand (the tag and the changelog can disagree).
+
 ## 2026-10-16: The game's UI is drawn by the engine, without a UI framework
 
 **Decision:** Everything a player sees besides the world (the status bar and HUD, centered messages, the console, and menus for a new game, loading and saving, and settings) is drawn by the engine with Three.js, as Quake drew its own: a small 2D layer of bitmap-font text and textured quads over the scene, laid out in virtual pixels and drawn into the same render target as the world. Menus are an immediate-mode list of items (actions, toggles, sliders, a text field) driven by the game's own keyboard, mouse, and later gamepad input. No React, Preact, or other UI framework in the game client. The developer overlay (fps, position, tick) and future debug panels stay HTML, and editors in `apps/` choose for themselves when they come.
