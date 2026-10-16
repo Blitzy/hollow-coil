@@ -168,7 +168,7 @@ Tests:
 
 ### M4: Enemy
 
-In progress. Enemy AI follows Quake's, infighting included (see `docs/ENEMIES.md`). Done: spawning, the think cadence, noticing the player by sight, taking damage (pain, death, and enemies blocking the player), chasing with Quake's movetogoal, and shooting back (with a wind-up, aim lag, and Quake's infighting), with placeholder boxes and the player's health in the game. Remaining: the rest of the game side (death and restart, hit feedback) and golden demos.
+Done (2026-10-15). Enemy AI follows Quake's, infighting included (see `docs/ENEMIES.md`): spawning, the think cadence, noticing the player by sight, taking damage (pain, death, and enemies blocking the player), chasing with Quake's movetogoal, and shooting back (with a wind-up, aim lag, and Quake's infighting), with placeholder boxes in the game. The game shows getting hurt (Quake's red flash and view kick), shots hitting someone, and dying (Quake's dead view), and a press restarts the level. Golden demos work: R records one in the game (format in `demos/README.md`), CI replays every demo in `demos/`, and `npm run rebaseline-demos` remakes one after an intentional change. The first, a fight in `greybox_01` that kills both shotgunners, found that browsers and Node disagree on `Math.sin` and friends, so the sim now does its own trigonometry (see DECISIONS.md).
 
 - States: idle, chase, attack, pain, dead. The reaction delay holds the first attack, as in Quake, rather than being a separate alert state.
 - Infighting, as in Quake: an enemy hurt by another enemy turns on it, then returns to the player
@@ -187,6 +187,33 @@ Tests:
 - Scenario: a chasing enemy closes distance to the player, steps up stairs, and never passes through walls
 - Golden demo: Ryan records a short fight in `greybox_01` with an in-game recorder; CI replays it against its per-tick state hashes
 
+### Demo Playback
+
+Planned next: watching a demo in the game, to see what a golden demo does and where a failing one goes wrong. Playback presents the demo through the same events as play, so hurt flashes, marks, and enemies all show.
+
+- Drag a `.demo.json` onto the game page to play it (in the dev server and in a release). A demo from another map reloads the page on that map first, from the file the demo was recorded on (the `.bsp`, or the `.map` with lighting off). If the map or data changed since it was recorded, the overlay says so before it plays.
+- The camera follows the recorded view angles, smoothed between ticks like movement.
+- Space pauses, the left and right arrows change speed (1/4x to 4x), and Escape leaves playback.
+- The overlay shows the time, the speed, and whether every tick's hash still matches the recording, flagging the tick where it first diverges.
+- Later: seeking, starting from the keyframes' full states.
+
+### Console
+
+Planned: a drop-down console, as in Quake, opened and closed with the backquote / tilde key. It's where commands with arguments go: recording and playing demos, loading maps, and cheats for testing levels and enemies.
+
+Commands come in two kinds, because the sim's rules decide where each one runs:
+
+- **Client commands** act on the session, outside the sim: `map <name>`, `maps`, `restart`, `record [name]`, `stop`, `playdemo <file>`, `help [command]`, `clear`, and settings such as `sensitivity <n>` and `brightness <n>`.
+- **Sim commands** change game state, so they go into the sim as actions on a tick, beside that tick's input command, never by editing state from outside. That keeps them deterministic, and the demo format already has a place for them: they're recorded in a demo's `actions` and replay exactly. Each is a generic engine action with tests, and its state starts neutral (see `demos/README.md`). Quake's names where it had one: `god` (take no damage), `noclip` (fly through walls, along the view), `notarget` (enemies don't notice you), `kill` (die), `give <weapon>`, plus `killmonsters` (kill every enemy).
+
+Steps:
+
+- [ ] C1 The console itself, drawn by the engine (see DECISIONS.md, "The game's UI is drawn by the engine"), which brings the 2D layer the HUD and menus will use too: bitmap-font text and quads over the scene, laid out in virtual pixels so it scales with the window now and with the low-resolution target in M5. It slides down over the top half of the view, releases the mouse, and takes the keyboard while open (the game pauses, as single player can). A command line with history (up and down), tab completion of command and map names, and scrollback (Page Up and Page Down). Commands are parsed as Quake did: words, with quotes for one that has spaces. The engine's messages go to it too (map loaded, demo saved, why a map is unlit), not only to the overlay and the browser console. The first client commands: `help`, `clear`, `map`, `maps`, `restart`, `record`, and `stop`; `record` replaces the R key. `map` loads a map in place instead of reloading the page, and `maps` needs the list of a game's maps: the dev server and a release's `games/index.json` say which maps each game has.
+- [ ] C2 Sim actions: the sim takes a tick's actions along with its command, demos record and replay them, and the first actions are `god`, `noclip`, `notarget`, `kill`, `give`, and `killmonsters`, each with unit tests and, where it can be seen in play, a scenario. Noclip movement goes in `docs/MOVEMENT.md`.
+- [ ] C3 With demo playback: `playdemo`, and settings that last between visits (stored in the browser).
+
+Open questions: where a game supplies its UI art (status bar graphics, the font), as Quake's came from `gfx.wad`, and what the engine provides when a game has none; where a game's own demos live and how `playdemo` finds them (the golden demos are the engine's, in `demos/`); and whether settings become Quake-style cvars that `set` and the config can name.
+
 ### M5: Feel and Presentation
 
 Mostly hands-on tuning by Ryan, with few tests.
@@ -196,17 +223,17 @@ Mostly hands-on tuning by Ryan, with few tests.
 - Separate texture and lightmap filter options in a custom preset
 - Stepped enemy animation at about 10 fps
 - View bob, weapon sway, muzzle flash, impact effects, placeholder audio
-- Minimal HUD
+- Minimal HUD, drawn with the 2D layer the console brings, replacing the HTML overlay's health and weapon line (the overlay stays, for developer info)
 
 ## Standalone Games
 
-A game made with the engine lives in its own repo and installs one package, `mandreljs`, for a `mandreljs` command (see DECISIONS.md, 2026-10-14, "Games use the engine through one installed command"). The tools now work on a game folder anywhere (S1). `mandreljs` runs them as one command (S2), and `mandreljs dev` serves the built client without Vite (S3). `mandreljs build` writes a release (S4). The `mandreljs` package bundles it all (S5), and CI tests it as installed (S6). Still to come: publishing it to npm.
+A game made with the engine lives in its own repo and installs one package, `mandreljs`, for a `mandreljs` command (see DECISIONS.md, 2026-10-14, "Games use the engine through one installed command"). The tools now work on a game folder anywhere (S1). `mandreljs` runs them as one command (S2), and `mandreljs dev` serves the built client without Vite (S3). `mandreljs build` writes a release (S4). The `mandreljs` package bundles it all (S5), and CI tests it as installed (S6). It's on npm from v0.0.1.
 
 - [x] S1 Tools work on any game folder, still from source in this repo. `layout.ts` separates engine files (schemas, the shared FGD, light styles, pinned tool versions, later the built client), found relative to the tools themselves, from the game: the current folder if it holds `data/game.json`, otherwise `--game`, otherwise `example`. Compiled maps go to `<game>/build/`, ericw-tools to a per-user cache, and `install-trenchbroom` links the engine's FGD from wherever the engine is. Repo-only checks (scenarios, `check-files`, `make-placeholder-textures`, old-link cleanup) stay repo-only. Done when `compile`, `validate`, and `install-trenchbroom` work on a copy of `example/` outside the repo.
 - [x] S2 One `mandreljs` command (`tools/src/mandreljs.ts`, the tools package's `bin`) with `dev`, `compile`, `validate`, `bspdump`, `setup`, and `install-trenchbroom`; the root npm scripts run it. `mandreljs build` arrives with S4. Inside this repo `mandreljs dev` runs Vite on the client's source.
 - [x] S3 A dev server without Vite: the request handling (serving game files, compiling stale maps) is plain Node code in `tools/src/dev-server.ts`, shared by the Vite plugin and a plain server that serves the built client and the current game (`mandreljs dev --built`, and an installed engine). The server lists its games and the one to play at `/games/index.json`, and the client asks it instead of defaulting to `example`.
 - [x] S4 `mandreljs build`: validates the game, builds the client (from source inside this repo), compiles maps at release quality, and writes the client with `games/index.json` and the game's data, textures, and compiled maps (not the `.map` sources) to `<game>/dist/`. The client and its assets use relative URLs, so a release works on any static host, even in a subfolder.
-- [x] S5 The `mandreljs` package (`npm run package`, in `dist/mandreljs/`): `mandreljs` bundled into `bin/mandreljs.js` with Vite (with a source map), the built client, the defs (schemas, light styles, the shared FGD), pinned tool versions, the license files, and a README for game makers. No runtime dependencies; requires Node 24. `--pack` makes the `.tgz` a game's repo installs. Engine-file paths come from `engine-files.ts`, swapped for `engine-files.package.ts` in the bundle.
+- [x] S5 The `mandreljs` package (`npm run package`, in `dist/mandreljs/`): `mandreljs` bundled into `bin/mandreljs.js` with Vite (with a source map), the built client, the defs (schemas, light styles, the shared FGD), pinned tool versions, the license files, and a README for game makers. No runtime dependencies; requires Node 24. It's packed into the `.tgz` a game's repo installs. Engine-file paths come from `engine-files.ts`, swapped for `engine-files.package.ts` in the bundle.
 - [x] S6 CI packs the package, installs it into a scratch folder with a copy of `example/`, and runs `validate`, `compile`, `build`, and a `mandreljs dev` request (`npm run test:package`, `tools/src/test-package.ts`). The README and the package's README describe making a game with `mandreljs`.
 
 Editors (particle editor, model viewer, and so on) join the same package later and are served by `mandreljs dev` next to the game; saving needs a write request that stays inside the game folder, validates, and accepts only the server's own pages.
@@ -230,5 +257,4 @@ The sim's only input is one command per tick, in an engine-neutral format used b
 
 ## Open Decisions
 
-- Cross-browser determinism (custom trig or lookup tables), deferred until demos need to play across browsers. Desktop builds sidestep it, since Electron bundles one browser engine.
-- For standalone games (above): whether `example/` gets a `package.json` so it doubles as a starter template, or a separate starter repo does that; and when to publish `mandreljs` to npm, which makes the engine public. Until then, game repos install it from a local checkout or a packed `.tgz`. (A release from `mandreljs build` holds only its own game, so `?game=` can't load another one there.)
+- For standalone games (above): whether `example/` gets a `package.json` so it doubles as a starter template, or a separate starter repo does that. (A release from `mandreljs build` holds only its own game, so `?game=` can't load another one there.)

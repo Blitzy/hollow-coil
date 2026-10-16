@@ -2,6 +2,7 @@
 // from a level's monster entities. The AI is in ai.ts, and taking damage in
 // damage.ts. See docs/ENEMIES.md.
 
+import { cos } from "../math/trig.ts";
 import { CONTENTS, secondsToTicks, SPAWN_RAISE, TICK_RATE } from "../constants.ts";
 import { entityBox } from "../collision/box.ts";
 import { trace, type CollisionBrush } from "../collision/trace.ts";
@@ -89,7 +90,7 @@ export function enemyContext(data: EnemiesData): EnemyContext {
       runStep: enemy.run_speed / TICK_RATE,
       thinkStep: (enemy.run_speed * Math.max(1, secondsToTicks(enemy.think_interval))) / TICK_RATE,
       turnStep: Math.round((enemy.turn_speed * ANGLE_UNITS_PER_TURN) / 360 / TICK_RATE),
-      viewCos: Math.cos((enemy.field_of_view * Math.PI) / 360),
+      viewCos: cos((enemy.field_of_view * Math.PI) / 360),
     });
     byClassname.set(enemy.classname, id);
   }

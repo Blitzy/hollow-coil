@@ -303,162 +303,169 @@
 ( 2080 -80 0 ) ( 2400 -80 0 ) ( 2080 -80 32 ) dev/grid_blue [ 1 0 0 0 ] [ 0 0 -1 0 ] 0 1 1 0 0 0
 ( 2400 -336 32 ) ( 2400 -80 0 ) ( 2400 -336 0 ) dev/grid_blue [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1 0 0 0
 }
+// brush 33
+{
+( 1760 -256 64 ) ( 1760 -336 64 ) ( 1760 -336 0 ) dev/grid_blue [ 0 1 0 0 ] [ 0 0 -1 0 ] 180 1 1 0 0 0
+( 1760 -336 64 ) ( 1872 -336 0 ) ( 1760 -336 0 ) dev/grid_blue [ 1 0 0 0 ] [ 0 0 -1 0 ] 180 1 1 0 0 0
+( 1872 -336 0 ) ( 1872 -256 0 ) ( 1760 -256 0 ) dev/grid_blue [ 1 0 0 0 ] [ 0 -1 0 0 ] 180 1 1 0 0 0
+( 1760 -256 0 ) ( 1872 -256 0 ) ( 1760 -256 64 ) dev/grid_blue [ 1 0 0 0 ] [ 0 0 -1 0 ] 180 1 1 0 0 0
+( 1760 -256 64 ) ( 1872 -256 0 ) ( 1872 -336 0 ) dev/grid_blue [ 1 0 0 0 ] [ 0 -1 0 0 ] 180 1 1 0 0 0
+}
 }
 // entity 1
-{
-"classname" "info_player_start"
-"origin" "-64 -208 24"
-"angle" "0"
-}
-// entity 2
 {
 "classname" "info_marker"
 "origin" "-64 -208 24"
 "name" "course_start"
 }
-// entity 3
+// entity 2
 {
 "classname" "info_marker"
 "origin" "2336 -208 56"
 "name" "finish"
 }
-// entity 4
+// entity 3
 {
 "classname" "info_marker"
 "origin" "64 0 24"
 "name" "step16_start"
 }
-// entity 5
+// entity 4
 {
 "classname" "info_marker"
 "origin" "64 144 24"
 "name" "step18_start"
 }
-// entity 6
+// entity 5
 {
 "classname" "info_marker"
 "origin" "64 288 24"
 "name" "step20_start"
 }
-// entity 7
+// entity 6
 {
 "classname" "info_marker"
 "origin" "64 432 24"
 "name" "steep_start"
 }
-// entity 8
+// entity 7
 {
 "classname" "light"
 "origin" "-64 -208 224"
 "light" "220"
 }
-// entity 9
+// entity 8
 {
 "classname" "light"
 "origin" "192 -208 224"
 "light" "220"
 }
-// entity 10
+// entity 9
 {
 "classname" "light"
 "origin" "448 -208 224"
 "light" "220"
 }
-// entity 11
+// entity 10
 {
 "classname" "light"
 "origin" "704 -208 224"
 "light" "220"
 "style" "2"
 }
-// entity 12
+// entity 11
 {
 "classname" "light"
 "origin" "960 -208 224"
 "light" "220"
 }
-// entity 13
+// entity 12
 {
 "classname" "light"
 "origin" "1216 -208 224"
 "light" "220"
 }
-// entity 14
+// entity 13
 {
 "classname" "light"
 "origin" "1472 -208 224"
 "light" "220"
 }
-// entity 15
+// entity 14
 {
 "classname" "light"
 "origin" "1728 -208 224"
 "light" "220"
 "style" "6"
 }
-// entity 16
+// entity 15
 {
 "classname" "light"
 "origin" "1984 -208 224"
 "light" "220"
 }
-// entity 17
+// entity 16
 {
 "classname" "light"
 "origin" "2240 -208 224"
 "light" "220"
 }
-// entity 18
+// entity 17
 {
 "classname" "light"
 "origin" "64 0 224"
 "light" "200"
 }
-// entity 19
+// entity 18
 {
 "classname" "light"
 "origin" "64 144 224"
 "light" "200"
 }
-// entity 20
+// entity 19
 {
 "classname" "light"
 "origin" "64 288 224"
 "light" "200"
 }
-// entity 21
+// entity 20
 {
 "classname" "light"
 "origin" "64 432 224"
 "light" "200"
 }
-// entity 22
+// entity 21
 {
 "classname" "light"
 "origin" "448 0 224"
 "light" "200"
 }
-// entity 23
+// entity 22
 {
 "classname" "light"
 "origin" "448 144 224"
 "light" "200"
 }
-// entity 24
+// entity 23
 {
 "classname" "light"
 "origin" "448 288 224"
 "light" "200"
 }
-// entity 25
+// entity 24
 {
 "classname" "light"
 "origin" "448 432 224"
 "light" "200"
 }
-// entity 26
+// entity 25
 {
 "classname" "light"
 "origin" "-64 216 192"
 "light" "200"
+}
+// entity 26
+{
+"classname" "info_player_start"
+"origin" "-64 -208 24"
 }

@@ -1,6 +1,7 @@
-// Snapshots and state hashes. Sim state is plain data, so a snapshot is its JSON
-// text (JSON round-trips every float64 exactly). The hash covers every value in
-// the state, in a fixed order, and is what golden demos compare tick by tick.
+// Snapshots and hashes. Sim state is plain data, so a snapshot is its JSON text
+// (JSON round-trips every float64 exactly). A hash covers every value in plain
+// data, in a fixed order: golden demos compare the state's tick by tick, and the
+// content a demo was recorded on (see demo.ts).
 
 import type { SimState } from "./sim.ts";
 
@@ -45,6 +46,8 @@ class Hasher {
     } else if (typeof v === "string") {
       this.byte(0x73);
       this.string(v);
+    } else if (v instanceof Map || v instanceof Set || ArrayBuffer.isView(v)) {
+      throw new TypeError("can't hash a Map, Set, or typed array: hash plain data"); // their contents aren't own keys
     } else if (Array.isArray(v)) {
       this.byte(0x61);
       this.uint32(v.length);
@@ -67,9 +70,12 @@ class Hasher {
   }
 }
 
-/** A 32-bit FNV-1a hash of the whole state, as 8 hex digits. */
-export function hashState(state: SimState): string {
+/** A 32-bit FNV-1a hash of plain data (objects, arrays, numbers, strings, booleans, null), as 8 hex digits. Object key order doesn't matter. */
+export function hashValue(value: unknown): string {
   const hasher = new Hasher();
-  hasher.value(state);
+  hasher.value(value);
   return hasher.digest();
 }
+
+/** A hash of the whole state, as 8 hex digits. */
+export const hashState = (state: SimState): string => hashValue(state);

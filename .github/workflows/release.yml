@@ -1,0 +1,108 @@
+name: Release
+
+# Publishes a release once CI passes on main: mandreljs to npm, then the GitHub
+# release and its tag, with the version's CHANGELOG section as the notes and the
+# packed package attached. Prepare a release on develop with
+# `npm run release -- prepare <bump>`, then merge develop into main.
+#
+# A push to main whose version is already released does nothing: each step checks
+# first, so a failed run can simply be re-run (or started by hand) to finish it. A
+# version without a CHANGELOG section isn't released (with a warning), and a
+# pre-release (such as 1.2.0-rc.1) is published as one, never as npm's latest.
+# Its own workflow, not a job in CI, so CI's cancel-in-progress can never stop a
+# publish halfway.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # the tag and the GitHub release
+  id-token: write # npm's trusted publishing, and provenance: a signed record of the commit and workflow that built the package
+
+jobs:
+  release:
+    name: Publish to npm and GitHub
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # The commit CI passed on (or, run by hand, main's latest).
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SHA }}
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+          registry-url: https://registry.npmjs.org
+
+      - name: Install
+        run: npm ci
+
+      - name: Read the version
+        run: echo "VERSION=$(npm pkg get version | tr -d '"')" >> "$GITHUB_ENV"
+
+      # changelog extract exits with 3 when the version has no section (one bumped
+      # without `npm run release -- prepare`): that skips the release with a
+      # warning. Any other failure is a bug in the script, and fails the run.
+      - name: Release notes from the changelog
+        id: notes
+        run: |
+          set +e
+          node tools/src/changelog.ts extract "$VERSION" > "$RUNNER_TEMP/notes.md"
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          elif [ "$status" -eq 3 ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::CHANGELOG.md has no section for v$VERSION, so it isn't released. Prepare releases with npm run release -- prepare <bump> on develop."
+            echo "### Release v$VERSION skipped: CHANGELOG.md has no section for it" >> "$GITHUB_STEP_SUMMARY"
+          else
+            exit "$status"
+          fi
+
+      - name: Build the package
+        if: steps.notes.outputs.found == 'true'
+        run: npm run package
+
+      # No npm token: npm's trusted publishing accepts mandreljs only from this
+      # workflow in this repo, which proves who it is with GitHub's OIDC (the
+      # id-token permission above), and adds provenance. Set up on npmjs.com, in
+      # the package's settings (Trusted Publisher: mandreljs/mandrel.js, release.yml).
+      # A pre-release goes to npm's "next" tag, so `npm install mandreljs` keeps getting the latest release.
+      - name: Publish to npm
+        if: steps.notes.outputs.found == 'true'
+        run: |
+          if npm view "mandreljs@$VERSION" version > /dev/null 2>&1; then
+            echo "mandreljs $VERSION is already on npm"
+          else
+            case "$VERSION" in *-*) tag=next ;; *) tag=latest ;; esac
+            npm publish "dist/mandreljs-$VERSION.tgz" --provenance --access public --tag "$tag"
+            echo "Published mandreljs $VERSION to npm ($tag)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Create the GitHub release and tag
+        if: steps.notes.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            echo "v$VERSION is already released on GitHub"
+          else
+            prerelease=""
+            case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
+            gh release create "v$VERSION" "dist/mandreljs-$VERSION.tgz" --target "$SHA" --title "v$VERSION" --notes-file "$RUNNER_TEMP/notes.md" $prerelease
+            echo "Released v$VERSION on GitHub." >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -5,7 +5,7 @@ import { BUTTON_ATTACK, BUTTON_JUMP, NEUTRAL_COMMAND, type InputCommand } from "
 import { levelFromMap } from "@mandreljs/sim/level";
 import { vec3 } from "@mandreljs/sim/math/vec3";
 import { SPAWN_RAISE } from "@mandreljs/sim/constants";
-import { createSim, PLAYER_ID, simContext, step, type SimState } from "@mandreljs/sim/sim";
+import { createSim, levelSpawn, PLAYER_ID, simContext, startLevel, step, type SimState } from "@mandreljs/sim/sim";
 import { hashState, restore, snapshot } from "@mandreljs/sim/snapshot";
 
 const config = loadSimConfig();
@@ -48,6 +48,26 @@ describe("spawning", () => {
   it("keeps the latest command's view angles", () => {
     const after = step(spawnAtCourseStart(), { ...NEUTRAL_COMMAND, yaw: 16384, pitch: -2000 }, ctx).state;
     expect([after.player.yaw, after.player.pitch]).toEqual([16384, -2000]);
+  });
+});
+
+describe("starting a level", () => {
+  it("puts the player at the level's info_player_start, facing its angle", () => {
+    expect(levelSpawn(level).origin).toEqual(level.playerStart!.origin);
+    expect(levelSpawn({ ...level, playerStart: { origin: vec3(0, 0, 0), angle: 90 } }).yaw).toBe(16384);
+    expect(levelSpawn({ ...level, playerStart: { origin: vec3(0, 0, 0), angle: -90 } }).yaw).toBe(49152);
+  });
+
+  it("falls back to the origin facing east without one", () => {
+    expect(levelSpawn({ ...level, playerStart: null })).toEqual({ origin: vec3(0, 0, 24), yaw: 0 });
+  });
+
+  it("starts at tick 0 with the level's enemies, seeded as asked", () => {
+    const combat = levelFromMap(readRepoFile("example/maps/test_combat.map"));
+    const state = startLevel(combat, config, 7);
+    expect(state.tick).toBe(0);
+    expect(state.enemies).toHaveLength(combat.entities.filter((e) => e.classname === "monster_shotgunner").length);
+    expect(state.rng).toBe(createSim(config, levelSpawn(combat), 7).rng);
   });
 });
 

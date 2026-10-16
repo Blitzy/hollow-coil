@@ -1,4 +1,5 @@
-// Marks where shots hit walls: small squares lying on the surface that fade out.
+// Marks where shots hit: small squares that fade out, lying on a wall's surface,
+// or facing the shooter where a shot hits an entity.
 // Placeholder feedback for playtesting until real impact effects (M5). A fixed
 // pool of marks is reused, oldest first, so constant firing allocates nothing.
 
@@ -59,6 +60,11 @@ export class ImpactMarks {
     mark.mesh.material.opacity = 1;
     mark.mesh.visible = true;
     mark.born = now;
+  }
+
+  /** Hides every mark, such as when the level starts over. */
+  clear(): void {
+    for (const { mesh } of this.marks) mesh.visible = false;
   }
 
   /** Fades marks by age and hides the ones that have faded out. Call once a frame. */

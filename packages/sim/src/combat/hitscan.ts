@@ -4,6 +4,7 @@
 // spread follows Quake's FireBullets (crandom on each axis, scaled along the
 // right and up vectors); id Software, GPLv2 or later.
 
+import { atan2, cos, hypot, sin, tan } from "../math/trig.ts";
 import { CONTENTS } from "../constants.ts";
 import { trace, type CollisionWorld } from "../collision/trace.ts";
 import type { HitscanData } from "../data.ts";
@@ -35,8 +36,8 @@ export interface Aim {
 export function aimVectors(yaw: number, pitch: number): Aim {
   const y = angleToRadians(yaw);
   const p = angleToRadians(pitch);
-  const forward = vec3(Math.cos(p) * Math.cos(y), Math.cos(p) * Math.sin(y), Math.sin(p));
-  const right = vec3(Math.sin(y), 0 - Math.cos(y), 0);
+  const forward = vec3(cos(p) * cos(y), cos(p) * sin(y), sin(p));
+  const right = vec3(sin(y), 0 - cos(y), 0);
   return { forward, right, up: cross(right, forward) };
 }
 
@@ -103,8 +104,8 @@ export function fireHitscan(
   rng: number,
 ): HitscanResult {
   const { forward, right, up } = aimVectors(yaw, pitch);
-  const spreadRight = Math.tan((attack.spread.horizontal * Math.PI) / 180);
-  const spreadUp = Math.tan((attack.spread.vertical * Math.PI) / 180);
+  const spreadRight = tan((attack.spread.horizontal * Math.PI) / 180);
+  const spreadUp = tan((attack.spread.vertical * Math.PI) / 180);
   const pellets: (PelletHit | null)[] = [];
   let state = rng;
   const crandom = (): number => {
@@ -125,7 +126,7 @@ export function fireHitscan(
 export function aimAngles(from: Vec3, to: Vec3): { yaw: number; pitch: number } {
   const d = sub(to, from);
   const toUnits = (radians: number): number => (radians * 65536) / (2 * Math.PI);
-  return { yaw: wrapYaw(toUnits(Math.atan2(d.y, d.x))), pitch: toUnits(Math.atan2(d.z, Math.hypot(d.x, d.y))) };
+  return { yaw: wrapYaw(toUnits(atan2(d.y, d.x))), pitch: toUnits(atan2(d.z, hypot(d.x, d.y))) };
 }
 
 /** The eye of a body standing at origin. */

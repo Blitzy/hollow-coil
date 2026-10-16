@@ -89,7 +89,7 @@ async function checkDev(game: string): Promise<void> {
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const { values } = parseArgs({ args: argv, options: { keep: { type: "boolean" } } });
-  if ((await buildPackage(["--pack"])) !== 0) return 1;
+  if ((await buildPackage()) !== 0) return 1;
   const { version } = JSON.parse(readFileSync(repoPath("package.json"), "utf-8")) as { version: string };
   const tgz = repoPath("dist", `mandreljs-${version}.tgz`);
 

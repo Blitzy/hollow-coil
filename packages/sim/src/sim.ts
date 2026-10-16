@@ -7,7 +7,7 @@ import type { CollisionBrush } from "./collision/trace.ts";
 import { CONTENTS } from "./constants.ts";
 import type { EnemiesData, HitscanData, PlayerData, WeaponsData } from "./data.ts";
 import { hullFromData } from "./data.ts";
-import type { InputCommand } from "./input.ts";
+import { degreesToUnits, wrapYaw, type InputCommand } from "./input.ts";
 import type { Level } from "./level.ts";
 import { add, vec3, ZERO, type Vec3 } from "./math/vec3.ts";
 import { playerMove, type MovementContext } from "./player/movement.ts";
@@ -16,7 +16,7 @@ import { seedRandom } from "./rng.ts";
 import { PLAYER_ID, SPAWN_RAISE } from "./constants.ts";
 import { updateEnemy, type EnemyEvent, type Quarry, type Surroundings } from "./enemy/ai.ts";
 import { damageEnemy, type Attacker, type DamageEvent } from "./enemy/damage.ts";
-import { alive, createEnemy, enemyBrush, enemyContext, type EnemyContext, type EnemySpawn, type EnemyState } from "./enemy/enemy.ts";
+import { alive, createEnemy, enemyBrush, enemyContext, enemySpawns, type EnemyContext, type EnemySpawn, type EnemyState } from "./enemy/enemy.ts";
 
 export { PLAYER_ID };
 
@@ -92,6 +92,16 @@ export function createSim(config: SimConfig, spawn: Spawn, seed = 0, enemies: re
     enemies: enemies.map((e, i) => createEnemy(PLAYER_ID + 1 + i, e, types.get(e.type)!, i)),
   };
 }
+
+/** Where a level starts the player: its info_player_start, or the origin facing east (+x) without one. */
+export function levelSpawn(level: Level): Spawn {
+  const start = level.playerStart ?? { origin: vec3(0, 0, 24), angle: 0 };
+  return { origin: start.origin, yaw: wrapYaw(degreesToUnits(start.angle)) };
+}
+
+/** A new game on a level: the player at its start, and its enemies at theirs. The game and demo replays both start here. */
+export const startLevel = (level: Level, config: SimConfig, seed = 0): SimState =>
+  createSim(config, levelSpawn(level), seed, enemySpawns(level, enemyContext(config.enemies)));
 
 /** Everything step needs that isn't sim state: the level and the data, prepared once. */
 export interface SimContext {

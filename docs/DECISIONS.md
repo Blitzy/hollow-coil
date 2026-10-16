@@ -2,6 +2,62 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-16: Releases publish themselves from main
+
+**Decision:** A release is prepared on `develop` with `npm run release -- prepare <bump>`, which bumps the engine's version (the root `package.json`, which the `mandreljs` package and the game client carry, and the lockfile) and turns `CHANGELOG.md`'s TBD section into that version's section. Merging `develop` into `main` releases it: once CI passes on `main`, `.github/workflows/release.yml` publishes `mandreljs` to npm through npm's trusted publishing (npm accepts it only from this workflow in this repo, so no npm token is stored) and with provenance, then makes the GitHub release and its `vX.Y.Z` tag, with the version's changelog section as the notes and the packed `.tgz` attached. Each step checks whether it's done first, so a push to `main` that isn't a release does nothing, and a failed release is finished by running the workflow again. A version with no changelog section is skipped with a warning, and a pre-release (such as `1.2.0-rc.1`) goes to npm's `next` tag and is marked as a pre-release on GitHub.
+
+**Why:**
+
+- Releasing by hand is a list of steps in an order that matters (publish before the source link works, tag the right commit, notes that match the changelog); a workflow does them the same way every time, only after CI passes.
+- Provenance lets anyone check that an npm release was built by this repo's workflow from a given commit, which matters for a package people run on their machines.
+- The changelog is written as work lands (the changelog-update skill); a release just stamps it, so the notes are already reviewed by the time they're published.
+- The workflow runs on its own, after CI, rather than as a job inside it: CI cancels a run when a newer commit arrives, which must never interrupt a publish.
+
+**Alternatives considered:** releasing by hand (error-prone, and easy to tag the wrong commit); an npm token stored as a repo secret (safe, since only pushes to `main` release, but tokens that can publish expire within months and must be replaced, and a token is one more secret to guard); release-please or semantic-release (they choose versions from commit messages and write changelogs themselves, while here a person writes the changelog for players and game makers and chooses the version); publishing on every tag pushed by hand (the tag and the changelog can disagree).
+
+## 2026-10-16: The game's UI is drawn by the engine, without a UI framework
+
+**Decision:** Everything a player sees besides the world (the status bar and HUD, centered messages, the console, and menus for a new game, loading and saving, and settings) is drawn by the engine with Three.js, as Quake drew its own: a small 2D layer of bitmap-font text and textured quads over the scene, laid out in virtual pixels and drawn into the same render target as the world. Menus are an immediate-mode list of items (actions, toggles, sliders, a text field) driven by the game's own keyboard, mouse, and later gamepad input. No React, Preact, or other UI framework in the game client. The developer overlay (fps, position, tick) and future debug panels stay HTML, and editors in `apps/` choose for themselves when they come.
+
+**Why:**
+
+- Era-authentic presentation: M5 renders the world into a low-resolution target and adds looks such as Software, with palette quantization. A UI in the same target gets the same chunky pixels and palette under every preset; an HTML UI would sit on top in crisp, full-resolution text and break the look.
+- 3D in the UI is free: a weapon or face in the status bar, or a model in a menu, is one more small scene drawn into the layer.
+- The UI is small. A boomer shooter's screens are lists, toggles, and sliders, which Quake's whole menu system did in a few hundred lines of C. A framework would add a dependency, a second way of drawing, and a second input path for about a dozen screens.
+- Input stays in one place: the game already owns the keyboard and pointer lock, so menus and the console use the same input, which also suits gamepads and Electron.
+
+**Costs:** screen readers can't read text drawn on a canvas, rich text input (such as composing other scripts) is harder, and wrapping and scrolling are ours to write. All are acceptable for this kind of game; the developer overlay, where crisp text matters, stays HTML.
+
+**Alternatives considered:** HTML styled to look pixelated (still off the render target, so presets and palettes don't reach it, and 3D in it needs extra canvases kept in step); Preact or React for menus (fine for forms, but a second rendering model for a small UI); a mix of in-engine HUD and HTML menus (two looks, two input paths).
+
+## 2026-10-15: The sim does its own trigonometry
+
+**Decision:** Sim code computes sine, cosine, tangent, arctangent, and hypotenuse with `packages/sim/src/math/trig.ts`, adapted from fdlibm using only arithmetic JavaScript defines exactly, and never with `Math.sin`, `cos`, `tan`, `atan2`, `hypot`, or any other `Math` function the language doesn't define to the last bit. A test fails if sim code calls one. This settles the open question of cross-browser determinism (custom trig or lookup tables).
+
+**Why:**
+
+- The first demo recorded in the game diverged when CI replayed it, at tick 175, by one bit in the player's position. Chrome 155 (V8 15.5) and Node 24 (V8 13.6) gave different last bits for `Math.sin`, `cos`, `tan`, and `atan2` on about 6% of arguments, and the spec allows that. Only `+ - * /` and `Math.sqrt` (and `abs`, `floor`, `min`, and the like) are exact everywhere.
+- With trig.ts, 20,000 random arguments give identical results in Chrome and Node, and that demo's 860 ticks replay in Chrome with every hash matching Node's.
+- fdlibm is the classic source most engines' math descends from: sine, cosine, and arctangent come out identical to Node's `Math` on 1.8 million sampled arguments, so behavior barely moved. Its license permits copying with its notice, which trig.ts keeps.
+
+**Alternatives considered:** lookup tables of sines (angles in the sim aren't all whole angle units, and the table has to be built deterministically anyway); only recording and replaying in one engine (CI replays in Node, players record in browsers, and other browsers and Electron versions would still differ).
+
+## 2026-10-15: Demos keep their inputs durable, and everything else derived
+
+**Decision:** A golden demo (`demos/*.demo.json`, format in `demos/README.md`) is one life on one map from the level's start: a header (map, which file the level came from, seed, tick rate, and hashes of the content it was recorded on), the input commands, and what the sim did with them: a hash per tick and a full state every 5 seconds. The inputs are stored by field name, each field its own run-length column, with view angles as changes. A missing column reads as the field's neutral value; an unknown column, action type, or newer version is refused with a message saying a newer engine recorded it. Additive changes don't bump the format's version; a breaking change does, with an upgrade so old files load. A demo replays on the game's current map and data. The content hashes cover what the sim uses: the level's collision brushes and the entities play reads (not lights or worldspawn's settings), and each data file without its `$schema`. When they don't match, CI says which content changed, rather than reporting a difference somewhere in the play. The hashes and keyframes can be made again from the inputs (`npm run rebaseline-demos`) when behavior or content changes on purpose, and the commit says so; after a content change, play the demo back to check it still does what it should. The game records with R; the level starts over, so every demo begins at `startLevel`, which the game and replays share.
+
+**Why:**
+
+- A demo can break two ways: the file stops being readable, or the replay stops matching. The format can prevent the first. The second is a demo doing its job, and can't be prevented, only made cheap: the inputs are what a person played and can't be made again, while the hashes are derived. So the inputs get the durable, growable encoding, and the rest gets a rebaseline command.
+- Columns by name let the input command grow (new buttons, new fields) without old demos changing meaning, since a field's neutral value is what the engine did before it existed. Refusing what it doesn't know is safer than replaying it wrong.
+- A demo tests the game as it is. Carrying a copy of the map or data would keep old demos passing on content nobody plays anymore, and every copy would have to keep loading as the schemas grow. With hashes, a content change makes a demo stale, which rebaselining fixes in one command; changes happen often (the feel pass is mostly tuning), so that has to be cheap, and the message says which content changed.
+- Hashing what the sim uses rather than the files means line endings (a Windows checkout's CRLF against CI's LF), formatting, texture alignment, and lighting changes don't make a demo stale.
+- Run-length columns keep files small: a held key or a still mouse is one run, and a 14-second fight with mouse look is 15 KB. A few minutes stays far under the 2 MB file limit.
+- The `.bsp` and `.map` give the same collision within a tolerance, not to the last bit, so a demo names its file and replays on it.
+- A demo recorded in a browser must replay identically in Node, which is what the CI test needs; the sim's own trigonometry makes sure of that (see "The sim does its own trigonometry").
+
+**Alternatives considered:** a copy of the data in each demo (tuning never fails a demo, but demos keep testing old values, and the copies constrain every schema change), or of the map too (44 KB of text for `greybox_01`, and the same staleness); separate frozen maps for demos (more files to keep in step, and a demo whose map is edited anyway still breaks confusingly); fixed-position arrays of command values (compact, but a new field shifts or breaks every old demo); a binary format (smaller, but unreadable in a diff, and JSON is already small enough); starting a demo from a saved state instead of the level's start (it can start anywhere, but the saved state must then load across sim changes too, which is a second format to keep compatible); leaving fields at their neutral value out of the state hash, so adding state never changes old hashes (possible later, if rebaselines get frequent; the hash rules get subtler).
+
 ## 2026-10-14: Games use the engine through one installed command, `mandreljs`
 
 **Decision:** A game made with Mandrel.js lives in its own repo, anywhere on disk, and gets the engine by installing one npm package, `mandreljs`, which provides a `mandreljs` command. A game's repo holds only its game directory and a `package.json`:

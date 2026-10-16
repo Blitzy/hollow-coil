@@ -55,7 +55,7 @@ It ends by telling you what to set in TrenchBroom: under Preferences > Games > M
 
 ### Make your own game
 
-A game lives in its own repo, under your own license, and installs the engine as one npm package, `mandreljs`, for the `mandreljs` command. The package's [README](tools/package-readme.md) covers starting a game from a copy of the example, its commands, and crediting your content. Until `mandreljs` is on npm, build it here with `npm run package -- --pack` and install the `.tgz` it makes.
+A game lives in its own repo, under your own license, and installs the engine as one npm package, `mandreljs`, for the `mandreljs` command. The package's [README](tools/package-readme.md) covers starting a game from a copy of the example, its commands, and crediting your content. To try the engine as it is in this repo, between releases, build the package here with `npm run package` and install the `.tgz` it makes.
 
 To work on the engine and a game together, keep the game next to `example/` in this repo instead (add it to `.git/info/exclude` so this repo ignores it). Then `npm run dev` plays it at http://localhost:5173/?game=mygame from the engine's source, and the other commands take `-- --game mygame`.
 
@@ -86,6 +86,7 @@ The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, an
 | `npm run compile` | Compiles every map into the game's `build/` folder, failing on leaks, missing textures, and compiler errors. Name maps to compile only those; `--mode release` for full-quality lighting. |
 | `npm run bspdump -- <file>` | Prints a compiled map's entities, counts, textures, and lightmap stats as JSON, such as `-- example/build/greybox_01.bsp`. `--no-entities` leaves out the entity list. |
 | `npm run make-placeholder-textures` | Regenerates the example game's placeholder textures in `example/textures/dev/`. |
+| `npm run rebaseline-demos` | Remakes golden demos' hashes and keyframes from their recorded inputs, after an intentional behavior change (say so in the commit message). Name demos to do only those; see [demos/README.md](demos/README.md). |
 
 **Checks**
 
@@ -99,11 +100,15 @@ The game commands (setup, `install-trenchbroom`, `dev`, `compile`, `bspdump`, an
 | `npm run check-files` | Fails if any tracked file is over 2 MB. |
 | `npm run test:package` | Packs the `mandreljs` package, installs it into a scratch folder outside the repo with a copy of the example game, and runs `mandreljs` there as a game's repo would: `setup --check`, `validate`, `compile`, `build`, and `dev`. Needs ericw-tools. |
 
-**The engine package**
+**The engine package and releases**
+
+Releases publish themselves. On `develop`, run `npm run release -- prepare <bump>`, commit, and merge `develop` into `main`; when CI passes there, the release workflow publishes `mandreljs` to npm and makes the GitHub release and its tag, with the version's `CHANGELOG.md` section as its notes.
 
 | Command | What it does |
 |---|---|
-| `npm run package` | Builds the `mandreljs` package, what a game's own repo installs for the `mandreljs` command, in `dist/mandreljs/`: the command bundled into JavaScript, the built client, and the engine's definitions. `-- --pack` also packs it into `dist/mandreljs-<version>.tgz`, which a game's repo can install with `npm install <path to .tgz>`. The version is the root `package.json`'s. |
+| `npm run package` | Builds the `mandreljs` package, what a game's own repo installs for the `mandreljs` command, in `dist/mandreljs/`: the command bundled into JavaScript, the built client, and the engine's definitions, packed into `dist/mandreljs-<version>.tgz`, which a game's repo can install with `npm install <path to .tgz>`. The version is the root `package.json`'s. |
+| `npm run release -- prepare <bump>` | Prepares a release: bumps the engine's version (`major`, `minor`, `patch`, or an explicit version such as `1.2.3`, or a pre-release such as `1.2.0-rc.1`, which is published as one and never as npm's latest) in `package.json` and its lockfile, and turns `CHANGELOG.md`'s TBD section into the version's, dated today (`--date YYYY-MM-DD` for another day), with a fresh TBD section above it. Refuses when TBD has no entries. |
+| `npm run changelog -- extract <version>` | Prints a version's `CHANGELOG.md` section, as the release workflow does for the GitHub release's notes. |
 
 ## Repository Layout
 
