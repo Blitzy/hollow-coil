@@ -33,7 +33,7 @@ You'll need:
 
 ### Play the example game
 
-Play it in your browser at https://mandreljs.github.io/mandrel.js/ ([greybox_01](https://mandreljs.github.io/mandrel.js/?map=greybox_01) is the most to see), built from `main` each time CI passes there.
+Play it in your browser at https://mandreljs.github.io/mandrel.js/, built from `main` each time CI passes there.
 
 To run it yourself, get the code, then install the dependencies and the pinned map compiler ([ericw-tools](https://ericw.github.io/ericw-tools/)), which goes into a per-user cache shared by every game:
 

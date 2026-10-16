@@ -13,7 +13,7 @@ Combine them as a query string, such as `http://localhost:5173/?map=greybox_01&r
 | Option | Default | Effect |
 |---|---|---|
 | `game=<dir>` | the game the server was started for (`example` from the repo root) | Plays another game directory the server offers: one in the repo root, holding `data/game.json`. The client asks the server's `/games/index.json` which game to play when the URL doesn't say. |
-| `map=<name>` | the game's `start_map` (`test_movement` in the example) | Loads the map, from its compiled `build/<name>.bsp` in the game directory (or the game's `maps/<name>.map` without one). |
+| `map=<name>` | the game's `start_map` (`greybox_01` in the example) | Loads the map, from its compiled `build/<name>.bsp` in the game directory (or the game's `maps/<name>.map` without one). |
 | `lighting=off` | on | Loads the unlit `.map` instead of the lit `.bsp`, for drawing, collision, and entities. |
 | `brightness=<n>` | `1.5` | Lightmap brightness, for comparison only. The default stays fixed so light values mean the same in every map (see `example/maps/README.md`). While playing, `[` and `]` adjust it. |
 | `rawinput=off` | on | Uses the OS's accelerated mouse instead of raw input. Raw input (no pointer acceleration) is used where the browser supports it. |
