@@ -208,11 +208,11 @@ Commands come in two kinds, because the sim's rules decide where each one runs:
 
 Steps:
 
-- [ ] C1 The console itself: it slides down over the top half of the view, releases the mouse, and takes the keyboard while open (the game pauses, as single player can). A command line with history (up and down), tab completion of command and map names, and scrollback (Page Up and Page Down). Commands are parsed as Quake did: words, with quotes for one that has spaces. The engine's messages go to it too (map loaded, demo saved, why a map is unlit), not only to the overlay and the browser console. The first client commands: `help`, `clear`, `map`, `maps`, `restart`, `record`, and `stop`; `record` replaces the R key. `map` loads a map in place instead of reloading the page, and `maps` needs the list of a game's maps: the dev server and a release's `games/index.json` say which maps each game has.
+- [ ] C1 The console itself, drawn by the engine (see DECISIONS.md, "The game's UI is drawn by the engine"), which brings the 2D layer the HUD and menus will use too: bitmap-font text and quads over the scene, laid out in virtual pixels so it scales with the window now and with the low-resolution target in M5. It slides down over the top half of the view, releases the mouse, and takes the keyboard while open (the game pauses, as single player can). A command line with history (up and down), tab completion of command and map names, and scrollback (Page Up and Page Down). Commands are parsed as Quake did: words, with quotes for one that has spaces. The engine's messages go to it too (map loaded, demo saved, why a map is unlit), not only to the overlay and the browser console. The first client commands: `help`, `clear`, `map`, `maps`, `restart`, `record`, and `stop`; `record` replaces the R key. `map` loads a map in place instead of reloading the page, and `maps` needs the list of a game's maps: the dev server and a release's `games/index.json` say which maps each game has.
 - [ ] C2 Sim actions: the sim takes a tick's actions along with its command, demos record and replay them, and the first actions are `god`, `noclip`, `notarget`, `kill`, `give`, and `killmonsters`, each with unit tests and, where it can be seen in play, a scenario. Noclip movement goes in `docs/MOVEMENT.md`.
 - [ ] C3 With demo playback: `playdemo`, and settings that last between visits (stored in the browser).
 
-Open questions: where a game's own demos live and how `playdemo` finds them (the golden demos are the engine's, in `demos/`); and whether settings become Quake-style cvars that `set` and the config can name.
+Open questions: where a game supplies its UI art (status bar graphics, the font), as Quake's came from `gfx.wad`, and what the engine provides when a game has none; where a game's own demos live and how `playdemo` finds them (the golden demos are the engine's, in `demos/`); and whether settings become Quake-style cvars that `set` and the config can name.
 
 ### M5: Feel and Presentation
 
@@ -223,7 +223,7 @@ Mostly hands-on tuning by Ryan, with few tests.
 - Separate texture and lightmap filter options in a custom preset
 - Stepped enemy animation at about 10 fps
 - View bob, weapon sway, muzzle flash, impact effects, placeholder audio
-- Minimal HUD
+- Minimal HUD, drawn with the 2D layer the console brings, replacing the HTML overlay's health and weapon line (the overlay stays, for developer info)
 
 ## Standalone Games
 

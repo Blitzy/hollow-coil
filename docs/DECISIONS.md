@@ -2,6 +2,21 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-16: The game's UI is drawn by the engine, without a UI framework
+
+**Decision:** Everything a player sees besides the world (the status bar and HUD, centered messages, the console, and menus for a new game, loading and saving, and settings) is drawn by the engine with Three.js, as Quake drew its own: a small 2D layer of bitmap-font text and textured quads over the scene, laid out in virtual pixels and drawn into the same render target as the world. Menus are an immediate-mode list of items (actions, toggles, sliders, a text field) driven by the game's own keyboard, mouse, and later gamepad input. No React, Preact, or other UI framework in the game client. The developer overlay (fps, position, tick) and future debug panels stay HTML, and editors in `apps/` choose for themselves when they come.
+
+**Why:**
+
+- Era-authentic presentation: M5 renders the world into a low-resolution target and adds looks such as Software, with palette quantization. A UI in the same target gets the same chunky pixels and palette under every preset; an HTML UI would sit on top in crisp, full-resolution text and break the look.
+- 3D in the UI is free: a weapon or face in the status bar, or a model in a menu, is one more small scene drawn into the layer.
+- The UI is small. A boomer shooter's screens are lists, toggles, and sliders, which Quake's whole menu system did in a few hundred lines of C. A framework would add a dependency, a second way of drawing, and a second input path for about a dozen screens.
+- Input stays in one place: the game already owns the keyboard and pointer lock, so menus and the console use the same input, which also suits gamepads and Electron.
+
+**Costs:** screen readers can't read text drawn on a canvas, rich text input (such as composing other scripts) is harder, and wrapping and scrolling are ours to write. All are acceptable for this kind of game; the developer overlay, where crisp text matters, stays HTML.
+
+**Alternatives considered:** HTML styled to look pixelated (still off the render target, so presets and palettes don't reach it, and 3D in it needs extra canvases kept in step); Preact or React for menus (fine for forms, but a second rendering model for a small UI); a mix of in-engine HUD and HTML menus (two looks, two input paths).
+
 ## 2026-10-15: The sim does its own trigonometry
 
 **Decision:** Sim code computes sine, cosine, tangent, arctangent, and hypotenuse with `packages/sim/src/math/trig.ts`, adapted from fdlibm using only arithmetic JavaScript defines exactly, and never with `Math.sin`, `cos`, `tan`, `atan2`, `hypot`, or any other `Math` function the language doesn't define to the last bit. A test fails if sim code calls one. This settles the open question of cross-browser determinism (custom trig or lookup tables).
