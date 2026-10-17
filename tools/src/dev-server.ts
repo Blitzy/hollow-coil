@@ -1,7 +1,7 @@
 // The dev server: serves game directories to the game client, the same files
 // the tools use, and compiles stale maps on request.
 //
-//   /games/index.json                       the games served, and which to play when the URL names none
+//   /games/index.json                       the games served with their maps, and which to play when the URL names none
 //   /games/<game>/{maps,textures,data}/...  a game directory: a folder holding data/game.json
 //   /games/<game>/build/...                 the game's build/, where its maps compile to
 //
@@ -69,6 +69,26 @@ export function folderGames(root: string, chosen: string): Games {
 export function singleGame(game: string): Games {
   const name = basename(game);
   return { defaultName: name, list: () => new Map([[name, resolve(game)]]) };
+}
+
+/** A game's maps by name, from its .map sources, which the server compiles when asked. */
+export function mapNames(game: string): string[] {
+  try {
+    return readdirSync(join(game, "maps")).filter((file) => file.endsWith(".map")).map((file) => basename(file, ".map")).sort();
+  } catch {
+    return [];
+  }
+}
+
+/** A game in games/index.json: its folder's name, and its maps. */
+export interface IndexedGame {
+  readonly name: string;
+  readonly maps: readonly string[];
+}
+
+/** games/index.json, as the dev server and a release give it: the game to play when the URL names none, and every game with its maps. */
+export function gameIndex(defaultName: string, games: readonly IndexedGame[]): { default: string; games: IndexedGame[] } {
+  return { default: defaultName, games: [...games].sort((a, b) => (a.name < b.name ? -1 : 1)) };
 }
 
 /** A request URL's path as folder parts, or null if it tries to climb out with "..". */
@@ -146,7 +166,7 @@ export function gameHandler(games: Games, log: (message: string) => void): (req:
     if (parts.length === 1 && parts[0] === "index.json") {
       res.setHeader("Content-Type", TYPES[".json"]!);
       res.setHeader("Cache-Control", "no-store");
-      res.end(JSON.stringify({ default: games.defaultName, games: [...games.list().keys()].sort() }));
+      res.end(JSON.stringify(gameIndex(games.defaultName, [...games.list()].map(([name, dir]) => ({ name, maps: mapNames(dir) })))));
       return;
     }
     if (parts.length < 3) return next();

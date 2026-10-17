@@ -2,6 +2,19 @@
 
 Decisions and their reasons, newest first. Each entry records what was decided, why, and what was considered instead.
 
+## 2026-10-17: The engine draws its own font, defined in code
+
+**Decision:** The console, and later the HUD and menus, draw text in the engine's own bitmap font: printable ASCII as 5 by 9 pixel glyphs (7 rows above the baseline, 2 for descenders) in 6 by 10 cells, written as rows of `#` and `.` in `packages/render/src/font.ts` and packed into a texture when the game starts. Text is turned into what the font draws before it's laid out, a character to a cell (`fontText`): tabs become spaces, typographic punctuation the ASCII it stands for (curly quotes, dashes, `…` as `...`), accented letters lose their accents (`é` as `e`), and anything else shows as `?`. So a game's data written in a word processor still reads right, and glyphs added later take over from the stand-ins. A game's own font, as Quake's came from `gfx.wad`, is left for when games supply UI art; the engine's stays the fallback.
+
+**Why:**
+
+- Every game gets a console without shipping or naming a file, in the dev server, a release, and tests alike, with nothing to serve or copy.
+- Quake's own font (`conchars`) is id's and can't be used. Drawing ours means it's the engine's code under its license, with no font license to track; fonts under the SIL Open Font License are free but don't combine cleanly with GPL code.
+- Glyphs as text are reviewable in a diff, and the tests check every one's size and that descenders are only where they belong.
+- 5 by 7 capitals with descenders below read well at the small sizes the low-resolution target in M5 brings, and the extra row of line spacing keeps a console page legible.
+
+**Alternatives considered:** a PNG in `packages/defs` (needs a tool to make it, serving, and a copy in every release, for the same pixels); an 8 by 8 font like Quake's or the IBM PC's (no room for descenders without cramping capitals; the PC fonts' licensing is murky); text drawn with the browser's fonts into a canvas (crisp, but not the era's look, and different on every system).
+
 ## 2026-10-16: Releases publish themselves from main
 
 **Decision:** A release is prepared on `develop` with `npm run release -- prepare <bump>`, which bumps the engine's version (the root `package.json`, which the `mandreljs` package and the game client carry, and the lockfile) and turns `CHANGELOG.md`'s TBD section into that version's section. Merging `develop` into `main` releases it: once CI passes on `main`, `.github/workflows/release.yml` publishes `mandreljs` to npm through npm's trusted publishing (npm accepts it only from this workflow in this repo, so no npm token is stored) and with provenance, then makes the GitHub release and its `vX.Y.Z` tag, with the version's changelog section as the notes and the packed `.tgz` attached. Each step checks whether it's done first, so a push to `main` that isn't a release does nothing, and a failed release is finished by running the workflow again. A version with no changelog section is skipped with a warning, and a pre-release (such as `1.2.0-rc.1`) goes to npm's `next` tag and is marked as a pre-release on GitHub.

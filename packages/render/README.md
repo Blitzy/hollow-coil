@@ -10,5 +10,8 @@ Three.js presentation shared by the game and future editors, so tools show exact
 - `impacts.ts`: fading marks where shots hit walls (placeholders until real effects)
 - `enemies.ts`: placeholder enemies, boxes colored by what they're doing (until models)
 - `coords.ts`: Quake-to-Three coordinates, camera angles, and field of view
+- `layer2d.ts`: the 2D layer over the scene, for the console and later the HUD and menus: text and filled rectangles in virtual pixels
+- `font.ts`: the engine's bitmap font, defined in code (no Three.js)
+- `dispose.ts`: frees a level's meshes and textures when another replaces it
 
 All in `src/`; tests are in `tests/`. The lightmap tests use the compiled fixture room from `packages/sim/tests/fixtures/bsp`.

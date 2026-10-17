@@ -50,20 +50,18 @@ export class BrowserInput {
 
   /** Whether the current pointer lock uses raw mouse input. */
   rawInput = false;
-  /** Whether a click captures the mouse. Off while watching a demo, which needs no mouse look. */
+  /** Whether a click captures the mouse. Off while watching a demo, which needs no mouse look, and while the console is open. */
   lockable = true;
 
   private readonly element: HTMLElement;
+  private readonly preferRawInput: boolean;
 
   /** preferRawInput: ask for raw mouse input when locking (see lockPointer). */
   constructor(element: HTMLElement, preferRawInput = true) {
     this.element = element;
+    this.preferRawInput = preferRawInput;
     element.addEventListener("click", () => {
-      if (this.locked || !this.lockable) return;
-      lockPointer(element, preferRawInput).then(
-        (raw) => (this.rawInput = raw),
-        (error: unknown) => console.warn("pointer lock failed:", error),
-      );
+      if (!this.locked && this.lockable) this.lock();
     });
     window.addEventListener("keydown", (e) => {
       this.held.add(e.code);
@@ -96,6 +94,21 @@ export class BrowserInput {
 
   get locked(): boolean {
     return document.pointerLockElement === this.element;
+  }
+
+  /** Captures the mouse for looking around. Browsers allow it only in answer to a click or a key press. */
+  lock(): void {
+    lockPointer(this.element, this.preferRawInput).then(
+      (raw) => (this.rawInput = raw),
+      (error: unknown) => console.warn("pointer lock failed:", error),
+    );
+  }
+
+  /** Lets go of every key and button held, and a weapon key not yet read, as when the console takes the keyboard. */
+  release(): void {
+    this.held.clear();
+    this.attack = false;
+    this.pendingWeapon = 0;
   }
 
   private isHeld(codes: readonly string[]): boolean {

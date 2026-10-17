@@ -2,7 +2,7 @@
   "name": "@mandreljs/render",
   "private": true,
   "type": "module",
-  "description": "Three.js presentation shared by the game and editors: level meshes, lightmaps, light styles, and coordinates.",
+  "description": "Three.js presentation shared by the game and editors: level meshes, lightmaps, light styles, coordinates, and the 2D layer and its font.",
   "exports": {
     "./*": "./src/*.ts"
   },

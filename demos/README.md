@@ -4,7 +4,7 @@ Golden demos: recorded games, replayed as regression tests. Each `*.demo.json` h
 
 ## Recording one
 
-Play with `npm run dev` and press R. The level starts over and recording begins; press R again to stop, or die and start over, and the browser saves the demo (named after the map and the time). Move it into this folder and commit it. A demo replays on the file the game played (the compiled `.bsp`, or the `.map` with `lighting=off`); `.bsp` demos need ericw-tools to replay, as CI has.
+Play with `npm run dev`, open the console with the backquote key, and enter `record` (or `record <name>`). The level starts over and recording begins when the console closes; enter `stop` in the console, or die and start over, and the browser saves the demo (named after the map and the time, or the name given). Move it into this folder and commit it. A demo replays on the file the game played (the compiled `.bsp`, or the `.map` with `lighting=off`); `.bsp` demos need ericw-tools to replay, as CI has.
 
 ## Watching one
 

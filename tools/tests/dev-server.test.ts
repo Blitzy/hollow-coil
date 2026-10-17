@@ -43,8 +43,8 @@ describe("dev server", () => {
     expect(await (await get("/assets/main.js")).text()).toContain("client");
   });
 
-  it("names the game to play in /games/index.json", async () => {
-    expect(await (await get("/games/index.json")).json()).toEqual({ default: "mygame", games: ["mygame"] });
+  it("names the game to play, and its maps, in /games/index.json", async () => {
+    expect(await (await get("/games/index.json")).json()).toEqual({ default: "mygame", games: [{ name: "mygame", maps: ["test_movement"] }] });
   });
 
   it("serves the game's files", async () => {

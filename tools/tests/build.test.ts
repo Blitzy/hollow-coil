@@ -41,7 +41,7 @@ describe("build", () => {
     const wrote = writeRelease(game, client, out);
     expect(readdirSync(out).sort()).toEqual(["LICENSE", "LICENSE-EXCEPTION.md", "NOTICE.md", "assets", "games", "index.html"]);
     expect(readFileSync(join(out, "NOTICE.md"), "utf-8")).toContain("Mandrel.js Example runs on Mandrel.js");
-    expect(JSON.parse(readFileSync(join(out, "games", "index.json"), "utf-8"))).toEqual({ default: "mygame", games: ["mygame"] });
+    expect(JSON.parse(readFileSync(join(out, "games", "index.json"), "utf-8"))).toEqual({ default: "mygame", games: [{ name: "mygame", maps: ["greybox_01", "test_movement"] }] });
     expect(readdirSync(join(out, "games", "mygame")).sort()).toEqual(["build", "data", "textures"]);
     expect(readdirSync(join(out, "games", "mygame", "build")).sort()).toEqual(["greybox_01.bsp", "test_movement.bsp"]); // no logs or .map sources
     expect(readdirSync(join(out, "games", "mygame", "data")).sort()).toEqual(["enemies.json", "game.json", "player.json", "weapons.json"]);

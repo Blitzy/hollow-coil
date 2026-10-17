@@ -4,7 +4,7 @@
 //   dist/LICENSE, LICENSE-EXCEPTION.md, NOTICE.md
 //                                   the engine's license, and what's whose: the engine is
 //                                   GPL and its source is linked; the game's content is its authors'
-//   dist/games/index.json           names the game to play
+//   dist/games/index.json           names the game to play, and its maps
 //   dist/games/<game>/data/         the game's data files
 //   dist/games/<game>/textures/     its textures
 //   dist/games/<game>/build/        its maps, compiled at release quality (the .map sources stay out)
@@ -24,7 +24,7 @@ import { parseArgs, styleText } from "node:util";
 import { isMain } from "./cli.ts";
 import { buildClient, CLIENT_BUILD, isBuiltClient, viteScript } from "./client.ts";
 import { main as compile, findMaps, LIGHT_ARGS, type Mode } from "./compile.ts";
-import { gameName } from "./dev-server.ts";
+import { gameIndex, gameName } from "./dev-server.ts";
 import { ENGINE_ROOT } from "./engine-files.ts";
 import { buildDir, displayPath, findGame } from "./layout.ts";
 import { main as validate } from "./validate.ts";
@@ -85,7 +85,6 @@ export function writeRelease(game: string, clientDir: string, out: string): { ma
   const notices = gameNotices(game);
   for (const file of notices) cpSync(join(game, file), join(target, file));
   writeFileSync(join(out, "NOTICE.md"), releaseNotice(gameName(game), engineInfo(), notices.map((file) => `games/${name}/${file}`)));
-  writeFileSync(join(out, "games", "index.json"), `${JSON.stringify({ default: name, games: [name] })}\n`);
 
   const data = readdirSync(join(game, "data")).filter((file) => file.endsWith(".json"));
   for (const file of data) cpSync(join(game, "data", file), join(target, "data", file));
@@ -93,6 +92,8 @@ export function writeRelease(game: string, clientDir: string, out: string): { ma
   const maps = findMaps([], game).map((map) => `${basename(map, ".map")}.bsp`);
   mkdirSync(join(target, "build"), { recursive: true });
   for (const bsp of maps) cpSync(join(buildDir(game), bsp), join(target, "build", bsp));
+  const index = gameIndex(name, [{ name, maps: maps.map((bsp) => basename(bsp, ".bsp")) }]);
+  writeFileSync(join(out, "games", "index.json"), `${JSON.stringify(index)}\n`);
 
   const textures = existsSync(join(target, "textures")) ? filesIn(join(target, "textures")).length : 0;
   return { maps: maps.length, textures, data: data.length, bytes: filesIn(out).reduce((sum, file) => sum + file.size, 0) };
