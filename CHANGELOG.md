@@ -4,14 +4,18 @@
 
 ### ✨ Added
 
-- Watch a demo by dropping it on the game page, with pause and 1/4x to 4x speed. ([#3](https://github.com/mandreljs/mandrel.js/pull/3))
-  - Show where play first differs from the recording, and which map or data changed since it was recorded.
-
 ### 🔧 Changed
 
 ### 🐛 Fixed
 
 ### 🗑️ Removed
+
+## v0.0.2 - 2026-10-17
+
+### ✨ Added
+
+- Watch a demo by dropping it on the game page, with pause and 1/4x to 4x speed. ([#3](https://github.com/mandreljs/mandrel.js/pull/3))
+  - Show where play first differs from the recording, and which map or data changed since it was recorded.
 
 ## v0.0.1
 
