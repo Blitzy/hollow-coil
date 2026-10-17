@@ -90,7 +90,12 @@ jobs:
           else
             case "$VERSION" in *-*) tag=next ;; *) tag=latest ;; esac
             # ./ so npm reads it as a file, not as the GitHub repo "dist/mandreljs-<version>.tgz".
-            npm publish "./dist/mandreljs-$VERSION.tgz" --provenance --access public --tag "$tag"
+            if ! npm publish "./dist/mandreljs-$VERSION.tgz" --provenance --access public --tag "$tag"; then
+              # When trusted publishing's login fails, npm falls back to no login and
+              # the upload fails with a 404; why the login failed is only in its debug log.
+              grep -hE 'using npm@|oidc' "$HOME"/.npm/_logs/*-debug-0.log || true
+              exit 1
+            fi
             echo "Published mandreljs $VERSION to npm ($tag)." >> "$GITHUB_STEP_SUMMARY"
           fi
 
