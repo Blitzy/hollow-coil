@@ -1,9 +1,11 @@
 // Runs the sim at its fixed tick rate regardless of frame rate. Each frame adds
-// real elapsed time; the caller runs that many ticks, then renders between the
-// last two states using alpha.
+// real elapsed time, at a speed (faster or slower for watching a demo); the
+// caller runs that many ticks, then renders between the last two states using alpha.
 
 export class FixedStep {
   private accumulator = 0;
+  /** Sim seconds the last advance added: its real seconds, capped, times its speed. */
+  elapsed = 0;
   private readonly tickRate: number;
   private readonly maxFrameSeconds: number;
 
@@ -17,9 +19,13 @@ export class FixedStep {
     this.maxFrameSeconds = maxFrameSeconds;
   }
 
-  /** Adds elapsed real time and returns how many ticks to run now. */
-  advance(seconds: number): number {
-    this.accumulator += Math.min(Math.max(seconds, 0), this.maxFrameSeconds);
+  /**
+   * Adds elapsed real time, run at speed (0 for none), and returns how many ticks to run now. The stall cap applies
+   * to the real time, so a fast speed still keeps up on a slow frame.
+   */
+  advance(seconds: number, speed = 1): number {
+    this.elapsed = Math.min(Math.max(seconds, 0), this.maxFrameSeconds) * speed;
+    this.accumulator += this.elapsed;
     const ticks = Math.floor(this.accumulator * this.tickRate);
     this.accumulator -= ticks / this.tickRate;
     return ticks;

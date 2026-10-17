@@ -83,4 +83,14 @@ describe("FixedStep", () => {
     const step = new FixedStep(60, 0.25);
     expect(step.advance(5)).toBe(15);
   });
+
+  it("runs time at a speed, capping the real time before scaling it", () => {
+    const step = new FixedStep(60, 0.25);
+    expect(step.advance(0.1, 4)).toBe(24);
+    expect(step.elapsed).toBeCloseTo(0.4, 10);
+    expect(step.advance(0.2, 4)).toBe(48); // a slow frame still plays at 4x
+    expect(step.advance(5, 4)).toBe(60); // a stall catches up 0.25 real seconds' worth
+    expect(step.advance(1, 0)).toBe(0); // paused
+    expect(step.elapsed).toBe(0);
+  });
 });

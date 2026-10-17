@@ -88,9 +88,9 @@ export class DemoPlayback {
     this.paused = false;
   }
 
-  /** The sim time that passes in seconds of real time: scaled by the speed, and none while paused or after the end. */
-  scale(seconds: number): number {
-    return this.paused || this.finished ? 0 : seconds * this.speed;
+  /** How fast sim time passes against real time: the speed, or 0 while paused or after the end. */
+  get rate(): number {
+    return this.paused || this.finished ? 0 : this.speed;
   }
 
   /** Plays the next tick and checks it against the recording. Returns null at the end. */

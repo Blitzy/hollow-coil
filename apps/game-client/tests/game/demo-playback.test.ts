@@ -66,12 +66,12 @@ describe("DemoPlayback", () => {
     expect(playback.seconds).toBe(0.5);
   });
 
-  it("scales time by its speed, from 1/4x to 4x, starting at 1x", () => {
+  it("runs time at its speed, from 1/4x to 4x, starting at 1x", () => {
     const playback = new DemoPlayback(demo, level, config);
-    expect(playback.scale(1)).toBe(1);
+    expect(playback.rate).toBe(1);
     for (let i = 0; i < 10; i++) playback.faster();
     expect(playback.speed).toBe(4);
-    expect(playback.scale(0.5)).toBe(2);
+    expect(playback.rate).toBe(4);
     for (let i = 0; i < 10; i++) playback.slower();
     expect(playback.speed).toBe(0.25);
     expect(PLAYBACK_SPEEDS[0]).toBe(0.25);
@@ -80,10 +80,10 @@ describe("DemoPlayback", () => {
   it("lets no time pass while paused or after the end", () => {
     const playback = new DemoPlayback(demo, level, config);
     playback.togglePause();
-    expect(playback.scale(1)).toBe(0);
+    expect(playback.rate).toBe(0);
     playback.togglePause();
     playToEnd(playback);
-    expect(playback.scale(1)).toBe(0);
+    expect(playback.rate).toBe(0);
   });
 
   it("rewinds to the start and plays it all again", () => {

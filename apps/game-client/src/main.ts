@@ -322,11 +322,11 @@ async function main(): Promise<void> {
   let fpsTime = lastTime;
 
   const frame = (now: number): void => {
-    const real = (now - lastTime) / 1000;
+    // Real time, capped after a stall, then run at the playback's speed: the sim seconds this frame shows.
+    const ticks = stepper.advance((now - lastTime) / 1000, playback?.rate ?? 1);
     lastTime = now;
-    const seconds = playback?.scale(real) ?? real;
+    const seconds = stepper.elapsed;
     clock += seconds;
-    const ticks = stepper.advance(seconds);
     if (playback !== null) {
       input.read(); // presses while watching don't carry over into play
       input.takeWeaponSteps();
