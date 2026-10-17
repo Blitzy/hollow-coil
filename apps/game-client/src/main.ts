@@ -13,16 +13,15 @@
 
 import * as THREE from "three";
 import { buildCommand } from "./game/command.ts";
-import { DamageView } from "./game/damage-view.ts";
 import { DEAD_EYE_HEIGHT, DEAD_ROLL, RespawnWait } from "./game/death.ts";
 import { DemoPlayback, lerpYaw, placeDemo, speedLabel, type PageLevel } from "./game/demo-playback.ts";
+import { Effects } from "./game/effects.ts";
 import { FixedStep } from "./game/fixed-step.ts";
 import { BrowserInput } from "./game/input.ts";
 import { cycleSlot } from "./game/weapon-select.ts";
 import { buildBspMeshes, bspTextureNames, DEFAULT_BRIGHTNESS, type LitWorld } from "@mandreljs/render/bsp-mesh";
 import { cameraRotation, toThree, verticalFov } from "@mandreljs/render/coords";
 import { EnemyFigures } from "@mandreljs/render/enemies";
-import { ImpactMarks } from "@mandreljs/render/impacts";
 import { LIGHT_STYLES, type LightStyleData } from "@mandreljs/render/light-styles";
 import { buildLevelMeshes, loadTextures, textureNames } from "@mandreljs/render/level-mesh";
 import { TICK_RATE } from "@mandreljs/sim/constants";
@@ -31,8 +30,8 @@ import type { EnemiesData, PlayerData, WeaponsData } from "@mandreljs/sim/data";
 import { angleToRadians } from "@mandreljs/sim/input";
 import { levelFromBsp, levelFromMap, type Level } from "@mandreljs/sim/level";
 import { readBsp } from "@mandreljs/sim/map/bsp";
-import { normalize, sub, vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
-import { levelSpawn, playerAlive, simContext, startLevel, step, type SimConfig, type SimEvent, type SimState } from "@mandreljs/sim/sim";
+import { vec3, type Vec3 } from "@mandreljs/sim/math/vec3";
+import { levelSpawn, playerAlive, simContext, startLevel, step, type SimConfig, type SimState } from "@mandreljs/sim/sim";
 
 // Game directories, relative to the page so a release works wherever it's hosted:
 // served by the dev server (tools/src/dev-server.ts), or copied next to the page
@@ -158,13 +157,9 @@ async function main(): Promise<void> {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x101014);
   scene.add(world.group);
-  const impacts = new ImpactMarks();
-  scene.add(impacts.group);
-  // Where shots hit someone: placeholder blood, facing the player, until real effects (M5).
-  const blood = new ImpactMarks({ color: 0xb01010, size: 4, lifetime: 0.5 });
-  scene.add(blood.group);
+  const effects = new Effects(config.player.eye_height);
+  scene.add(effects.group);
   const flash = document.getElementById("flash")!;
-  const damageView = new DamageView();
   const respawn = new RespawnWait();
   const looks = new Map([...ctx.enemies.types].map(([id, type]) => [id, { hull: type.hull, eyeHeight: type.data.eye_height }]));
   const enemyFigures = new EnemyFigures(looks);
@@ -196,14 +191,19 @@ async function main(): Promise<void> {
 
   let previous = startLevel(level, config, SEED);
   let current = previous;
+  /**
+   * Shows a state from scratch: no easing from an earlier tick, and no effects left from before. Every start goes
+   * through here (the level starting over, a demo starting or playing again), so a new effect only needs to be in Effects.
+   */
+  const showFrom = (state: SimState): void => {
+    previous = current = state;
+    effects.reset();
+  };
   /** Starts the level over, as Quake's single player restarts the map when you respawn. */
   const restart = (): void => {
-    previous = current = startLevel(level, config, SEED);
+    showFrom(startLevel(level, config, SEED));
     input.yaw = angleToRadians(startYaw);
     input.pitch = 0;
-    damageView.reset();
-    impacts.clear();
-    blood.clear();
   };
 
   // Recording a demo: R starts the level over and records from its start; R again, or starting over, saves it.
@@ -257,10 +257,7 @@ async function main(): Promise<void> {
     message = "";
     logged = { divergence: false, differences: false };
     if (playback.changes.length > 0) console.warn(`${playback.changes.join(", ")} changed since the demo was recorded, so it may not play as recorded`);
-    previous = current = playback.state;
-    damageView.reset();
-    impacts.clear();
-    blood.clear();
+    showFrom(playback.state);
     input.lockable = false;
     document.exitPointerLock();
   };
@@ -283,7 +280,10 @@ async function main(): Promise<void> {
   window.addEventListener("keydown", (e) => {
     if (e.repeat) return;
     if (playback !== null) {
-      if (e.code === "Space") playback.togglePause();
+      if (e.code === "Space" && playback.finished) {
+        playback.rewind(); // at the end, Space plays it again
+        showFrom(playback.state);
+      } else if (e.code === "Space") playback.togglePause();
       else if (e.code === "ArrowLeft") playback.slower();
       else if (e.code === "ArrowRight") playback.faster();
       else if (e.code === "Escape") stopPlayback();
@@ -295,19 +295,6 @@ async function main(): Promise<void> {
     recorder = new DemoRecorder(header, current);
   });
 
-  /** Presents what happened in a tick: marks where shots hit, and the player getting hurt, facing yaw (radians). */
-  const present = (events: readonly SimEvent[], state: SimState, now: number, yaw: number): void => {
-    const player = state.player;
-    const eye = vec3(player.origin.x, player.origin.y, player.origin.z + config.player.eye_height);
-    for (const event of events) {
-      if (event.type === "hitWall") impacts.add(event.point, event.normal, now);
-      else if (event.type === "hitEntity" && event.target !== player.id) blood.add(event.point, normalize(sub(eye, event.point)), now);
-      else if (event.type === "damaged" && event.entity === player.id) {
-        const attacker = state.enemies.find((e) => e.id === event.attacker);
-        damageView.hurt(event.amount, player.origin, yaw, attacker?.origin ?? null);
-      }
-    }
-  };
   /** Says in the browser console where the playback first differs from the recording, and what differs. */
   const logDivergence = (watched: DemoPlayback): void => {
     if (watched.divergedAt !== null && !logged.divergence) {
@@ -343,7 +330,7 @@ async function main(): Promise<void> {
         if (result === null) break;
         previous = current;
         current = result.state;
-        present(result.events, current, clock, angleToRadians(current.player.yaw));
+        effects.present(result.events, current, clock, angleToRadians(current.player.yaw));
         continue;
       }
       const held = input.read();
@@ -355,7 +342,7 @@ async function main(): Promise<void> {
       previous = current;
       current = result.state;
       recorder?.record(cmd, current);
-      present(result.events, current, clock, input.yaw);
+      effects.present(result.events, current, clock, input.yaw);
       if (respawn.update(current.tick, playerAlive(current.player), cmd.buttons)) {
         saveDemo(); // a demo is one life, from the level's start
         restart();
@@ -370,17 +357,15 @@ async function main(): Promise<void> {
     // latency; a demo's come from its ticks, eased between them like position.
     // The dead see from the floor, rolled over; getting hurt flashes the screen and kicks the view.
     const alive = playerAlive(current.player);
-    damageView.update(seconds);
+    effects.update(seconds, clock);
     const origin = lerp(previous.player.origin, current.player.origin, stepper.alpha);
     camera.position.set(...toThree(vec3(origin.x, origin.y, origin.z + (alive ? config.player.eye_height : DEAD_EYE_HEIGHT))));
     const yaw = playback === null ? input.yaw : lerpYaw(previous.player.yaw, current.player.yaw, stepper.alpha);
     const pitch = playback === null ? input.pitch : angleToRadians(previous.player.pitch + (current.player.pitch - previous.player.pitch) * stepper.alpha);
-    const rot = cameraRotation(yaw, pitch + damageView.pitch);
-    camera.rotation.set(rot.x, rot.y, -((alive ? 0 : DEAD_ROLL) + damageView.roll)); // three.js rolls counterclockwise; ours is right side down
-    flash.style.opacity = damageView.flash.toFixed(3);
+    const rot = cameraRotation(yaw, pitch + effects.view.pitch);
+    camera.rotation.set(rot.x, rot.y, -((alive ? 0 : DEAD_ROLL) + effects.view.roll)); // three.js rolls counterclockwise; ours is right side down
+    flash.style.opacity = effects.view.flash.toFixed(3);
     world.lit?.animate(current.tick);
-    impacts.update(clock);
-    blood.update(clock);
     enemyFigures.update(previous.enemies, current.enemies, stepper.alpha);
     renderer.render(scene, camera);
 

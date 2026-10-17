@@ -77,15 +77,15 @@ export class DemoPlayback {
     this.speedIndex = Math.max(this.speedIndex - 1, 0);
   }
 
-  /** Pauses or plays on; at the end, plays again from the start. */
   togglePause(): void {
-    if (this.finished) {
-      this.state = startLevel(this.level, this.config, this.demo.seed);
-      this.check();
-      this.paused = false;
-      return;
-    }
     this.paused = !this.paused;
+  }
+
+  /** Goes back to the level's start, playing. Presentation that holds earlier ticks (interpolation, effects) must reset too. */
+  rewind(): void {
+    this.state = startLevel(this.level, this.config, this.demo.seed);
+    this.check();
+    this.paused = false;
   }
 
   /** The sim time that passes in seconds of real time: scaled by the speed, and none while paused or after the end. */

@@ -86,13 +86,14 @@ describe("DemoPlayback", () => {
     expect(playback.scale(1)).toBe(0);
   });
 
-  it("plays again from the start when unpaused at the end", () => {
+  it("rewinds to the start and plays it all again", () => {
     const playback = new DemoPlayback(demo, level, config);
     playToEnd(playback);
     playback.togglePause();
-    expect(playback.state).toEqual(states[0]);
+    playback.rewind();
     expect(playback.paused).toBe(false);
-    expect(playback.finished).toBe(false);
+    expect(playToEnd(playback)).toEqual(states);
+    expect(playback.divergedAt).toBeNull();
   });
 
   it("starts paused, naming what changed, on content that changed since the demo was recorded", () => {
