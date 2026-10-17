@@ -3,22 +3,14 @@
 // the recording's hash. Presentation takes the events each tick gives, as in play.
 
 import { TICK_RATE } from "@mandreljs/sim/constants";
-import { checkDemoHashes, checkTickRate, contentChanges, demoCommands, demoHash, differences, type Demo } from "@mandreljs/sim/demo";
+import { checkTickRate, contentChanges, DemoCheck, demoCommands, type Demo, type KeyframeDifferences } from "@mandreljs/sim/demo";
 import { ANGLE_UNITS_PER_TURN, angleToRadians, type InputCommand } from "@mandreljs/sim/input";
 import type { Level } from "@mandreljs/sim/level";
-import { hashState } from "@mandreljs/sim/snapshot";
 import { simContext, startLevel, step, type SimConfig, type SimContext, type SimState, type StepResult } from "@mandreljs/sim/sim";
 
 /** Playback speeds, slowest first: the arrow keys step through them. */
 export const PLAYBACK_SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
 const NORMAL_SPEED = PLAYBACK_SPEEDS.indexOf(1);
-
-/** What differs from the recording at a keyframe after the first divergent tick. */
-export interface KeyframeDifferences {
-  readonly tick: number;
-  /** "path: recorded -> replayed" lines, the first few. */
-  readonly lines: readonly string[];
-}
 
 export class DemoPlayback {
   readonly demo: Demo;
@@ -27,10 +19,8 @@ export class DemoPlayback {
   /** The state at the playback's current tick. */
   state: SimState;
   paused: boolean;
-  /** The first tick whose state doesn't match the recording's hash, or null while every tick has. */
-  divergedAt: number | null = null;
-  /** What differs at the first keyframe since divergedAt where something still does, once playback reaches it. */
-  differences: KeyframeDifferences | null = null;
+  /** Compares each tick with the recording, as replayDemo does. */
+  private readonly check: DemoCheck;
   private readonly level: Level;
   private readonly config: SimConfig;
   private readonly ctx: SimContext;
@@ -40,7 +30,7 @@ export class DemoPlayback {
   /** Throws a DemoError for a demo this engine can't play. Starts paused when content has changed, so the viewer is told first. */
   constructor(demo: Demo, level: Level, config: SimConfig) {
     checkTickRate(demo);
-    checkDemoHashes(demo);
+    this.check = new DemoCheck(demo);
     this.demo = demo;
     this.commands = demoCommands(demo);
     this.level = level;
@@ -49,7 +39,17 @@ export class DemoPlayback {
     this.changes = contentChanges(demo, level, config);
     this.paused = this.changes.length > 0;
     this.state = startLevel(level, config, demo.seed);
-    this.check();
+    this.check.compare(this.state);
+  }
+
+  /** The first tick whose state doesn't match the recording's hash, or null while every tick has. */
+  get divergedAt(): number | null {
+    return this.check.divergedAt;
+  }
+
+  /** What differs at the first keyframe from divergedAt on where something still does, once playback reaches it. */
+  get differences(): KeyframeDifferences | null {
+    return this.check.differences;
   }
 
   get speed(): number {
@@ -84,7 +84,7 @@ export class DemoPlayback {
   /** Goes back to the level's start, playing. Presentation that holds earlier ticks (interpolation, effects) must reset too. */
   rewind(): void {
     this.state = startLevel(this.level, this.config, this.demo.seed);
-    this.check();
+    this.check.compare(this.state);
     this.paused = false;
   }
 
@@ -98,18 +98,8 @@ export class DemoPlayback {
     if (this.finished) return null;
     const result = step(this.state, this.commands[this.state.tick]!, this.ctx);
     this.state = result.state;
-    this.check();
+    this.check.compare(this.state);
     return result;
-  }
-
-  private check(): void {
-    const tick = this.state.tick;
-    if (this.divergedAt === null && hashState(this.state) !== demoHash(this.demo, tick)) this.divergedAt = tick;
-    if (this.divergedAt === null || this.differences !== null || tick < this.divergedAt) return;
-    const keyframe = this.demo.keyframes.find((k) => k.tick === tick);
-    if (keyframe === undefined) return;
-    const lines = differences(keyframe.state, JSON.parse(JSON.stringify(this.state)) as unknown);
-    if (lines.length > 0) this.differences = { tick, lines };
   }
 }
 

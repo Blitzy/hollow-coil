@@ -261,13 +261,7 @@ export interface ReplayResult {
   readonly states: readonly SimState[];
 }
 
-/** The recorded hashState at a tick, from 0 to the demo's ticks. */
-export const demoHash = (demo: Demo, tick: number): string => demo.hashes.slice(tick * HASH_LENGTH, (tick + 1) * HASH_LENGTH);
-
-/** Throws a DemoError unless the demo has a hash for every tick from 0 to its last. */
-export function checkDemoHashes(demo: Demo): void {
-  if (demo.hashes.length !== (demo.ticks + 1) * HASH_LENGTH) throw new DemoError(`the demo has ${demo.hashes.length / HASH_LENGTH} hashes for ${demo.ticks} ticks`);
-}
+const hashAt = (demo: Demo, tick: number): string => demo.hashes.slice(tick * HASH_LENGTH, (tick + 1) * HASH_LENGTH);
 
 /** Up to max "path: recorded -> replayed" lines where two plain-data values differ. */
 export function differences(recorded: unknown, replayed: unknown, max = 10, path = ""): string[] {
@@ -283,6 +277,54 @@ export function differences(recorded: unknown, replayed: unknown, max = 10, path
     out.push(...differences((recorded as Record<string, unknown>)[key], (replayed as Record<string, unknown>)[key], max - out.length, at));
   }
   return out;
+}
+
+/** What differs from the recording at a keyframe, as "path: recorded -> replayed" lines (the first few). */
+export interface KeyframeDifferences {
+  readonly tick: number;
+  readonly lines: readonly string[];
+}
+
+/**
+ * Compares the states a demo's inputs play into with what it recorded, as they're played, in tick order from 0: all at
+ * once in replayDemo, or a tick at a time as the game plays a demo back. It finds the first tick whose hash differs,
+ * then says what differs at the first keyframe from there where something still does (a tiny difference can even out).
+ */
+export class DemoCheck {
+  /** The first tick whose state doesn't match the recording's hash, or null while every tick has. */
+  divergedAt: number | null = null;
+  /** What differs at the first keyframe from divergedAt on where something still does, once that keyframe is compared. */
+  differences: KeyframeDifferences | null = null;
+  private readonly demo: Demo;
+
+  /** Throws a DemoError unless the demo has a hash for every tick from 0 to its last. */
+  constructor(demo: Demo) {
+    if (demo.hashes.length !== (demo.ticks + 1) * HASH_LENGTH) throw new DemoError(`the demo has ${demo.hashes.length / HASH_LENGTH} hashes for ${demo.ticks} ticks`);
+    this.demo = demo;
+  }
+
+  /** Compares the state at its tick with the recording. */
+  compare(state: SimState): void {
+    const tick = state.tick;
+    if (this.divergedAt === null && hashState(state) !== hashAt(this.demo, tick)) this.divergedAt = tick;
+    if (this.divergedAt === null || this.differences !== null || tick < this.divergedAt) return;
+    const keyframe = this.demo.keyframes.find((k) => k.tick === tick);
+    if (keyframe === undefined) return;
+    // Compared as a file holds a state, so a value JSON can't keep (such as -0) isn't a difference.
+    const lines = differences(keyframe.state, JSON.parse(JSON.stringify(state)) as unknown);
+    if (lines.length > 0) this.differences = { tick, lines };
+  }
+
+  /**
+   * Where play first differed, for after every tick is compared: with what differs at the first keyframe from there
+   * where something still does, or, if it all evened out, the first keyframe from there and no differences.
+   */
+  divergence(): Divergence | null {
+    const tick = this.divergedAt;
+    if (tick === null) return null;
+    if (this.differences !== null) return { tick, keyframe: this.differences.tick, differences: this.differences.lines };
+    return { tick, keyframe: this.demo.keyframes.find((k) => k.tick >= tick)?.tick ?? tick, differences: [] };
+  }
 }
 
 /** Throws a DemoError unless the demo was recorded at the sim's tick rate, the only one it replays at. */
@@ -305,15 +347,10 @@ function runDemo(demo: Demo, level: Level, config: SimConfig): { commands: Input
  * that differs, if any. Check contentChanges first: on changed content, a difference is expected.
  */
 export function replayDemo(demo: Demo, level: Level, config: SimConfig): ReplayResult {
-  checkDemoHashes(demo);
+  const check = new DemoCheck(demo);
   const { states } = runDemo(demo, level, config);
-  const first = states.findIndex((state) => hashState(state) !== demoHash(demo, state.tick));
-  if (first === -1) return { divergence: null, states };
-  // Say what differs at the first keyframe after it where something still does (a tiny difference can even out).
-  const later = demo.keyframes.filter((k) => k.tick >= first);
-  const compared = later.map((k) => ({ tick: k.tick, differences: differences(k.state, JSON.parse(JSON.stringify(states[k.tick])) as unknown) }));
-  const shown = compared.find((k) => k.differences.length > 0) ?? compared[0] ?? { tick: first, differences: [] };
-  return { divergence: { tick: first, keyframe: shown.tick, differences: shown.differences }, states };
+  for (const state of states) check.compare(state);
+  return { divergence: check.divergence(), states };
 }
 
 /**
