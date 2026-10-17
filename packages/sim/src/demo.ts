@@ -261,7 +261,13 @@ export interface ReplayResult {
   readonly states: readonly SimState[];
 }
 
-const hashAt = (demo: Demo, tick: number): string => demo.hashes.slice(tick * HASH_LENGTH, (tick + 1) * HASH_LENGTH);
+/** The recorded hashState at a tick, from 0 to the demo's ticks. */
+export const demoHash = (demo: Demo, tick: number): string => demo.hashes.slice(tick * HASH_LENGTH, (tick + 1) * HASH_LENGTH);
+
+/** Throws a DemoError unless the demo has a hash for every tick from 0 to its last. */
+export function checkDemoHashes(demo: Demo): void {
+  if (demo.hashes.length !== (demo.ticks + 1) * HASH_LENGTH) throw new DemoError(`the demo has ${demo.hashes.length / HASH_LENGTH} hashes for ${demo.ticks} ticks`);
+}
 
 /** Up to max "path: recorded -> replayed" lines where two plain-data values differ. */
 export function differences(recorded: unknown, replayed: unknown, max = 10, path = ""): string[] {
@@ -279,9 +285,14 @@ export function differences(recorded: unknown, replayed: unknown, max = 10, path
   return out;
 }
 
+/** Throws a DemoError unless the demo was recorded at the sim's tick rate, the only one it replays at. */
+export function checkTickRate(demo: Demo): void {
+  if (demo.tick_rate !== TICK_RATE) throw new DemoError(`the demo was recorded at ${demo.tick_rate} ticks a second, and the sim runs at ${TICK_RATE}`);
+}
+
 /** Runs a demo's inputs on its level and the game's data, from the level's start: the state at every tick, from 0. */
 function runDemo(demo: Demo, level: Level, config: SimConfig): { commands: InputCommand[]; states: SimState[] } {
-  if (demo.tick_rate !== TICK_RATE) throw new DemoError(`the demo was recorded at ${demo.tick_rate} ticks a second, and the sim runs at ${TICK_RATE}`);
+  checkTickRate(demo);
   const commands = demoCommands(demo);
   const ctx = simContext(level, config);
   const states = [startLevel(level, config, demo.seed)];
@@ -294,9 +305,9 @@ function runDemo(demo: Demo, level: Level, config: SimConfig): { commands: Input
  * that differs, if any. Check contentChanges first: on changed content, a difference is expected.
  */
 export function replayDemo(demo: Demo, level: Level, config: SimConfig): ReplayResult {
-  if (demo.hashes.length !== (demo.ticks + 1) * HASH_LENGTH) throw new DemoError(`the demo has ${demo.hashes.length / HASH_LENGTH} hashes for ${demo.ticks} ticks`);
+  checkDemoHashes(demo);
   const { states } = runDemo(demo, level, config);
-  const first = states.findIndex((state) => hashState(state) !== hashAt(demo, state.tick));
+  const first = states.findIndex((state) => hashState(state) !== demoHash(demo, state.tick));
   if (first === -1) return { divergence: null, states };
   // Say what differs at the first keyframe after it where something still does (a tiny difference can even out).
   const later = demo.keyframes.filter((k) => k.tick >= first);

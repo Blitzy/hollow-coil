@@ -7,6 +7,7 @@
 // unlit .map instead of the compiled .bsp, &brightness=<n> to try another lightmap scale,
 // &rawinput=off for the OS's accelerated mouse instead of raw input. R records a demo
 // (see demos/README.md): it starts the level over, and R again or starting over saves it.
+// Dropping a demo on the page plays it, on the map and level file it was recorded on.
 // Everything comes from one file: the .bsp (drawing, collision, and entities),
 // or the .map when there's no usable .bsp or lighting is off.
 
@@ -14,6 +15,7 @@ import * as THREE from "three";
 import { buildCommand } from "./game/command.ts";
 import { DamageView } from "./game/damage-view.ts";
 import { DEAD_EYE_HEIGHT, DEAD_ROLL, RespawnWait } from "./game/death.ts";
+import { DemoPlayback, lerpYaw, placeDemo, speedLabel, type PageLevel } from "./game/demo-playback.ts";
 import { FixedStep } from "./game/fixed-step.ts";
 import { BrowserInput } from "./game/input.ts";
 import { cycleSlot } from "./game/weapon-select.ts";
@@ -24,7 +26,7 @@ import { ImpactMarks } from "@mandreljs/render/impacts";
 import { LIGHT_STYLES, type LightStyleData } from "@mandreljs/render/light-styles";
 import { buildLevelMeshes, loadTextures, textureNames } from "@mandreljs/render/level-mesh";
 import { TICK_RATE } from "@mandreljs/sim/constants";
-import { contentHashes, DemoRecorder, formatDemo, type DemoHeader } from "@mandreljs/sim/demo";
+import { contentHashes, DemoRecorder, formatDemo, upgradeDemo, type Demo, type DemoHeader } from "@mandreljs/sim/demo";
 import type { EnemiesData, PlayerData, WeaponsData } from "@mandreljs/sim/data";
 import { angleToRadians } from "@mandreljs/sim/input";
 import { levelFromBsp, levelFromMap, type Level } from "@mandreljs/sim/level";
@@ -40,6 +42,21 @@ const HORIZONTAL_FOV = 90;
 const BRIGHTNESS_STEP = 0.1;
 /** The RNG seed every game starts with. */
 const SEED = 0;
+/** Where a dropped demo waits while the page reloads on its map. */
+const PENDING_DEMO = "mandreljs.pending-demo";
+
+/** The demo left for this page by the one before it, if any, taken so a later reload doesn't play it again. */
+function takePendingDemo(): string | null {
+  try {
+    const text = sessionStorage.getItem(PENDING_DEMO);
+    sessionStorage.removeItem(PENDING_DEMO);
+    return text;
+  } catch {
+    return null; // storage blocked: nothing was left
+  }
+}
+
+const errorText = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
 /** Hands the player a text file to save. */
 function download(name: string, text: string): void {
@@ -109,6 +126,7 @@ async function loadLevel(game: string, mapName: string, lightStyles: LightStyleD
 
 async function main(): Promise<void> {
   const params = new URLSearchParams(location.search);
+  const pendingDemo = takePendingDemo();
   const overlay = document.getElementById("overlay")!;
   overlay.textContent = "loading...";
   const gameDir = params.get("game") ?? (JSON.parse(await fetchText(`${GAMES}/index.json`)) as GameIndex).default;
@@ -190,22 +208,95 @@ async function main(): Promise<void> {
 
   // Recording a demo: R starts the level over and records from its start; R again, or starting over, saves it.
   let recorder: DemoRecorder | null = null;
-  const header: DemoHeader = { game: info.name, map: mapName, level: world.lit ? "bsp" : "map", seed: SEED, engine: __MANDRELJS_VERSION__, content: contentHashes(level, config) };
+  const page: PageLevel = { game: info.name, map: mapName, level: world.lit ? "bsp" : "map", lightingOff: params.get("lighting") === "off", note: world.note };
+  const header: DemoHeader = { game: info.name, map: mapName, level: page.level, seed: SEED, engine: __MANDRELJS_VERSION__, content: contentHashes(level, config) };
   const saveDemo = (): void => {
     if (recorder === null) return;
     const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
     download(`${mapName}-${stamp}.demo.json`, formatDemo(recorder.finish()));
     recorder = null;
   };
+
+  // Watching a demo: dropped on the page, or left by the page before, which reloaded on the demo's map.
+  // Space pauses, the left and right arrows change speed, and Escape goes back to playing.
+  let playback: DemoPlayback | null = null;
+  /** Why the last demo couldn't play, for the overlay. */
+  let message = "";
+  /** What's been said in the browser console about where the playback differs from the recording. */
+  let logged = { divergence: false, differences: false };
+  const playDemo = (text: string, reloaded: boolean): void => {
+    let demo: Demo;
+    try {
+      demo = upgradeDemo(JSON.parse(text));
+    } catch (error) {
+      message = `can't play that demo: ${errorText(error)}`;
+      return;
+    }
+    const place = placeDemo(demo, page, location.search, reloaded);
+    if (place.kind === "unplayable") {
+      message = `can't play the demo: ${place.reason}`;
+      return;
+    }
+    if (place.kind === "reload") {
+      try {
+        sessionStorage.setItem(PENDING_DEMO, text);
+      } catch {
+        message = `can't carry the demo to ${demo.map}: open ${place.search} and drop it there`;
+        return;
+      }
+      location.search = place.search;
+      return;
+    }
+    try {
+      playback = new DemoPlayback(demo, level, config);
+    } catch (error) {
+      message = `can't play the demo: ${errorText(error)}`;
+      return;
+    }
+    saveDemo();
+    message = "";
+    logged = { divergence: false, differences: false };
+    if (playback.changes.length > 0) console.warn(`${playback.changes.join(", ")} changed since the demo was recorded, so it may not play as recorded`);
+    previous = current = playback.state;
+    damageView.reset();
+    impacts.clear();
+    blood.clear();
+    input.lockable = false;
+    document.exitPointerLock();
+  };
+  const stopPlayback = (): void => {
+    playback = null;
+    input.lockable = true;
+    restart();
+  };
+  window.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+  });
+  window.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer?.files[0];
+    if (file === undefined) return;
+    file.text().then((text) => playDemo(text, false), (error: unknown) => (message = `can't read ${file.name}: ${errorText(error)}`));
+  });
+
   window.addEventListener("keydown", (e) => {
-    if (e.code !== "KeyR" || e.repeat) return;
+    if (e.repeat) return;
+    if (playback !== null) {
+      if (e.code === "Space") playback.togglePause();
+      else if (e.code === "ArrowLeft") playback.slower();
+      else if (e.code === "ArrowRight") playback.faster();
+      else if (e.code === "Escape") stopPlayback();
+      return;
+    }
+    if (e.code !== "KeyR") return;
     if (recorder !== null) return saveDemo();
     restart();
     recorder = new DemoRecorder(header, current);
   });
 
-  /** Presents what happened in a tick: marks where shots hit, and the player getting hurt. */
-  const present = (events: readonly SimEvent[], state: SimState, now: number): void => {
+  /** Presents what happened in a tick: marks where shots hit, and the player getting hurt, facing yaw (radians). */
+  const present = (events: readonly SimEvent[], state: SimState, now: number, yaw: number): void => {
     const player = state.player;
     const eye = vec3(player.origin.x, player.origin.y, player.origin.z + config.player.eye_height);
     for (const event of events) {
@@ -213,21 +304,48 @@ async function main(): Promise<void> {
       else if (event.type === "hitEntity" && event.target !== player.id) blood.add(event.point, normalize(sub(eye, event.point)), now);
       else if (event.type === "damaged" && event.entity === player.id) {
         const attacker = state.enemies.find((e) => e.id === event.attacker);
-        damageView.hurt(event.amount, player.origin, input.yaw, attacker?.origin ?? null);
+        damageView.hurt(event.amount, player.origin, yaw, attacker?.origin ?? null);
       }
+    }
+  };
+  /** Says in the browser console where the playback first differs from the recording, and what differs. */
+  const logDivergence = (watched: DemoPlayback): void => {
+    if (watched.divergedAt !== null && !logged.divergence) {
+      console.warn(`the demo differs from the recording from tick ${watched.divergedAt}`);
+      logged.divergence = true;
+    }
+    if (watched.differences !== null && !logged.differences) {
+      console.warn(`at tick ${watched.differences.tick} (recorded -> played):\n${watched.differences.lines.join("\n")}`);
+      logged.differences = true;
     }
   };
   const stepper = new FixedStep(TICK_RATE);
   let lastTime = performance.now();
+  /** Seconds of play shown so far, for fading effects: real time in play, and playback's own time when watching. */
+  let clock = 0;
   let frames = 0;
   let fps = 0;
   let fpsTime = lastTime;
 
   const frame = (now: number): void => {
-    const seconds = (now - lastTime) / 1000;
-    const ticks = stepper.advance(seconds);
+    const real = (now - lastTime) / 1000;
     lastTime = now;
+    const seconds = playback?.scale(real) ?? real;
+    clock += seconds;
+    const ticks = stepper.advance(seconds);
+    if (playback !== null) {
+      input.read(); // presses while watching don't carry over into play
+      input.takeWeaponSteps();
+    }
     for (let i = 0; i < ticks; i++) {
+      if (playback !== null) {
+        const result = playback.step();
+        if (result === null) break;
+        previous = current;
+        current = result.state;
+        present(result.events, current, clock, angleToRadians(current.player.yaw));
+        continue;
+      }
       const held = input.read();
       // A number key wins; otherwise the wheel steps on from the weapon last asked for.
       const steps = input.takeWeaponSteps();
@@ -237,25 +355,32 @@ async function main(): Promise<void> {
       previous = current;
       current = result.state;
       recorder?.record(cmd, current);
-      present(result.events, current, now / 1000);
+      present(result.events, current, clock, input.yaw);
       if (respawn.update(current.tick, playerAlive(current.player), cmd.buttons)) {
         saveDemo(); // a demo is one life, from the level's start
         restart();
       }
     }
+    if (playback !== null) {
+      logDivergence(playback);
+      if (playback.finished) previous = current; // hold the last tick rather than easing toward it
+    }
 
-    // Interpolate position between the last two ticks; view angles come straight from the mouse for low latency.
+    // Interpolate position between the last two ticks. In play, view angles come straight from the mouse for low
+    // latency; a demo's come from its ticks, eased between them like position.
     // The dead see from the floor, rolled over; getting hurt flashes the screen and kicks the view.
     const alive = playerAlive(current.player);
     damageView.update(seconds);
     const origin = lerp(previous.player.origin, current.player.origin, stepper.alpha);
     camera.position.set(...toThree(vec3(origin.x, origin.y, origin.z + (alive ? config.player.eye_height : DEAD_EYE_HEIGHT))));
-    const rot = cameraRotation(input.yaw, input.pitch + damageView.pitch);
+    const yaw = playback === null ? input.yaw : lerpYaw(previous.player.yaw, current.player.yaw, stepper.alpha);
+    const pitch = playback === null ? input.pitch : angleToRadians(previous.player.pitch + (current.player.pitch - previous.player.pitch) * stepper.alpha);
+    const rot = cameraRotation(yaw, pitch + damageView.pitch);
     camera.rotation.set(rot.x, rot.y, -((alive ? 0 : DEAD_ROLL) + damageView.roll)); // three.js rolls counterclockwise; ours is right side down
     flash.style.opacity = damageView.flash.toFixed(3);
     world.lit?.animate(current.tick);
-    impacts.update(now / 1000);
-    blood.update(now / 1000);
+    impacts.update(clock);
+    blood.update(clock);
     enemyFigures.update(previous.enemies, current.enemies, stepper.alpha);
     renderer.render(scene, camera);
 
@@ -266,19 +391,40 @@ async function main(): Promise<void> {
       fpsTime = now;
     }
     const p = current.player;
-    overlay.textContent = [
+    const status = alive ? `health ${p.health}  ${weaponData[p.weapon.current]!.name}  ${p.weapon.phase}` : "dead";
+    const lighting = world.lit ? `lit  brightness ${world.lit.brightness.value.toFixed(1)}  ([ and ] adjust)` : world.note;
+    const lines = [
       `${world.file}  ${fps} fps  tick ${current.tick}`,
       `pos ${p.origin.x.toFixed(1)} ${p.origin.y.toFixed(1)} ${p.origin.z.toFixed(1)}`,
       `speed ${Math.hypot(p.velocity.x, p.velocity.y).toFixed(0)}  ${p.onGround ? "ground" : "air"}`,
-      alive ? `health ${p.health}  ${weaponData[p.weapon.current]!.name}  ${p.weapon.phase}` : respawn.ready ? "dead  (click or jump to start over)" : "dead",
-      recorder !== null ? `recording  ${(recorder.ticks / TICK_RATE).toFixed(1)}s  (R to stop and save)` : "R to record a demo",
-      world.lit ? `lit  brightness ${world.lit.brightness.value.toFixed(1)}  ([ and ] adjust)` : world.note,
-      input.locked
-        ? `mouse ${input.rawInput ? "raw" : preferRawInput ? "accelerated (raw input unavailable)" : "accelerated (rawinput=off)"}`
-        : "click to play  (WASD, mouse, space; click to fire; 1-2 or wheel to switch)",
-    ].join("\n");
+    ];
+    if (playback !== null) {
+      const state = playback.finished ? "ended" : playback.paused ? "paused" : "playing";
+      const diverged = playback.divergedAt;
+      lines.push(
+        status,
+        `demo  ${playback.seconds.toFixed(1)} / ${playback.length.toFixed(1)}s  ${speedLabel(playback.speed)}  ${state}`,
+        diverged === null ? "every tick matches the recording" : `differs from the recording from tick ${diverged} (${(diverged / TICK_RATE).toFixed(2)}s)`,
+        ...(playback.differences === null ? [] : [`  at tick ${playback.differences.tick}: ${playback.differences.lines[0]!}  (more in the console)`]),
+        ...(playback.changes.length > 0 ? [`${playback.changes.join(", ")} changed since it was recorded, so it may not play as recorded`] : []),
+        lighting,
+        playback.finished ? "space to play again, escape to leave" : `space to ${playback.paused ? "play" : "pause"}, left and right arrows for speed, escape to leave`,
+      );
+    } else {
+      lines.push(
+        alive || !respawn.ready ? status : "dead  (click or jump to start over)",
+        recorder !== null ? `recording  ${(recorder.ticks / TICK_RATE).toFixed(1)}s  (R to stop and save)` : "R to record a demo, or drop one here to watch it",
+        lighting,
+        input.locked
+          ? `mouse ${input.rawInput ? "raw" : preferRawInput ? "accelerated (raw input unavailable)" : "accelerated (rawinput=off)"}`
+          : "click to play  (WASD, mouse, space; click to fire; 1-2 or wheel to switch)",
+      );
+    }
+    if (message !== "") lines.push(message);
+    overlay.textContent = lines.join("\n");
     requestAnimationFrame(frame);
   };
+  if (pendingDemo !== null) playDemo(pendingDemo, true);
   requestAnimationFrame(frame);
 }
 

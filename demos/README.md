@@ -6,6 +6,10 @@ Golden demos: recorded games, replayed as regression tests. Each `*.demo.json` h
 
 Play with `npm run dev` and press R. The level starts over and recording begins; press R again to stop, or die and start over, and the browser saves the demo (named after the map and the time). Move it into this folder and commit it. A demo replays on the file the game played (the compiled `.bsp`, or the `.map` with `lighting=off`); `.bsp` demos need ericw-tools to replay, as CI has.
 
+## Watching one
+
+Drag a `.demo.json` onto the game page (`npm run dev`, or a release). If it was recorded on another map, or on the other level file, the page reloads there first. Space pauses, the left and right arrows change speed (1/4x to 4x), and Escape goes back to playing. The overlay says whether every tick still matches the recording, and the first tick that doesn't; if its map or data changed since it was recorded, the overlay says which, and playback waits for Space.
+
 ## When a demo fails
 
 A demo fails for one of two reasons:
