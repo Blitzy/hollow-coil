@@ -189,12 +189,12 @@ Tests:
 
 ### Demo Playback
 
-Planned next: watching a demo in the game, to see what a golden demo does and where a failing one goes wrong. Playback presents the demo through the same events as play, so hurt flashes, marks, and enemies all show.
+Done (2026-10-16): watching a demo in the game, to see what a golden demo does and where a failing one goes wrong. Playback presents the demo through the same events as play, so hurt flashes, marks, and enemies all show. The playback itself is `apps/game-client/src/game/demo-playback.ts`.
 
-- Drag a `.demo.json` onto the game page to play it (in the dev server and in a release). A demo from another map reloads the page on that map first, from the file the demo was recorded on (the `.bsp`, or the `.map` with lighting off). If the map or data changed since it was recorded, the overlay says so before it plays.
+- Drag a `.demo.json` onto the game page to play it (in the dev server and in a release). A demo from another map reloads the page on that map first, from the file the demo was recorded on (the `.bsp`, or the `.map` with lighting off), carrying the demo across in the browser's session storage. If the map or data changed since it was recorded, the overlay says which, and playback starts paused.
 - The camera follows the recorded view angles, smoothed between ticks like movement.
-- Space pauses, the left and right arrows change speed (1/4x to 4x), and Escape leaves playback.
-- The overlay shows the time, the speed, and whether every tick's hash still matches the recording, flagging the tick where it first diverges.
+- Space pauses (and at the end plays again), the left and right arrows change speed (1/4x to 4x), and Escape leaves playback. Effects fade on playback time, so pausing freezes them.
+- The overlay shows the time, the speed, and whether every tick's hash still matches the recording, flagging the tick where it first diverges, and what differs at the next keyframe where something still does (all of it in the browser console).
 - Later: seeking, starting from the keyframes' full states.
 
 ### Console

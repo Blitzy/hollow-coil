@@ -4,6 +4,8 @@
 
 ### ✨ Added
 
+- Watch a demo by dropping it on the game page, with pause and 1/4x to 4x speed. The game says where the play first differs from the recording, and which map or data changed since it was recorded.
+
 ### 🔧 Changed
 
 ### 🐛 Fixed

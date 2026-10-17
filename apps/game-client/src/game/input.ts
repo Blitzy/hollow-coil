@@ -50,6 +50,8 @@ export class BrowserInput {
 
   /** Whether the current pointer lock uses raw mouse input. */
   rawInput = false;
+  /** Whether a click captures the mouse. Off while watching a demo, which needs no mouse look. */
+  lockable = true;
 
   private readonly element: HTMLElement;
 
@@ -57,7 +59,7 @@ export class BrowserInput {
   constructor(element: HTMLElement, preferRawInput = true) {
     this.element = element;
     element.addEventListener("click", () => {
-      if (this.locked) return;
+      if (this.locked || !this.lockable) return;
       lockPointer(element, preferRawInput).then(
         (raw) => (this.rawInput = raw),
         (error: unknown) => console.warn("pointer lock failed:", error),

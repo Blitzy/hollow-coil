@@ -45,9 +45,12 @@ export class DamageView {
     this.kickLeft = Math.max(0, this.kickLeft - seconds);
   }
 
+  /** Back to how it starts, with no flash or kick. */
   reset(): void {
     this.shift = 0;
     this.kickLeft = 0;
+    this.kickPitch = 0;
+    this.kickRoll = 0;
   }
 
   /** The red flash's opacity, 0 to about 0.6. */

@@ -6,6 +6,7 @@ import {
   contentHashes,
   DEMO_FORMAT,
   DEMO_VERSION,
+  DemoCheck,
   DemoError,
   DemoRecorder,
   demoCommands,
@@ -134,6 +135,32 @@ describe("demos", () => {
     expect(replay.divergence).not.toBeNull();
     expect(replay.divergence!.tick).toBeGreaterThan(0);
     expect(replay.divergence!.differences.some((line) => line.startsWith("player.origin"))).toBe(true);
+  });
+
+  it("can be checked a tick at a time as they play, saying what replayDemo says", () => {
+    const check = new DemoCheck(demo);
+    const ctx = simContext(level, faster);
+    let state = startLevel(level, faster, demo.seed);
+    check.compare(state);
+    for (const cmd of commands) {
+      state = step(state, cmd, ctx).state;
+      check.compare(state);
+      if (state.tick === KEYFRAME_SECONDS * TICK_RATE - 1) {
+        expect(check.divergedAt).not.toBeNull();
+        expect(check.differences).toBeNull(); // nothing to compare until the next keyframe
+      }
+    }
+    expect(check.differences?.tick).toBe(KEYFRAME_SECONDS * TICK_RATE);
+    expect(check.divergence()).toEqual(replayDemo(demo, level, faster).divergence);
+  });
+
+  it("say where play first differed even when it evens out again by the next keyframe", () => {
+    const once = { ...demo, hashes: `${demo.hashes.slice(0, 10 * 8)}00000000${demo.hashes.slice(11 * 8)}` };
+    expect(replayDemo(once, level, config).divergence).toEqual({ tick: 10, keyframe: KEYFRAME_SECONDS * TICK_RATE, differences: [] });
+  });
+
+  it("refuse to be checked without a hash for every tick", () => {
+    expect(() => new DemoCheck({ ...demo, hashes: demo.hashes.slice(8) })).toThrow(/hashes for/);
   });
 
   it("can be rebaselined from their inputs when behavior or content changes on purpose", () => {
