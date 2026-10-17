@@ -16,6 +16,7 @@ import { buildCommand } from "./game/command.ts";
 import { DEAD_EYE_HEIGHT, DEAD_ROLL, RespawnWait } from "./game/death.ts";
 import { DemoPlayback, lerpYaw, placeDemo, speedLabel, type PageLevel } from "./game/demo-playback.ts";
 import { Effects } from "./game/effects.ts";
+import { failureLine, levelProblem, levelUrl } from "./game/level-files.ts";
 import { FixedStep } from "./game/fixed-step.ts";
 import { BrowserInput } from "./game/input.ts";
 import { cycleSlot } from "./game/weapon-select.ts";
@@ -102,7 +103,7 @@ async function loadLevel(game: string, mapName: string, lightStyles: LightStyleD
   let reason = "lighting=off";
   if (lighting) {
     try {
-      const response = await fetch(`${game}/build/${mapName}.bsp`);
+      const response = await fetch(levelUrl(game, mapName, "bsp"));
       if (response.ok) {
         const bsp = readBsp(await response.arrayBuffer());
         const level = levelFromBsp(bsp);
@@ -112,13 +113,13 @@ async function loadLevel(game: string, mapName: string, lightStyles: LightStyleD
       }
       const report = (await response.text()).trim();
       console.warn(`no lit build of ${mapName}:\n${report}`);
-      reason = report.split("\n").find((line) => /FAIL|error|leak|missing|not installed/i.test(line))?.trim() ?? `${response.status} ${response.statusText}`;
+      reason = failureLine(report, response);
     } catch (error) {
       console.warn(error);
       reason = error instanceof Error ? error.message : String(error);
     }
   }
-  const level = levelFromMap(await fetchText(`${game}/maps/${mapName}.map`));
+  const level = levelFromMap(await fetchText(levelUrl(game, mapName, "map")));
   const group = buildLevelMeshes(level, await loadTextures(textureNames(level), `${game}/textures`));
   return { level, group, lit: null, file: `${mapName}.map`, note: `unlit (${reason})` };
 }
@@ -224,7 +225,7 @@ async function main(): Promise<void> {
   let message = "";
   /** What's been said in the browser console about where the playback differs from the recording. */
   let logged = { divergence: false, differences: false };
-  const playDemo = (text: string, reloaded: boolean): void => {
+  const playDemo = async (text: string, reloaded: boolean): Promise<void> => {
     let demo: Demo;
     try {
       demo = upgradeDemo(JSON.parse(text));
@@ -238,6 +239,12 @@ async function main(): Promise<void> {
       return;
     }
     if (place.kind === "reload") {
+      // Only leave this page for one that will load: a demo for a map that's gone stays here and says so.
+      const problem = await levelProblem(game, demo.map, demo.level);
+      if (problem !== null) {
+        message = `can't play the demo: ${problem}`;
+        return;
+      }
       try {
         sessionStorage.setItem(PENDING_DEMO, text);
       } catch {
@@ -409,7 +416,7 @@ async function main(): Promise<void> {
     overlay.textContent = lines.join("\n");
     requestAnimationFrame(frame);
   };
-  if (pendingDemo !== null) playDemo(pendingDemo, true);
+  if (pendingDemo !== null) void playDemo(pendingDemo, true);
   requestAnimationFrame(frame);
 }
 
