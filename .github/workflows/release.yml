@@ -89,7 +89,8 @@ jobs:
             echo "mandreljs $VERSION is already on npm"
           else
             case "$VERSION" in *-*) tag=next ;; *) tag=latest ;; esac
-            npm publish "dist/mandreljs-$VERSION.tgz" --provenance --access public --tag "$tag"
+            # ./ so npm reads it as a file, not as the GitHub repo "dist/mandreljs-<version>.tgz".
+            npm publish "./dist/mandreljs-$VERSION.tgz" --provenance --access public --tag "$tag"
             echo "Published mandreljs $VERSION to npm ($tag)." >> "$GITHUB_STEP_SUMMARY"
           fi
 
