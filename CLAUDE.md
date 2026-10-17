@@ -61,12 +61,12 @@ The simulation is strictly separated from presentation. These rules are not opti
 
 ## Commit Messages
 
-Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`, with the summary in the imperative and lowercase, no trailing period.
+Use [Conventional Commits](https://www.conventionalcommits.org/) without a scope: `type: summary`, with the summary in the imperative and lowercase, no trailing period.
 
 - Types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`, `ci`, `build`, `style`, `revert`.
-- Scope is optional. Use the area touched: an app or package (`game-client`, `sim`, `render`, `defs`, and future app names), or `tools`, `example` (the example game's content), `maps`, `data`, `scenarios`, `demos`, `ci`, `repo` (workspace-wide setup).
-- Breaking changes to data formats, scenario formats, or demo compatibility get a `!` after the type (`feat(data)!: ...`) and a `BREAKING CHANGE:` footer.
-- Examples: `feat(sim): add air acceleration`, `fix(sim): stop step-up through ceilings`, `test(scenarios): add 20-unit step scenario`, `chore: update gitignore`.
+- No scope in parentheses after the type. Older commits have one (`feat(sim): ...`); new ones don't.
+- Breaking changes to data formats, scenario formats, or demo compatibility get a `!` after the type (`feat!: ...`) and a `BREAKING CHANGE:` footer.
+- Examples: `feat: add air acceleration`, `fix: stop step-up through ceilings`, `test: add 20-unit step scenario`, `chore: update gitignore`.
 
 ## Licensing
 
